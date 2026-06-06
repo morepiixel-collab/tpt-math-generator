@@ -63,13 +63,23 @@ class TpTWorksheet(FPDF):
         self.cell(0, 10, f"Page {self.page_no()}  |  {self.theme}  |  Ready for TpT", align="C")
 
 # ==========================================
-# 2. ฟังก์ชันเตรียมข้อมูลโจทย์ (อัปเดตสำหรับ K1)
+# 2. ฟังก์ชันเตรียมข้อมูลโจทย์ (ระบบกันโจทย์ซ้ำ)
 # ==========================================
 def generate_questions(level, topic, num_q):
     questions = []
-    for _ in range(num_q):
+    
+    # สุ่มชุดตัวเลข 1-10 แบบไม่ให้ซ้ำกันเลย สำหรับข้อที่ต้องนับหรือเขียน
+    if topic in ["Counting (1-10)", "Number Tracing"]:
+        unique_numbers = random.sample(range(1, 11), num_q)
+    else:
+        unique_numbers = []
+        
+    used_math_pairs = set() # เก็บโจทย์บวกเลขที่ออกไปแล้ว
+
+    for i in range(num_q):
         if topic == "Counting (1-10)":
-            num = random.randint(1, 10)
+            num = unique_numbers[i] # ดึงตัวเลขที่ไม่ซ้ำมาใช้
+            
             # สร้างตัวเลือกลวง 2 ตัวที่ไม่ซ้ำกับคำตอบจริง
             choices = [num]
             while len(choices) < 3:
@@ -80,22 +90,31 @@ def generate_questions(level, topic, num_q):
             
             questions.append({
                 "type": "counting_choice", 
-                "text": "Point, Count & Circle:", # ให้เด็กใช้นิ้วชี้ นับ แล้ววงกลม
+                "text": "Point, Count & Circle:", 
                 "count": num, 
                 "choices": choices,
                 "ans": str(num)
             })
+            
         elif topic == "Number Tracing":
-            num = random.randint(1, 10)
+            num = unique_numbers[i]
             questions.append({"type": "tracing", "text": "Trace:", "num": num, "ans": str(num)})
-        else:
-            a = random.randint(1, 5)
-            b = random.randint(1, 5)
-            questions.append({"type": "math", "text": f"{a}  +  {b}  =", "ans": str(a + b)})
+            
+        else: # Basic Addition
+            # ลูปสุ่มไปเรื่อยๆ จนกว่าจะได้โจทย์ที่ไม่เคยออกในหน้านี้
+            while True:
+                a = random.randint(1, 5)
+                b = random.randint(1, 5)
+                pair = (a, b)
+                if pair not in used_math_pairs:
+                    used_math_pairs.add(pair)
+                    questions.append({"type": "math", "text": f"{a}  +  {b}  =", "ans": str(a + b)})
+                    break
+                    
     return questions
 
 # ==========================================
-# 3. ฟังก์ชันสร้างไฟล์ PDF (ระบบกราฟิก)
+# 3. ฟังก์ชันสร้างไฟล์ PDF
 # ==========================================
 def render_pdf_content(pdf, questions):
     pdf.add_page()
@@ -108,7 +127,6 @@ def render_pdf_content(pdf, questions):
     
     for i, q in enumerate(questions):
         y_start = pdf.get_y()
-        # ขยายความสูงของการ์ดแต่ละข้อให้ใหญ่ขึ้น เพื่อให้เด็กๆ ไม่อึดอัด
         card_height = 28 
         if y_start > 230:
             pdf.add_page()
@@ -123,7 +141,6 @@ def render_pdf_content(pdf, questions):
         pdf.set_line_width(0.5)
         pdf.rect(15, y_start, 185, card_height, style="DF")
 
-        # เลขข้อ
         pdf.set_font("helvetica", "B", 16)
         pdf.set_text_color(255, 100, 100) 
         pdf.set_xy(18, y_start + 10)
@@ -132,12 +149,10 @@ def render_pdf_content(pdf, questions):
 
         pdf.set_xy(30, y_start + 10)
         
-        # --- ระบบข้อสอบสำหรับเด็ก K1 (ไม่ต้องเขียน) ---
         if q["type"] == "counting_choice":
             pdf.set_font("helvetica", "B", 12)
             pdf.cell(50, 8, q["text"])
             
-            # วาดรูปทรงเรขาคณิต (จัดกลุ่มละ 5 ให้ชี้ง่ายๆ)
             cx = 85
             shape_type = random.choice(shapes)
             r, g, b = random.choice(color_palette)
@@ -146,12 +161,11 @@ def render_pdf_content(pdf, questions):
             pdf.set_line_width(0.4)
             
             for j in range(q["count"]):
-                row = j // 5  # ขึ้นบรรทัดใหม่ทุกๆ 5 ชิ้น
+                row = j // 5  
                 col = j % 5
                 sx = cx + (col * 11)
                 sy = y_start + 6 + (row * 10)
                 
-                # ขยายรูปทรงให้ใหญ่ขึ้น
                 if shape_type == 'circle':
                     pdf.ellipse(sx, sy, 8, 8, style="DF")
                 elif shape_type == 'square':
@@ -159,13 +173,11 @@ def render_pdf_content(pdf, questions):
                 elif shape_type == 'triangle':
                     pdf.polygon(((sx+4, sy), (sx+8, sy+8), (sx, sy+8)), style="DF")
 
-            # วาดตัวเลือก 3 ข้อ (Multiple Choice Bubbles) ให้เด็กวงกลม
             pdf.set_font("helvetica", "B", 16)
             for idx, choice in enumerate(q["choices"]):
                 bx = 145 + (idx * 16)
                 by = y_start + 8
                 
-                # ถ้าเป็นหน้าเฉลย ให้ไฮไลท์ตัวเลือกที่ถูกต้องเป็นสีแดง
                 if pdf.is_answer_key and str(choice) == q["ans"]:
                     pdf.set_fill_color(255, 180, 180)
                 else:
@@ -178,8 +190,6 @@ def render_pdf_content(pdf, questions):
                 pdf.set_text_color(50, 50, 50)
                 pdf.set_xy(bx, by + 2)
                 pdf.cell(12, 8, str(choice), align="C")
-
-        # ----------------------------------------------
                     
         elif q["type"] == "tracing":
             pdf.set_font("helvetica", "B", 14)
@@ -239,32 +249,32 @@ def display_pdf_as_image(file_path):
 # ==========================================
 st.set_page_config(page_title="Kids Math Generator", page_icon="🎨", layout="wide")
 st.title("🎨 K1-Friendly Math Worksheet Generator")
-st.markdown("ระบบสร้างใบงานคณิตศาสตร์ฉบับเด็กอนุบาล (เน้นใช้นิ้วชี้และวงกลม ไม่ต้องเขียน)")
+st.markdown("ระบบสร้างใบงานคณิตศาสตร์ (อัปเกรด: ป้องกันข้อซ้ำ 100%)")
 
 with st.sidebar:
     st.header("⚙️ Settings")
     level = st.selectbox("Grade Level:", ["K1 (Kindergarten 1)", "K2 (Kindergarten 2)"])
     topic = st.selectbox("Topic:", ["Counting (1-10)", "Number Tracing", "Basic Addition"])
     theme = st.selectbox("Theme:", ["Colorful Shapes", "Pastel Magic"])
-    num_q = st.slider("Questions per page:", min_value=3, max_value=6, value=5) # ลดจำนวนข้อลงเพื่อให้การ์ดใหญ่ขึ้น
+    num_q = st.slider("Questions per page:", min_value=3, max_value=6, value=5) 
     include_ans = st.checkbox("Generate Answer Key", value=True)
     st.markdown("---")
-    generate_btn = st.button("✨ Generate K1 PDF", use_container_width=True, type="primary")
+    generate_btn = st.button("✨ Generate Unique PDF", use_container_width=True, type="primary")
 
 if generate_btn:
-    with st.spinner("Preparing K1-friendly layout..."):
+    with st.spinner("Preparing unique questions..."):
         try:
             files = create_pdf(level, topic, theme, num_q, include_ans)
-            st.success("✅ Worksheets generated! Perfect for little fingers to point and count.")
+            st.success("✅ Worksheets generated! No duplicate questions.")
             
             col1, col2 = st.columns(2)
             with col1:
                 with open(files["student"], "rb") as f:
-                    st.download_button("📥 Download Fun Worksheet", data=f, file_name="K1_Worksheet.pdf", mime="application/pdf", use_container_width=True)
+                    st.download_button("📥 Download Fun Worksheet", data=f, file_name="K1_Worksheet_Unique.pdf", mime="application/pdf", use_container_width=True)
             if include_ans and "answer" in files:
                 with col2:
                     with open(files["answer"], "rb") as f:
-                        st.download_button("📥 Download Answer Key", data=f, file_name="Answer_Key.pdf", mime="application/pdf", use_container_width=True)
+                        st.download_button("📥 Download Answer Key", data=f, file_name="Answer_Key_Unique.pdf", mime="application/pdf", use_container_width=True)
             
             st.markdown("---")
             col_preview1, col_preview2 = st.columns(2)
