@@ -179,7 +179,7 @@ with st.sidebar:
         topics = ["Addition/Subtraction (No carry)", "Patterns", "Greater/Less Than"]
         
     topic = st.selectbox("Select Topic:", topics)
-    theme = st.selectbox("Select Theme (For your listing cover):", ["Safari Animals 🦁", "Space Explorer 🚀", "Cute Dinosaurs 🦖", "Underwater World 🐠"])
+    theme = st.selectbox("Select Theme:", ["Safari Animals", "Space Explorer", "Cute Dinosaurs", "Underwater World"])
     num_q = st.slider("Questions per page:", min_value=5, max_value=15, value=10)
     include_ans = st.checkbox("Generate Answer Key", value=True)
     
