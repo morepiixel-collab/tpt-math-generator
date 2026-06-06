@@ -59,7 +59,7 @@ def generate_questions(level, topic, num_q):
             if topic == "Counting (1-10)":
                 num = random.randint(1, 10)
                 # จำลองการใช้รูปภาพด้วยสัญลักษณ์ (ในของจริงใช้ pdf.image() แทรก Clipart ได้)
-                q_text = "★ " * num
+                q_text = "O " * num
                 questions.append(f"Count the stars:   {q_text}")
                 answers.append(str(num))
             elif topic == "Number Tracing":
