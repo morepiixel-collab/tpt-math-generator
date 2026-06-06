@@ -63,34 +63,32 @@ class TpTWorksheet(FPDF):
         self.cell(0, 10, f"Page {self.page_no()}  |  {self.theme}  |  Ready for TpT", align="C")
 
 # ==========================================
-# 2. ฟังก์ชันเตรียมข้อมูลโจทย์ (ระบบกันโจทย์ซ้ำ)
+# 2. ฟังก์ชันเตรียมข้อมูลโจทย์
 # ==========================================
 def generate_questions(level, topic, num_q):
     questions = []
     
-    # สุ่มชุดตัวเลข 1-10 แบบไม่ให้ซ้ำกันเลย สำหรับข้อที่ต้องนับหรือเขียน
     if topic in ["Counting (1-10)", "Number Tracing"]:
         unique_numbers = random.sample(range(1, 11), num_q)
     else:
         unique_numbers = []
         
-    used_math_pairs = set() # เก็บโจทย์บวกเลขที่ออกไปแล้ว
+    used_math_pairs = set() 
 
     for i in range(num_q):
         if topic == "Counting (1-10)":
-            num = unique_numbers[i] # ดึงตัวเลขที่ไม่ซ้ำมาใช้
+            num = unique_numbers[i] 
             
-            # สร้างตัวเลือกลวง 2 ตัวที่ไม่ซ้ำกับคำตอบจริง
             choices = [num]
             while len(choices) < 3:
                 fake_ans = random.randint(1, 10)
                 if fake_ans not in choices:
                     choices.append(fake_ans)
-            random.shuffle(choices) # สลับตำแหน่งตัวเลือก
+            random.shuffle(choices) 
             
             questions.append({
                 "type": "counting_choice", 
-                "text": "Point, Count & Circle:", 
+                "text": "Point, Count & Color:", # อัปเดตคำสั่งตามที่คุณต้องการ!
                 "count": num, 
                 "choices": choices,
                 "ans": str(num)
@@ -100,8 +98,7 @@ def generate_questions(level, topic, num_q):
             num = unique_numbers[i]
             questions.append({"type": "tracing", "text": "Trace:", "num": num, "ans": str(num)})
             
-        else: # Basic Addition
-            # ลูปสุ่มไปเรื่อยๆ จนกว่าจะได้โจทย์ที่ไม่เคยออกในหน้านี้
+        else: 
             while True:
                 a = random.randint(1, 5)
                 b = random.randint(1, 5)
@@ -119,10 +116,6 @@ def generate_questions(level, topic, num_q):
 def render_pdf_content(pdf, questions):
     pdf.add_page()
     
-    color_palette = [
-        (255, 153, 153), (102, 204, 255), 
-        (102, 255, 153), (255, 220, 100), (204, 153, 255)
-    ]
     shapes = ['circle', 'square', 'triangle']
     
     for i, q in enumerate(questions):
@@ -155,10 +148,11 @@ def render_pdf_content(pdf, questions):
             
             cx = 85
             shape_type = random.choice(shapes)
-            r, g, b = random.choice(color_palette)
-            pdf.set_fill_color(r, g, b)
-            pdf.set_draw_color(100, 100, 100)
-            pdf.set_line_width(0.4)
+            
+            # --- อัปเดตส่วนรูปทรงสำหรับระบายสี (Coloring Shapes) ---
+            pdf.set_fill_color(255, 255, 255) # เติมพื้นสีขาวให้เด็กลงสีเอง
+            pdf.set_draw_color(50, 50, 50) # เส้นขอบสีเทาเข้ม
+            pdf.set_line_width(0.6) # เส้นขอบหนาขึ้นเพื่อให้อยู่ในกรอบง่าย
             
             for j in range(q["count"]):
                 row = j // 5  
@@ -173,13 +167,14 @@ def render_pdf_content(pdf, questions):
                 elif shape_type == 'triangle':
                     pdf.polygon(((sx+4, sy), (sx+8, sy+8), (sx, sy+8)), style="DF")
 
+            # ส่วนตัวเลือก 3 ข้อ ให้เป็นฟองสีขาว เด็กสามารถระบายสีทับข้อที่ถูกได้
             pdf.set_font("helvetica", "B", 16)
             for idx, choice in enumerate(q["choices"]):
                 bx = 145 + (idx * 16)
                 by = y_start + 8
                 
                 if pdf.is_answer_key and str(choice) == q["ans"]:
-                    pdf.set_fill_color(255, 180, 180)
+                    pdf.set_fill_color(255, 180, 180) # หน้าเฉลยยังคงเป็นสีแดง
                 else:
                     pdf.set_fill_color(255, 255, 255)
                     
@@ -200,90 +195,4 @@ def render_pdf_content(pdf, questions):
             pdf.set_text_color(50, 50, 50)
             
         elif q["type"] == "math":
-            pdf.set_font("helvetica", "B", 20)
-            pdf.cell(100, 8, q["text"], align="C")
-            pdf.set_draw_color(150, 200, 255)
-            pdf.set_fill_color(255, 255, 255)
-            pdf.set_line_width(0.8)
-            pdf.ellipse(175, y_start + 6.5, 15, 15, style="DF")
-            if pdf.is_answer_key:
-                pdf.set_font("helvetica", "B", 16)
-                pdf.set_text_color(220, 53, 69)
-                pdf.set_xy(175, y_start + 8)
-                pdf.cell(15, 12, q["ans"], align="C")
-                pdf.set_text_color(0, 0, 0)
-
-        pdf.set_y(y_start + card_height + 4)
-
-def create_pdf(level, topic, theme, num_q, include_ans):
-    questions = generate_questions(level, topic, num_q)
-    output_files = {}
-
-    pdf_student = TpTWorksheet(level, topic, theme, is_answer_key=False)
-    render_pdf_content(pdf_student, questions)
-    fd, path_student = tempfile.mkstemp(suffix=".pdf")
-    os.close(fd)
-    pdf_student.output(path_student)
-    output_files["student"] = path_student
-
-    if include_ans:
-        pdf_ans = TpTWorksheet(level, topic, theme, is_answer_key=True)
-        render_pdf_content(pdf_ans, questions)
-        fd, path_ans = tempfile.mkstemp(suffix=".pdf")
-        os.close(fd)
-        pdf_ans.output(path_ans)
-        output_files["answer"] = path_ans
-
-    return output_files
-
-def display_pdf_as_image(file_path):
-    doc = fitz.open(file_path)
-    for i in range(len(doc)):
-        page = doc.load_page(i)
-        pix = page.get_pixmap(dpi=150)
-        img_bytes = pix.tobytes("png")
-        st.image(img_bytes, use_container_width=True)
-
-# ==========================================
-# 4. หน้าต่างแสดงผล Streamlit
-# ==========================================
-st.set_page_config(page_title="Kids Math Generator", page_icon="🎨", layout="wide")
-st.title("🎨 K1-Friendly Math Worksheet Generator")
-st.markdown("ระบบสร้างใบงานคณิตศาสตร์ (อัปเกรด: ป้องกันข้อซ้ำ 100%)")
-
-with st.sidebar:
-    st.header("⚙️ Settings")
-    level = st.selectbox("Grade Level:", ["K1 (Kindergarten 1)", "K2 (Kindergarten 2)"])
-    topic = st.selectbox("Topic:", ["Counting (1-10)", "Number Tracing", "Basic Addition"])
-    theme = st.selectbox("Theme:", ["Colorful Shapes", "Pastel Magic"])
-    num_q = st.slider("Questions per page:", min_value=3, max_value=6, value=5) 
-    include_ans = st.checkbox("Generate Answer Key", value=True)
-    st.markdown("---")
-    generate_btn = st.button("✨ Generate Unique PDF", use_container_width=True, type="primary")
-
-if generate_btn:
-    with st.spinner("Preparing unique questions..."):
-        try:
-            files = create_pdf(level, topic, theme, num_q, include_ans)
-            st.success("✅ Worksheets generated! No duplicate questions.")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                with open(files["student"], "rb") as f:
-                    st.download_button("📥 Download Fun Worksheet", data=f, file_name="K1_Worksheet_Unique.pdf", mime="application/pdf", use_container_width=True)
-            if include_ans and "answer" in files:
-                with col2:
-                    with open(files["answer"], "rb") as f:
-                        st.download_button("📥 Download Answer Key", data=f, file_name="Answer_Key_Unique.pdf", mime="application/pdf", use_container_width=True)
-            
-            st.markdown("---")
-            col_preview1, col_preview2 = st.columns(2)
-            with col_preview1:
-                st.subheader("👁️ Preview: Student")
-                display_pdf_as_image(files["student"])
-            if include_ans and "answer" in files:
-                with col_preview2:
-                    st.subheader("👁️ Preview: Teacher")
-                    display_pdf_as_image(files["answer"])
-        except Exception as e:
-            st.error(f"Error: {e}")
+            pdf.set_font("helvetica", "B
