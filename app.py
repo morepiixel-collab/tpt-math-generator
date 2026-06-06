@@ -44,10 +44,11 @@ class TpTWorksheet(FPDF):
         self.cell(100, 8, "Date: _________________")
         
         self.set_xy(15, 45)
-        self.set_font("helvetica", "B", 22)
-        title_text = f"{self.topic}"
+        self.set_font("helvetica", "B", 20)
+        # แสดงระดับชั้นและหัวข้อให้ชัดเจน
+        title_text = f"{self.level[:2]} - {self.topic}"
         if self.is_answer_key:
-            title_text += " [ANSWER KEY]"
+            title_text += " [KEY]"
             self.set_text_color(220, 53, 69)
         else:
             self.set_text_color(40, 100, 200) 
@@ -63,22 +64,17 @@ class TpTWorksheet(FPDF):
         self.cell(0, 10, f"Page {self.page_no()}  |  {self.theme}  |  Ready for TpT", align="C")
 
 # ==========================================
-# 2. ฟังก์ชันเตรียมข้อมูลโจทย์
+# 2. ฟังก์ชันเตรียมข้อมูลโจทย์ (แยก K1 และ K2)
 # ==========================================
 def generate_questions(level, topic, num_q):
     questions = []
-    
-    if topic in ["Counting (1-10)", "Number Tracing"]:
-        unique_numbers = random.sample(range(1, 11), num_q)
-    else:
-        unique_numbers = []
-        
     used_math_pairs = set()
 
-    for i in range(num_q):
-        if topic == "Counting (1-10)":
+    # --- โหมด K1 (อนุบาล 1) ---
+    if level == "K1 (Kindergarten 1)":
+        unique_numbers = random.sample(range(1, 11), num_q)
+        for i in range(num_q):
             num = unique_numbers[i]
-            
             choices = [num]
             while len(choices) < 3:
                 fake_ans = random.randint(1, 10)
@@ -87,35 +83,56 @@ def generate_questions(level, topic, num_q):
             random.shuffle(choices)
             
             questions.append({
-                "type": "counting_choice", 
-                "text": "Point, Count & Color:", # เปลี่ยนคำสั่งเป็น Color
+                "type": "counting_k1", 
+                "text": "Point, Count & Color:", 
                 "count": num, 
                 "choices": choices,
                 "ans": str(num)
             })
-            
-        elif topic == "Number Tracing":
-            num = unique_numbers[i]
-            questions.append({"type": "tracing", "text": "Trace:", "num": num, "ans": str(num)})
-            
-        else:
-            while True:
-                a = random.randint(1, 5)
-                b = random.randint(1, 5)
-                pair = (a, b)
-                if pair not in used_math_pairs:
-                    used_math_pairs.add(pair)
-                    questions.append({"type": "math", "text": f"{a}  +  {b}  =", "ans": str(a + b)})
-                    break
-                    
+
+    # --- โหมด K2 (อนุบาล 2) ---
+    elif level == "K2 (Kindergarten 2)":
+        if topic == "Count & Write (1-10)":
+            unique_numbers = random.sample(range(1, 11), num_q)
+            for i in range(num_q):
+                num = unique_numbers[i]
+                questions.append({
+                    "type": "counting_k2", 
+                    "text": "Count and write the number:", 
+                    "count": num, 
+                    "ans": str(num)
+                })
+                
+        elif topic == "Basic Math (Sum <= 10)":
+            for _ in range(num_q):
+                while True:
+                    a = random.randint(1, 8)
+                    b = random.randint(1, 9 - a) # บังคับผลลัพธ์ไม่เกิน 10
+                    pair = (a, b)
+                    if pair not in used_math_pairs:
+                        used_math_pairs.add(pair)
+                        questions.append({"type": "math_k2", "text": f"{a}   +   {b}   =", "ans": str(a + b)})
+                        break
+                        
+        elif topic == "Size Comparison":
+            for _ in range(num_q):
+                target = random.choice(["BIGGER", "SMALLER"])
+                big_pos = random.choice(["Left", "Right"])
+                ans = "Left" if (target == "BIGGER" and big_pos == "Left") or (target == "SMALLER" and big_pos == "Right") else "Right"
+                questions.append({
+                    "type": "size_k2", 
+                    "text": f"Circle the {target} shape:", 
+                    "big_pos": big_pos,
+                    "ans": ans
+                })
+
     return questions
 
 # ==========================================
-# 3. ฟังก์ชันสร้างไฟล์ PDF
+# 3. ฟังก์ชันสร้างไฟล์ PDF (ระบบวาด UI ที่แตกต่างกัน)
 # ==========================================
 def render_pdf_content(pdf, questions):
     pdf.add_page()
-    
     shapes = ['circle', 'square', 'triangle']
     
     for i, q in enumerate(questions):
@@ -125,7 +142,7 @@ def render_pdf_content(pdf, questions):
             pdf.add_page()
             y_start = pdf.get_y()
 
-        # พื้นหลังการ์ดสลับสีอ่อนๆ ให้ดูสบายตา
+        # พื้นหลังการ์ด
         if i % 2 == 0:
             pdf.set_fill_color(245, 250, 255) 
         else:
@@ -135,77 +152,127 @@ def render_pdf_content(pdf, questions):
         pdf.set_line_width(0.5)
         pdf.rect(15, y_start, 185, card_height, style="DF")
 
+        # เลขข้อ
         pdf.set_font("helvetica", "B", 16)
         pdf.set_text_color(255, 100, 100) 
         pdf.set_xy(18, y_start + 10)
         pdf.cell(12, 8, f"{i + 1}.")
         pdf.set_text_color(50, 50, 50)
-
         pdf.set_xy(30, y_start + 10)
         
-        if q["type"] == "counting_choice":
+        # ------------------------------------
+        # เลย์เอาต์ K1 (นับแล้วระบายสีวงกลม)
+        # ------------------------------------
+        if q["type"] == "counting_k1":
             pdf.set_font("helvetica", "B", 12)
             pdf.cell(50, 8, q["text"])
-            
             cx = 85
             shape_type = random.choice(shapes)
-            
-            # ตั้งค่าให้เป็นลายเส้น (ไม่มีสีพื้นหลัง) เพื่อให้เด็กลงสีเอง
-            pdf.set_draw_color(40, 40, 40) # ขอบสีดำเข้ม
-            pdf.set_line_width(0.7) # เส้นขอบหนาขึ้นสำหรับระบายสี
+            pdf.set_draw_color(40, 40, 40) 
+            pdf.set_line_width(0.7) 
             
             for j in range(q["count"]):
                 row = j // 5  
                 col = j % 5
                 sx = cx + (col * 11)
                 sy = y_start + 6 + (row * 10)
-                
-                # style="D" คือวาดเฉพาะเส้นขอบ (Draw outline only)
-                if shape_type == 'circle':
-                    pdf.ellipse(sx, sy, 8, 8, style="D")
-                elif shape_type == 'square':
-                    pdf.rect(sx, sy, 8, 8, style="D")
-                elif shape_type == 'triangle':
-                    pdf.polygon(((sx+4, sy), (sx+8, sy+8), (sx, sy+8)), style="D")
+                if shape_type == 'circle': pdf.ellipse(sx, sy, 8, 8, style="D")
+                elif shape_type == 'square': pdf.rect(sx, sy, 8, 8, style="D")
+                elif shape_type == 'triangle': pdf.polygon(((sx+4, sy), (sx+8, sy+8), (sx, sy+8)), style="D")
 
             pdf.set_font("helvetica", "B", 16)
             for idx, choice in enumerate(q["choices"]):
                 bx = 145 + (idx * 16)
                 by = y_start + 8
-                
-                if pdf.is_answer_key and str(choice) == q["ans"]:
-                    pdf.set_fill_color(255, 180, 180)
-                else:
-                    pdf.set_fill_color(255, 255, 255)
-                    
+                if pdf.is_answer_key and str(choice) == q["ans"]: pdf.set_fill_color(255, 180, 180)
+                else: pdf.set_fill_color(255, 255, 255)
                 pdf.set_draw_color(150, 150, 200)
                 pdf.set_line_width(0.6)
                 pdf.ellipse(bx, by, 12, 12, style="DF")
-                
                 pdf.set_text_color(50, 50, 50)
                 pdf.set_xy(bx, by + 2)
                 pdf.cell(12, 8, str(choice), align="C")
-                    
-        elif q["type"] == "tracing":
-            pdf.set_font("helvetica", "B", 14)
-            pdf.cell(30, 8, q["text"])
-            pdf.set_font("helvetica", "B", 26)
-            pdf.set_text_color(200, 200, 200) 
-            pdf.cell(100, 7, f"{q['num']}      {q['num']}      {q['num']}      {q['num']}")
-            pdf.set_text_color(50, 50, 50)
+
+        # ------------------------------------
+        # เลย์เอาต์ K2 (มีกล่องให้เขียนตอบ)
+        # ------------------------------------
+        elif q["type"] == "counting_k2":
+            pdf.set_font("helvetica", "B", 12)
+            pdf.cell(60, 8, q["text"])
+            cx = 95
+            shape_type = random.choice(shapes)
+            pdf.set_draw_color(40, 40, 40) 
+            pdf.set_line_width(0.7) 
             
-        elif q["type"] == "math":
-            pdf.set_font("helvetica", "B", 20)
-            pdf.cell(100, 8, q["text"], align="C")
-            pdf.set_draw_color(150, 200, 255)
+            # วาดรูปทรงให้นับ
+            for j in range(q["count"]):
+                row = j // 5  
+                col = j % 5
+                sx = cx + (col * 11)
+                sy = y_start + 6 + (row * 10)
+                if shape_type == 'circle': pdf.ellipse(sx, sy, 8, 8, style="D")
+                elif shape_type == 'square': pdf.rect(sx, sy, 8, 8, style="D")
+                elif shape_type == 'triangle': pdf.polygon(((sx+4, sy), (sx+8, sy+8), (sx, sy+8)), style="D")
+
+            # วาดกล่องสี่เหลี่ยมสำหรับเขียนตอบ
+            pdf.set_draw_color(100, 150, 255) # ขอบสีฟ้า
             pdf.set_fill_color(255, 255, 255)
             pdf.set_line_width(0.8)
-            pdf.ellipse(175, y_start + 6.5, 15, 15, style="DF")
+            pdf.rect(170, y_start + 5, 18, 18, style="DF")
+            
             if pdf.is_answer_key:
-                pdf.set_font("helvetica", "B", 16)
+                pdf.set_font("helvetica", "B", 20)
+                pdf.set_text_color(220, 53, 69)
+                pdf.set_xy(170, y_start + 8)
+                pdf.cell(18, 12, q["ans"], align="C")
+                pdf.set_text_color(0, 0, 0)
+
+        elif q["type"] == "math_k2":
+            pdf.set_font("helvetica", "B", 22)
+            pdf.cell(110, 8, q["text"], align="C")
+            
+            # กล่องเขียนตอบ
+            pdf.set_draw_color(100, 150, 255)
+            pdf.set_fill_color(255, 255, 255)
+            pdf.set_line_width(0.8)
+            pdf.rect(160, y_start + 4, 20, 20, style="DF")
+            
+            if pdf.is_answer_key:
+                pdf.set_font("helvetica", "B", 22)
+                pdf.set_text_color(220, 53, 69)
+                pdf.set_xy(160, y_start + 8)
+                pdf.cell(20, 12, q["ans"], align="C")
+                pdf.set_text_color(0, 0, 0)
+                
+        elif q["type"] == "size_k2":
+            pdf.set_font("helvetica", "B", 14)
+            pdf.cell(70, 8, q["text"])
+            
+            shape = random.choice(['circle', 'square'])
+            pdf.set_draw_color(60, 60, 60)
+            pdf.set_fill_color(200, 230, 255) # ลงสีฟ้าอ่อนๆ ให้รูปทรง
+            
+            # วาดรูปใหญ่-เล็ก ตามตำแหน่งที่สุ่มได้
+            if q["big_pos"] == "Left":
+                if shape == 'circle':
+                    pdf.ellipse(105, y_start + 2, 20, 20, style="DF")
+                    pdf.ellipse(145, y_start + 8, 8, 8, style="DF")
+                else:
+                    pdf.rect(105, y_start + 2, 20, 20, style="DF")
+                    pdf.rect(145, y_start + 8, 8, 8, style="DF")
+            else:
+                if shape == 'circle':
+                    pdf.ellipse(105, y_start + 8, 8, 8, style="DF")
+                    pdf.ellipse(140, y_start + 2, 20, 20, style="DF")
+                else:
+                    pdf.rect(105, y_start + 8, 8, 8, style="DF")
+                    pdf.rect(140, y_start + 2, 20, 20, style="DF")
+
+            if pdf.is_answer_key:
+                pdf.set_font("helvetica", "B", 14)
                 pdf.set_text_color(220, 53, 69)
                 pdf.set_xy(175, y_start + 8)
-                pdf.cell(15, 12, q["ans"], align="C")
+                pdf.cell(15, 12, f"({q['ans']})", align="C")
                 pdf.set_text_color(0, 0, 0)
 
         pdf.set_y(y_start + card_height + 4)
@@ -243,13 +310,19 @@ def display_pdf_as_image(file_path):
 # 4. หน้าต่างแสดงผล Streamlit
 # ==========================================
 st.set_page_config(page_title="Kids Math Generator", page_icon="🎨", layout="wide")
-st.title("🎨 K1-Friendly Math Worksheet Generator")
-st.markdown("ระบบสร้างใบงานคณิตศาสตร์ (โหมดระบายสี & ป้องกันข้อซ้ำ 100%)")
+st.title("🎨 K1 & K2 Math Worksheet Generator")
+st.markdown("ระบบสร้างใบงานคณิตศาสตร์ (แยกพัฒนาการ K1 และ K2)")
 
 with st.sidebar:
     st.header("⚙️ Settings")
     level = st.selectbox("Grade Level:", ["K1 (Kindergarten 1)", "K2 (Kindergarten 2)"])
-    topic = st.selectbox("Topic:", ["Counting (1-10)", "Number Tracing", "Basic Addition"])
+    
+    # เมนูเปลี่ยนไปตามระดับชั้น
+    if level == "K1 (Kindergarten 1)":
+        topic = st.selectbox("Topic (K1):", ["Counting (1-10)"])
+    else:
+        topic = st.selectbox("Topic (K2):", ["Count & Write (1-10)", "Basic Math (Sum <= 10)", "Size Comparison"])
+        
     theme = st.selectbox("Theme:", ["Coloring Shapes", "Pastel Magic"])
     num_q = st.slider("Questions per page:", min_value=3, max_value=6, value=5) 
     include_ans = st.checkbox("Generate Answer Key", value=True)
@@ -257,19 +330,19 @@ with st.sidebar:
     generate_btn = st.button("✨ Generate PDF", use_container_width=True, type="primary")
 
 if generate_btn:
-    with st.spinner("Preparing coloring pages..."):
+    with st.spinner(f"Preparing {level[:2]} pages..."):
         try:
             files = create_pdf(level, topic, theme, num_q, include_ans)
-            st.success("✅ Worksheets generated! Ready for kids to color.")
+            st.success("✅ Worksheets generated successfully!")
             
             col1, col2 = st.columns(2)
             with col1:
                 with open(files["student"], "rb") as f:
-                    st.download_button("📥 Download Fun Worksheet", data=f, file_name="K1_Worksheet_Coloring.pdf", mime="application/pdf", use_container_width=True)
+                    st.download_button("📥 Download Fun Worksheet", data=f, file_name=f"{level[:2]}_Worksheet.pdf", mime="application/pdf", use_container_width=True)
             if include_ans and "answer" in files:
                 with col2:
                     with open(files["answer"], "rb") as f:
-                        st.download_button("📥 Download Answer Key", data=f, file_name="Answer_Key_Coloring.pdf", mime="application/pdf", use_container_width=True)
+                        st.download_button("📥 Download Answer Key", data=f, file_name=f"{level[:2]}_Answer_Key.pdf", mime="application/pdf", use_container_width=True)
             
             st.markdown("---")
             col_preview1, col_preview2 = st.columns(2)
