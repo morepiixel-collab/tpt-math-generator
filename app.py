@@ -221,7 +221,7 @@ def generate_questions_data(topic, num_questions):
     return questions
 
 # ==========================================
-# PART 3: Premium Grid Render Layout Engine
+# PART 3: Premium Grid Render Layout Engine (Fixed Overlapping)
 # ==========================================
 def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_answer_key=False):
     # ส่งตัวแปร store_name เข้าไปในคลาสเพื่อแสดงที่ Footer มุมขวาล่าง
@@ -303,7 +303,7 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
         
         ans_color = (220, 50, 50) if is_answer_key else (0, 0, 0)
         
-        # --- เริ่มเรนเดอร์ดีไซน์ตามเงื่อนไขรายหัวข้อ ---
+        # --- เริ่มเรนเดอร์ดีไซน์ตามเงื่อนไขรายหัวข้อ (แก้ไขการชนกันของข้อความทั้งหมดแล้ว) ---
         if "Teen Numbers" in topic:
             pdf.set_draw_color(200, 200, 200)
             pdf.set_line_width(0.2)
@@ -317,76 +317,68 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
             pdf.cell(75, 6, f"[ Place {theme} Clipart x{q.get('num', '')} Here ]", align="C")
             
             pdf.set_text_color(0, 0, 0)
-            pdf.set_font("ComicNeue", "B", 26)
-            pdf.set_xy(x_start + 95, y_start + (box_h / 2) - 8)
+            pdf.set_font("ComicNeue", "B", 20)
+            pdf.set_xy(x_start + 95, y_start + (box_h / 2) - 6)
             if is_answer_key:
                 pdf.set_text_color(*ans_color)
-                pdf.cell(75, 14, f"Count = {q.get('num', '')}", align="C")
+                pdf.cell(75, 12, f"Count = {q.get('num', '')}", align="C")
             else:
-                pdf.cell(75, 14, "Count = [      ]", align="C")
+                pdf.cell(75, 12, "Count = [      ]", align="C")
 
         elif "What Comes Next" in topic:
-            pdf.set_font("ComicNeue", "B", 24)
+            pdf.set_font("ComicNeue", "B", 18)
             pdf.set_xy(x_start + 5, y_start + 12)
             seq = q.get('seq', [0,0,0])
-            seq_text = f"{seq[0]},  {seq[1]},  {seq[2]},  "
-            pdf.cell(58, 12, seq_text, align="R")
-            
             if is_answer_key:
+                full_str = f"{seq[0]},  {seq[1]},  {seq[2]},  {q.get('ans', '')}"
                 pdf.set_text_color(*ans_color)
-                pdf.cell(20, 12, str(q.get('ans', '')), align="L")
+                pdf.cell(78, 12, full_str, align="C")
             else:
-                pdf.set_draw_color(0, 0, 0)
-                pdf.set_line_width(0.6)
-                pdf.line(pdf.get_x() + 1, y_start + 22, pdf.get_x() + 14, y_start + 22)
+                full_str = f"{seq[0]},  {seq[1]},  {seq[2]},  ____"
+                pdf.cell(78, 12, full_str, align="C")
 
         elif "Order Numbers" in topic:
-            pdf.set_font("ComicNeue", "B", 24)
-            pdf.set_xy(x_start + 15, y_start + 10)
-            num_str = "   .   ".join(map(str, q.get('nums', [])))
-            pdf.cell(70, 12, f"Mix:  {num_str}", align="L")
+            # ✨ ปรับปรุงจุดนี้: แยกเลเอาต์โจทย์ไว้บรรทัดบน กล่องตอบไว้บรรทัดล่าง จัดกึ่งกลางสวยงาม ไม่ชนกันเด็ดขาด
+            pdf.set_font("ComicNeue", "B", 16)
+            pdf.set_xy(x_start + 10, y_start + 6)
+            num_str = "   ,   ".join(map(str, q.get('nums', [])))
+            pdf.cell(162, 8, f"Mix:  {num_str}", align="C")
             
-            pdf.set_xy(x_start + 95, y_start + 11)
+            pdf.set_xy(x_start + 10, y_start + 18)
             if is_answer_key:
-                pdf.set_font("ComicNeue", "B", 20)
+                pdf.set_font("ComicNeue", "B", 16)
                 pdf.set_text_color(*ans_color)
                 ans_str = "  <  ".join(map(str, q.get('sorted', [])))
-                pdf.cell(75, 10, f"Ans: {ans_str}", align="C")
+                pdf.cell(162, 8, f"Ans: {ans_str}", align="C")
             else:
-                pdf.set_font("ComicNeue", "B", 22)
-                pdf.cell(75, 10, "[    ] < [    ] < [    ] < [    ]", align="C")
+                pdf.set_font("ComicNeue", "B", 14)
+                pdf.cell(162, 8, "[      ]  <  [      ]  <  [      ]  <  [      ]", align="C")
 
         elif "Write Number's Name" in topic:
-            pdf.set_font("ComicNeue", "B", 24)
-            pdf.set_xy(x_start + 5, y_start + 11)
-            pdf.cell(28, 12, f"{q.get('num', '')}  = ", align="R")
-            
+            pdf.set_font("ComicNeue", "B", 18)
+            pdf.set_xy(x_start + 5, y_start + 12)
+            num = q.get('num', '')
             if is_answer_key:
-                pdf.set_font("ComicNeue", "B", 18)
+                pdf.cell(30, 12, f"{num}  =  ", align="R")
                 pdf.set_text_color(*ans_color)
-                pdf.cell(50, 12, str(q.get('word', '')).upper(), align="L")
+                pdf.cell(48, 12, str(q.get('word', '')).upper(), align="L")
             else:
-                pdf.set_font("ComicNeue", "", 15)
-                pdf.cell(50, 12, "__________________", align="L")
+                pdf.cell(30, 12, f"{num}  =  ", align="R")
+                pdf.cell(48, 12, "___________", align="L")
 
         elif "Missing Addends" in topic:
-            pdf.set_font("ComicNeue", "B", 24)
-            pdf.set_xy(x_start + 5, y_start + 11)
-            pdf.cell(22, 12, f"{q.get('a', '')}  +", align="R")
-            
-            box_x = pdf.get_x() + 2
-            pdf.set_draw_color(0, 0, 0)
-            pdf.set_line_width(0.5)
-            pdf.rect(box_x, y_start + 11, 13, 13)
-            
+            pdf.set_font("ComicNeue", "B", 18)
+            pdf.set_xy(x_start + 5, y_start + 12)
             if is_answer_key:
-                pdf.set_xy(box_x, y_start + 11)
+                pdf.cell(25, 12, f"{q.get('a', '')}  +", align="R")
                 pdf.set_text_color(*ans_color)
-                pdf.cell(13, 13, str(q.get('b', '')), align="C")
+                pdf.cell(15, 12, f" {q.get('b', '')} ", align="C")
                 pdf.set_text_color(0, 0, 0)
-            
-            pdf.set_xy(box_x + 16, y_start + 11)
-            pdf.cell(30, 12, f"=  {q.get('ans', '')}", align="L")
+                pdf.cell(33, 12, f"=  {q.get('ans', '')}", align="L")
+            else:
+                pdf.cell(25, 12, f"{q.get('a', '')}  +", align="R")
+                pdf.cell(15, 12, "[    ]", align="C")
+                pdf.cell(33, 12, f"=  {q.get('ans', '')}", align="L")
 
         elif "Picture Subtraction" in topic:
             pdf.set_draw_color(200, 200, 200)
@@ -401,7 +393,7 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
             pdf.cell(152, 6, f"[ Drop {q.get('a', '')} copies of {theme} clipart here. Students cross out {q.get('b', '')} ]", align="C")
             
             pdf.set_text_color(0, 0, 0)
-            pdf.set_font("ComicNeue", "B", 26)
+            pdf.set_font("ComicNeue", "B", 22)
             pdf.set_xy(x_start + 15, y_start + 34)
             if is_answer_key:
                 pdf.set_text_color(*ans_color)
@@ -410,7 +402,7 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.cell(152, 14, f"{q.get('a', '')}   -   {q.get('b', '')}   =   ______", align="C")
 
         elif "Color by Answer" in topic:
-            pdf.set_font("ComicNeue", "B", 26)
+            pdf.set_font("ComicNeue", "B", 22)
             pdf.set_xy(x_start + 15, y_start + 14)
             pdf.cell(65, 14, f"{q.get('a', '')}  +  {q.get('b', '')}  =  ?", align="L")
             
@@ -435,7 +427,7 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.cell(65, 6, f"If Answer is {q.get('ans', '')}  ->  Color it {q.get('color', '')}", align="L")
 
         elif "How Many Sides" in topic:
-            pdf.set_font("ComicNeue", "B", 24)
+            pdf.set_font("ComicNeue", "B", 20)
             pdf.set_xy(x_start + 15, y_start + 16)
             pdf.cell(85, 12, f"Shape:  {q.get('shape', '')}", align="L")
             
@@ -465,21 +457,21 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.set_text_color(*ans_color)
                 pdf.cell(75, 8, f"{q.get('tens', '')} Tens and {q.get('ones', '')} Ones", align="C")
                 pdf.set_xy(x_start + 95, y_start + 26)
-                pdf.set_font("ComicNeue", "B", 26)
+                pdf.set_font("ComicNeue", "B", 22)
                 pdf.cell(75, 12, f"=   {q.get('total', '')}", align="C")
             else:
                 pdf.cell(75, 8, "____ Tens and ____ Ones", align="C")
                 pdf.set_xy(x_start + 95, y_start + 26)
-                pdf.set_font("ComicNeue", "B", 26)
+                pdf.set_font("ComicNeue", "B", 22)
                 pdf.cell(75, 12, "=   [      ]", align="C")
 
         elif "True or False" in topic:
-            pdf.set_font("ComicNeue", "B", 24)
+            pdf.set_font("ComicNeue", "B", 18)
             pdf.set_xy(x_start + 4, y_start + 8)
             pdf.cell(80, 12, f"{q.get('a', '')}  +  {q.get('b', '')}  =  {q.get('eq_ans', '')}", align="C")
             
-            pdf.set_font("ComicNeue", "B", 14)
-            pdf.set_xy(x_start + 4, y_start + 23)
+            pdf.set_font("ComicNeue", "B", 12)
+            pdf.set_xy(x_start + 4, y_start + 22)
             if is_answer_key:
                 pdf.set_text_color(*ans_color)
                 choice_text = "[ TRUE ]      FALSE" if q.get('is_true') else "TRUE      [ FALSE ]"
@@ -489,42 +481,42 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.cell(80, 8, "TRUE   /   FALSE", align="C")
 
         elif "Which is More" in topic:
-            pdf.set_font("ComicNeue", "B", 26)
-            pdf.set_xy(x_start + 5, y_start + 12)
-            
+            pdf.set_font("ComicNeue", "B", 20)
+            pdf.set_xy(x_start + 4, y_start + 12)
             if is_answer_key:
                 if q.get('a') == q.get('more'):
                     pdf.set_text_color(*ans_color)
-                    pdf.cell(39, 12, f"({q.get('a', '')})", align="C")
+                    pdf.cell(40, 12, f"({q.get('a', '')})", align="C")
                     pdf.set_text_color(0, 0, 0)
-                    pdf.cell(39, 12, str(q.get('b', '')), align="C")
+                    pdf.cell(40, 12, str(q.get('b', '')), align="C")
                 else:
-                    pdf.cell(39, 12, str(q.get('a', '')), align="C")
+                    pdf.set_text_color(0, 0, 0)
+                    pdf.cell(40, 12, str(q.get('a', '')), align="C")
                     pdf.set_text_color(*ans_color)
-                    pdf.cell(39, 12, f"({q.get('b', '')})", align="C")
+                    pdf.cell(40, 12, f"({q.get('b', '')})", align="C")
             else:
-                pdf.cell(39, 12, str(q.get('a', '')), align="C")
-                pdf.cell(39, 12, str(q.get('b', '')), align="C")
+                pdf.cell(40, 12, str(q.get('a', '')), align="C")
+                pdf.cell(40, 12, str(q.get('b', '')), align="C")
 
         elif "Count by 5's" in topic:
-            pdf.set_font("ComicNeue", "B", 20)
-            pdf.set_xy(x_start + 4, y_start + 12)
+            # ✨ ปรับปรุงจุดนี้: ให้ข้อความเชื่อมกันเป็นสตริงเดียว จัดกลาง ไม่ใช้มัลติเซลล์ลดความเสี่ยงตัวหนังสือขี่กัน
+            pdf.set_font("ComicNeue", "B", 18)
+            pdf.set_xy(x_start + 5, y_start + 12)
             seq = q.get('seq', [0,0,0,0])
-            pdf.cell(24, 12, f"{seq[0]},  ", align="R")
-            
             if is_answer_key:
                 pdf.set_text_color(*ans_color)
-                pdf.cell(56, 12, f"{seq[1]},   {seq[2]},   {seq[3]}", align="L")
+                full_seq = f"{seq[0]},  {seq[1]},  {seq[2]},  {seq[3]}"
+                pdf.cell(78, 12, full_seq, align="C")
             else:
-                pdf.set_font("ComicNeue", "", 18)
-                pdf.cell(56, 12, "__ ,   __ ,   __", align="L")
+                full_seq = f"{seq[0]},  ____,  ____,  ____"
+                pdf.cell(78, 12, full_seq, align="C")
 
         elif "Roll It On" in topic:
-            pdf.set_font("ComicNeue", "B", 16)
+            pdf.set_font("ComicNeue", "B", 14)
             pdf.set_xy(x_start + 4, y_start + 8)
             pdf.cell(80, 8, f"Dice:  [{q.get('d1', '')}]  +  [{q.get('d2', '')}]", align="C")
             
-            pdf.set_font("ComicNeue", "B", 22)
+            pdf.set_font("ComicNeue", "B", 18)
             pdf.set_xy(x_start + 4, y_start + 20)
             if is_answer_key:
                 pdf.set_text_color(*ans_color)
