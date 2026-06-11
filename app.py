@@ -8,7 +8,7 @@ import fitz  # PyMuPDF
 from PIL import Image
 
 # ==========================================
-# 0. Download Cute Google Fonts for Kids Worksheets
+# PART 1: Setup & PDF Template
 # ==========================================
 def download_cute_fonts():
     fonts = {
@@ -20,13 +20,10 @@ def download_cute_fonts():
             try:
                 urllib.request.urlretrieve(url, name)
             except Exception as e:
-                st.error(f"Failed to download font {name}: {e}")
+                pass
 
 download_cute_fonts()
 
-# ==========================================
-# 1. Premium PDF Class for TpT (Double Border)
-# ==========================================
 class WorksheetPDF(FPDF):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -36,18 +33,19 @@ class WorksheetPDF(FPDF):
             self.add_font("ComicNeue", style="B", fname="ComicNeue-Bold.ttf")
 
     def header(self):
+        # กรอบแบบ Double Border
         self.set_line_width(0.8)
         self.rect(10, 10, 190, 277)
         self.set_line_width(0.2)
         self.rect(12, 12, 186, 273)
         self.set_line_width(0.2)
         
+        # หัวกระดาษ Name, Date, Score
         self.set_font("ComicNeue", "B", 14)
         self.set_y(20)
         self.set_x(15)
         self.cell(85, 10, "Name: ______________________", border=0, align="L")
         self.cell(85, 10, "Date: ______________", border=0, align="R", new_x="LMARGIN", new_y="NEXT")
-        
         self.set_y(28)
         self.set_x(15)
         self.cell(170, 10, "Score: _______ / _______", border=0, align="R", new_x="LMARGIN", new_y="NEXT")
@@ -61,154 +59,166 @@ class WorksheetPDF(FPDF):
         self.set_text_color(0, 0, 0)
 
 # ==========================================
-# 2. Logic: สร้างข้อมูลโจทย์ (ป้องกันการซ้ำ)
+# PART 2: Logic - Generate Data based on PDFs
 # ==========================================
 def generate_questions_data(topic, num_q):
-    """ฟังก์ชันนี้ทำหน้าที่สร้างและจำโจทย์ เพื่อไม่ให้ซ้ำกัน และให้หน้าเฉลยมีเลขตรงกันเป๊ะ"""
     questions = []
-    used_keys = set() # ตัวเก็บข้อมูลกันซ้ำ
+    used_keys = set()
     
     for _ in range(num_q):
         q_data = {}
-        # พยายามสุ่มใหม่ถ้าซ้ำ (สูงสุด 30 รอบต่อข้อ ป้องกัน Infinite Loop)
-        for _ in range(30):
-            if topic == "Counting 1 to 10" or topic == "Number Tracing (1-10)":
-                num = random.randint(1, 10)
-                key = f"n_{num}"
+        for _ in range(30): # ป้องกันลูปค้างเวลาสุ่มเลข
+            # 1. จาก PDF: "I Can Count Teen Numbers" / "TEEN Numbers"
+            if topic == "1. Teen Numbers (11-20)":
+                num = random.randint(11, 20)
+                key = f"teen_{num}"
                 q_data = {'num': num}
             
-            elif topic == "Teen Numbers (11-20)":
-                num = random.randint(11, 20)
-                key = f"n_{num}"
-                q_data = {'num': num}
-                
-            elif topic == "What Comes Next?":
+            # 2. จาก PDF: "What Comes Next?"
+            elif topic == "2. What Comes Next?":
                 start = random.randint(1, 15)
-                key = f"seq_{start}"
+                key = f"next_{start}"
                 q_data = {'start': start}
                 
-            elif topic == "Addition to 10":
-                a, b = random.randint(1, 5), random.randint(1, 5)
-                key = f"add_{a}_{b}"
-                q_data = {'a': a, 'b': b, 'op': '+', 'ans': a + b}
+            # 3. จาก PDF: "I Can Order Numbers (Smallest to Largest)"
+            elif topic == "3. Order Numbers (Smallest to Largest)":
+                nums = random.sample(range(1, 25), 4)
+                key = f"order_{'_'.join(map(str, nums))}"
+                q_data = {'nums': nums, 'sorted': sorted(nums)}
                 
-            elif topic == "Picture Subtraction":
+            # 4. จาก PDF: "Write Your Number's Name"
+            elif topic == "4. Write Number's Name":
+                num_words = {11:"eleven", 12:"twelve", 13:"thirteen", 14:"fourteen", 15:"fifteen", 16:"sixteen", 17:"seventeen", 18:"eighteen", 19:"nineteen", 20:"twenty"}
+                num = random.choice(list(num_words.keys()))
+                key = f"name_{num}"
+                q_data = {'num': num, 'word': num_words[num]}
+
+            # 5. จาก PDF: "Missing Addends" (4 + _ = 6)
+            elif topic == "5. Missing Addends":
+                ans = random.randint(5, 12)
+                a = random.randint(1, ans - 1)
+                b = ans - a
+                key = f"miss_{a}_{ans}"
+                q_data = {'a': a, 'b': b, 'ans': ans}
+
+            # 6. จาก PDF: "Cookie Picture Subtraction"
+            elif topic == "6. Picture Subtraction":
                 a = random.randint(5, 10)
                 b = random.randint(1, a - 1)
                 key = f"sub_{a}_{b}"
-                q_data = {'a': a, 'b': b, 'op': '-', 'ans': a - b}
-                
-            elif topic == "Missing Addends (Up to 10)":
-                total = random.randint(4, 10)
-                a = random.randint(1, total - 1)
-                key = f"miss_{a}_{total}"
-                q_data = {'a': a, 'b': total - a, 'total': total}
-                
-            elif topic == "2D & 3D Shapes (Sides)":
-                shapes = [("Triangle", "3"), ("Square", "4"), ("Rectangle", "4"), ("Pentagon", "5"), ("Hexagon", "6")]
-                shape, sides = random.choice(shapes)
-                key = f"shp_{shape}"
-                q_data = {'shape': shape, 'sides': sides}
-                
-            elif topic == "Place Value (Tens and Ones)":
-                tens, ones = random.choice([1, 2, 3]), random.randint(1, 9)
-                key = f"pv_{tens}_{ones}"
-                q_data = {'tens': tens, 'ones': ones, 'total': (tens * 10) + ones}
-                
-            elif topic == "Addition & Subtraction to 50":
-                is_add = random.choice([True, False])
-                a, b = (random.randint(10, 30), random.randint(1, 20)) if is_add else (random.randint(20, 50), random.randint(1, 19))
-                op, ans = ("+", a + b) if is_add else ("-", a - b)
-                key = f"math50_{a}_{op}_{b}"
-                q_data = {'a': a, 'b': b, 'op': op, 'ans': ans}
-                
-            elif topic == "Skip Counting (by 2s, 5s, 10s)":
-                step = random.choice([2, 5, 10])
-                start = step * random.randint(1, 4)
-                key = f"skip_{start}_{step}"
-                q_data = {'start': start, 'step': step}
-                
-            elif topic == "True or False Equations":
-                a, b = random.randint(5, 20), random.randint(5, 20)
-                is_true = random.choice([True, False])
-                disp_ans = (a + b) if is_true else (a + b + random.choice([-2, -1, 1, 2]))
-                key = f"tf_{a}_{b}_{disp_ans}"
-                q_data = {'a': a, 'b': b, 'disp_ans': disp_ans, 'is_true': is_true}
-                
-            elif topic == "Number Words (Names)":
-                words_dict = {11: "eleven", 14: "fourteen", 15: "fifteen", 20: "twenty", 23: "twenty-three", 35: "thirty-five", 42: "forty-two", 50: "fifty"}
-                val = random.choice(list(words_dict.keys()))
-                key = f"word_{val}"
-                q_data = {'val': val, 'word': words_dict[val]}
+                q_data = {'a': a, 'b': b, 'ans': a - b}
 
-            # ตรวจสอบว่าซ้ำหรือไม่ ถ้าไม่ซ้ำให้บันทึกแล้วเบรคออกลูป
+            # 7. จาก PDF: "Color by Answer"
+            elif topic == "7. Color by Answer":
+                a = random.randint(1, 5)
+                b = random.randint(1, 5)
+                colors = ["Red", "Blue", "Green", "Yellow", "Pink"]
+                ans_color = random.choice(colors)
+                key = f"cba_{a}_{b}"
+                q_data = {'a': a, 'b': b, 'ans': a+b, 'color': ans_color}
+
+            # 8. จาก PDF: "How Many Sides?" (2D/3D Shapes)
+            elif topic == "8. How Many Sides?":
+                shapes = [("Triangle", 3), ("Square", 4), ("Rectangle", 4), ("Pentagon", 5), ("Hexagon", 6)]
+                shape, sides = random.choice(shapes)
+                key = f"shape_{shape}"
+                q_data = {'shape': shape, 'sides': sides}
+
+            # 9. จาก PDF: "Tens and Ones Counting Blocks"
+            elif topic == "9. Tens and Ones":
+                t = random.randint(1, 3)
+                o = random.randint(1, 9)
+                key = f"tens_{t}_{o}"
+                q_data = {'tens': t, 'ones': o, 'total': (t*10)+o}
+
+            # 10. จาก PDF: "True or False"
+            elif topic == "10. True or False":
+                a, b = random.randint(1, 10), random.randint(1, 10)
+                is_true = random.choice([True, False])
+                eq_ans = (a + b) if is_true else (a + b + random.choice([-2, 2, 1]))
+                key = f"tf_{a}_{b}_{eq_ans}"
+                q_data = {'a': a, 'b': b, 'eq_ans': eq_ans, 'is_true': is_true}
+
+            # 11. จาก PDF: "Which is More?" (Gumball Match)
+            elif topic == "11. Which is More?":
+                a, b = random.sample(range(5, 30), 2)
+                key = f"more_{a}_{b}"
+                q_data = {'a': a, 'b': b, 'more': max(a, b)}
+
+            # 12. จาก PDF: "Count by 5's"
+            elif topic == "12. Count by 5's":
+                start = random.randint(1, 5) * 5
+                key = f"by5_{start}"
+                q_data = {'start': start, 'seq': [start, start+5, start+10, start+15]}
+
+            # 13. จาก PDF: "Roll It On"
+            elif topic == "13. Roll It On":
+                dice1 = random.randint(1, 6)
+                dice2 = random.randint(1, 6)
+                key = f"roll_{dice1}_{dice2}"
+                q_data = {'d1': dice1, 'd2': dice2, 'ans': dice1+dice2}
+
+            # ป้องกันข้อซ้ำในหน้าเดียวกัน
             if key not in used_keys:
                 used_keys.add(key)
                 break
-                
         questions.append(q_data)
     return questions
 
 # ==========================================
-# 3. Render: นำโจทย์ที่สร้างไว้วาดลง PDF
+# PART 3: Render Worksheet Layout
 # ==========================================
-def render_pdf_worksheet(level, topic, theme, questions_data, is_answer_key=False):
+def render_pdf_worksheet(topic, theme, questions_data, is_answer_key=False):
     pdf = WorksheetPDF(orientation="P", unit="mm", format="A4")
     pdf.add_page()
-    pdf.set_auto_page_break(auto=False) 
+    pdf.set_auto_page_break(auto=False)
     
     # Title
-    pdf.set_font("ComicNeue", "B", 22)
-    title_text = f"{topic}"
+    pdf.set_font("ComicNeue", "B", 20)
+    title_text = topic.split(". ")[1] # ตัดตัวเลขลำดับหัวข้อข้างหน้าออก
     if is_answer_key:
         pdf.set_text_color(220, 50, 50)
         title_text += " (ANSWER KEY)"
-    
     pdf.set_y(38)
     pdf.cell(0, 10, title_text, align="C", new_x="LMARGIN", new_y="NEXT")
     pdf.set_text_color(0, 0, 0)
     pdf.ln(2)
 
-    # Directions
-    pdf.set_font("ComicNeue", "B", 13)
+    # Directions (ปรับข้อความคำสั่งตามหน้าจริงใน PDF ของคุณ)
+    pdf.set_font("ComicNeue", "B", 12)
     pdf.set_x(15)
     directions_map = {
-        "Counting 1 to 10": f"Directions: Count the {theme.lower()} and write the number in the box.",
-        "Number Tracing (1-10)": "Directions: Trace the numbers. Then draw or color the items.",
-        "Teen Numbers (11-20)": f"Directions: Count the {theme.lower()} and write the correct teen number.",
-        "What Comes Next?": "Directions: Write the missing number that comes next in the pattern.",
-        "Addition to 10": f"Directions: Add the {theme.lower()} together and write the sum.",
-        "Picture Subtraction": f"Directions: Look at the pictures. Cross some out to solve the subtraction.",
-        "Missing Addends (Up to 10)": "Directions: Find the missing addend to make the equation true.",
-        "2D & 3D Shapes (Sides)": "Directions: Count and write how many sides each shape has.",
-        "Place Value (Tens and Ones)": f"Directions: Count the tens and ones blocks, then write the total.",
-        "Addition & Subtraction to 50": f"Directions: Solve the math problems carefully. Show your work!",
-        "Skip Counting (by 2s, 5s, 10s)": "Directions: Fill in the missing numbers by skip counting.",
-        "True or False Equations": "Directions: Check if the equation is right. Circle TRUE or FALSE.",
-        "Number Words (Names)": "Directions: Read the number word carefully and write the digit."
+        "1. Teen Numbers (11-20)": f"Directions: Count the {theme.lower()} items and write the correct teen number in the box.",
+        "2. What Comes Next?": "Directions: Write the missing number that comes next in the number pattern.",
+        "3. Order Numbers (Smallest to Largest)": "Directions: Write the given numbers in order from the smallest to the largest.",
+        "4. Write Number's Name": "Directions: Read the number and write its name in words on the line.",
+        "5. Missing Addends": "Directions: Find and write the missing number to make the addition equation true.",
+        "6. Picture Subtraction": f"Directions: Look at the {theme.lower()} pictures. Cross out the items to solve the subtraction question.",
+        "7. Color by Answer": "Directions: Solve the addition equation and use the answer key below to color the space.",
+        "8. How Many Sides?": "Directions: Look at the 2D/3D shapes. Count and write how many sides each shape has.",
+        "9. Tens and Ones": "Directions: Count the tens blocks and ones blocks, then write the total number.",
+        "10. True or False": "Directions: Determine if the equation is true or false. Circle the correct answer.",
+        "11. Which is More?": "Directions: Look at the two numbers and circle the number that is the largest.",
+        "12. Count by 5's": "Directions: Fill in the missing numbers to count forward by 5s correctly.",
+        "13. Roll It On": "Directions: Roll the dice, write down the numbers, and count on to find the total sum."
     }
-    pdf.multi_cell(180, 6, directions_map.get(topic, "Directions: Solve the math problems on this worksheet."))
+    pdf.multi_cell(180, 6, directions_map.get(topic, "Directions: Solve the math problems on this worksheet carefully."))
     pdf.ln(5)
 
-    q_heights = {
-        "Counting 1 to 10": 45, "Number Tracing (1-10)": 35, "Teen Numbers (11-20)": 45,
-        "What Comes Next?": 25, "Addition to 10": 45, "Picture Subtraction": 45,
-        "Missing Addends (Up to 10)": 25, "2D & 3D Shapes (Sides)": 40,
-        "Place Value (Tens and Ones)": 50, "Addition & Subtraction to 50": 30,
-        "Skip Counting (by 2s, 5s, 10s)": 25, "True or False Equations": 25,
-        "Number Words (Names)": 25
-    }
-    box_h = q_heights.get(topic, 30)
+    # กำหนดความสูงของกล่องข้อตามความเหมาะสมของแต่ละหัวข้อกิจกรรม
+    box_h = 35 
+    if "Order Numbers" in topic or "Which is More" in topic or "What Comes Next" in topic: box_h = 25
+    if "Count by 5's" in topic or "True or False" in topic or "Write Number's Name" in topic: box_h = 25
+    if "Picture Subtraction" in topic or "Color by Answer" in topic or "Tens and Ones" in topic: box_h = 45
 
-    # วาดกล่องทีละข้อ จากชุดข้อมูลที่สุ่มไว้
+    # ลูปวาดกล่องทีละข้อจากชุดข้อมูลที่สุ่มไว้
     for i, q in enumerate(questions_data, start=1):
         if pdf.get_y() + box_h > 265:
             pdf.add_page()
             pdf.set_y(40)
             
         y_start = pdf.get_y()
-        
-        pdf.set_draw_color(180, 180, 180)
+        pdf.set_draw_color(200, 200, 200)
         pdf.set_line_width(0.5)
         pdf.rect(14, y_start, 182, box_h, style="D")
         pdf.set_draw_color(0, 0, 0)
@@ -216,236 +226,276 @@ def render_pdf_worksheet(level, topic, theme, questions_data, is_answer_key=Fals
         pdf.set_font("ComicNeue", "B", 16)
         pdf.set_xy(16, y_start + 4)
         pdf.cell(10, 8, f"{i}.", align="L")
-        pdf.set_font("ComicNeue", "", 16)
         
-        # --- วาดข้อความตาม Topic ---
-        if topic in ["Counting 1 to 10", "Teen Numbers (11-20)"]:
-            pdf.set_font("ComicNeue", "B", 18)
+        pdf.set_font("ComicNeue", "B", 18)
+        ans_color = (220, 50, 50) if is_answer_key else (0, 0, 0)
+        
+        # 1. Teen Numbers Layout
+        if "Teen Numbers" in topic:
             pdf.set_xy(26, y_start + box_h - 12)
-            ans_str = f"Answer:   {q['num']}" if is_answer_key else "Answer:   _______"
-            if is_answer_key: pdf.set_text_color(220, 50, 50)
-            pdf.cell(160, 8, ans_str, align="C")
+            if is_answer_key: pdf.set_text_color(*ans_color)
+            pdf.cell(160, 8, f"Answer: {q['num']}" if is_answer_key else "Answer: _______", align="C")
+            pdf.set_text_color(0, 0, 0)
+            
+        # 2. What Comes Next Layout
+        elif "What Comes Next" in topic:
+            pdf.set_xy(26, y_start + 8)
+            seq_text = f"{q['start']},  {q['start']+1},  {q['start']+2},  "
+            if is_answer_key:
+                pdf.cell(80, 10, seq_text, align="R")
+                pdf.set_text_color(*ans_color)
+                pdf.cell(40, 10, str(q['start']+3), align="L")
+                pdf.set_text_color(0, 0, 0)
+            else:
+                pdf.cell(160, 10, seq_text + "______", align="C")
+
+        # 3. Order Numbers Layout
+        elif "Order Numbers" in topic:
+            pdf.set_xy(26, y_start + 8)
+            num_str = "   ".join(map(str, q['nums']))
+            pdf.cell(60, 10, f"Sort:  {num_str}", align="L")
+            if is_answer_key:
+                pdf.set_text_color(*ans_color)
+                pdf.cell(100, 10, f"Answer:  {'  <  '.join(map(str, q['sorted']))}", align="R")
+                pdf.set_text_color(0, 0, 0)
+            else:
+                pdf.cell(100, 10, "____ < ____ < ____ < ____", align="R")
+
+        # 4. Write Name Layout
+        elif "Write Number's Name" in topic:
+            pdf.set_xy(26, y_start + 8)
+            pdf.cell(80, 10, f"{q['num']}  =  ", align="R")
+            if is_answer_key: pdf.set_text_color(*ans_color)
+            pdf.cell(80, 10, f"{q['word']}" if is_answer_key else "________________", align="L")
             pdf.set_text_color(0, 0, 0)
 
-        elif topic == "Number Tracing (1-10)":
-            pdf.set_font("ComicNeue", "B", 22)
+        # 5. Missing Addends Layout
+        elif "Missing Addends" in topic:
             pdf.set_xy(26, y_start + 12)
-            pdf.cell(60, 10, f"Trace:    {q['num']}    {q['num']}    {q['num']}", align="L")
-
-        elif topic == "What Comes Next?":
-            start = q['start']
-            seq = f"{start},   {start+1},   {start+2},   "
-            pdf.set_font("ComicNeue", "B", 20)
-            pdf.set_xy(26, y_start + 8)
-            if is_answer_key:
-                pdf.cell(80, 10, seq, align="R")
-                pdf.set_text_color(220, 50, 50)
-                pdf.cell(40, 10, f"{start+3}", align="L")
-                pdf.set_text_color(0, 0, 0)
-            else:
-                pdf.cell(160, 10, f"{seq}  ________", align="C")
-
-        elif topic in ["Addition to 10", "Picture Subtraction"]:
-            pdf.set_font("ComicNeue", "B", 22)
-            pdf.set_xy(26, y_start + box_h - 15)
-            if is_answer_key:
-                pdf.cell(160, 10, f"{q['a']}   {q['op']}   {q['b']}   =   ", align="C")
-                pdf.set_text_color(220, 50, 50)
-                pdf.set_xy(115, y_start + box_h - 15) 
-                pdf.cell(30, 10, f"{q['ans']}", align="L")
-                pdf.set_text_color(0, 0, 0)
-            else:
-                pdf.cell(160, 10, f"{q['a']}   {q['op']}   {q['b']}   =   ______", align="C")
-
-        elif topic == "Missing Addends (Up to 10)":
-            pdf.set_font("ComicNeue", "B", 20)
-            pdf.set_xy(26, y_start + 8)
             if is_answer_key:
                 pdf.cell(60, 10, f"{q['a']}   +   ", align="R")
-                pdf.set_text_color(220, 50, 50)
-                pdf.cell(20, 10, f"{q['b']}", align="C")
+                pdf.set_text_color(*ans_color)
+                pdf.cell(20, 10, str(q['b']), align="C")
                 pdf.set_text_color(0, 0, 0)
-                pdf.cell(40, 10, f"   =   {q['total']}", align="L")
+                pdf.cell(40, 10, f"   =   {q['ans']}", align="L")
             else:
-                pdf.cell(160, 10, f"{q['a']}   +   ________   =   {q['total']}", align="C")
+                pdf.cell(160, 10, f"{q['a']}   +   ________   =   {q['ans']}", align="C")
 
-        elif topic == "2D & 3D Shapes (Sides)":
-            pdf.set_font("ComicNeue", "B", 18)
-            pdf.set_xy(26, y_start + 6)
-            pdf.cell(60, 10, f"Shape: {q['shape']}", align="L")
-            pdf.set_xy(26, y_start + box_h - 14)
-            if is_answer_key:
-                pdf.cell(150, 10, f"Sides: ", align="R")
-                pdf.set_text_color(220, 50, 50)
-                pdf.set_xy(175, y_start + box_h - 14)
-                pdf.cell(20, 10, f"{q['sides']}", align="L")
-                pdf.set_text_color(0, 0, 0)
-            else:
-                pdf.cell(160, 10, f"Sides: ______", align="R")
-
-        elif topic == "Place Value (Tens and Ones)":
-            pdf.set_font("ComicNeue", "B", 18)
+        # 6. Picture Subtraction Layout
+        elif "Picture Subtraction" in topic:
             pdf.set_xy(26, y_start + box_h - 15)
             if is_answer_key:
-                pdf.set_text_color(220, 50, 50)
+                pdf.cell(160, 10, f"{q['a']}   -   {q['b']}   =   ", align="C")
+                pdf.set_text_color(*ans_color)
+                pdf.set_xy(115, y_start + box_h - 15)
+                pdf.cell(20, 10, str(q['ans']), align="L")
+                pdf.set_text_color(0, 0, 0)
+            else:
+                pdf.cell(160, 10, f"{q['a']}   -   {q['b']}   =   ______", align="C")
+
+        # 7. Color by Answer Layout
+        elif "Color by Answer" in topic:
+            pdf.set_xy(26, y_start + 5)
+            pdf.cell(160, 10, f"Solve: {q['a']} + {q['b']} = ?", align="C")
+            pdf.set_xy(26, y_start + box_h - 15)
+            if is_answer_key:
+                pdf.set_text_color(*ans_color)
+                pdf.cell(160, 10, f"Color the picture: {q['color']} (Ans: {q['ans']})", align="C")
+                pdf.set_text_color(0, 0, 0)
+            else:
+                pdf.cell(160, 10, f"If Answer is {q['ans']}, color it {q['color']}", align="C")
+
+        # 8. How Many Sides Layout
+        elif "How Many Sides" in topic:
+            pdf.set_xy(26, y_start + 12)
+            pdf.cell(80, 10, f"Shape: {q['shape']}", align="L")
+            if is_answer_key:
+                pdf.set_text_color(*ans_color)
+                pdf.cell(80, 10, f"Sides: {q['sides']}", align="R")
+                pdf.set_text_color(0, 0, 0)
+            else:
+                pdf.cell(80, 10, "Sides: _____", align="R")
+
+        # 9. Tens and Ones Layout
+        elif "Tens and Ones" in topic:
+            pdf.set_xy(26, y_start + box_h - 15)
+            if is_answer_key:
+                pdf.set_text_color(*ans_color)
                 pdf.cell(160, 10, f"{q['tens']} Tens and {q['ones']} Ones = {q['total']}", align="C")
                 pdf.set_text_color(0, 0, 0)
             else:
                 pdf.cell(160, 10, "______ Tens and ______ Ones = ______", align="C")
 
-        elif topic == "Addition & Subtraction to 50":
-            pdf.set_font("ComicNeue", "B", 22)
-            pdf.set_xy(26, y_start + 10)
+        # 10. True or False Layout
+        elif "True or False" in topic:
+            pdf.set_xy(26, y_start + 8)
+            pdf.cell(70, 10, f"{q['a']} + {q['b']} = {q['eq_ans']}", align="L")
             if is_answer_key:
-                pdf.cell(80, 10, f"{q['a']}   {q['op']}   {q['b']}   =   ", align="R")
-                pdf.set_text_color(220, 50, 50)
-                pdf.cell(40, 10, f"{q['ans']}", align="L")
+                pdf.set_text_color(*ans_color)
+                pdf.cell(90, 10, "[ TRUE ]     FALSE" if q['is_true'] else "TRUE     [ FALSE ]", align="R")
                 pdf.set_text_color(0, 0, 0)
             else:
-                pdf.cell(160, 10, f"{q['a']}   {q['op']}   {q['b']}   =   ________", align="C")
+                pdf.cell(90, 10, "TRUE   /   FALSE", align="R")
 
-        elif topic == "Skip Counting (by 2s, 5s, 10s)":
-            start, step = q['start'], q['step']
-            seq = f"{start},   {start+step},   {start+step*2},   "
-            pdf.set_font("ComicNeue", "B", 20)
+        # 11. Which is More Layout
+        elif "Which is More" in topic:
             pdf.set_xy(26, y_start + 8)
+            pdf.cell(80, 10, f"{q['a']}      or      {q['b']}", align="C")
             if is_answer_key:
-                pdf.cell(80, 10, seq, align="R")
-                pdf.set_text_color(220, 50, 50)
-                pdf.cell(40, 10, f"{start+step*3}", align="L")
+                pdf.set_text_color(*ans_color)
+                pdf.cell(80, 10, f"Larger: {q['more']}", align="R")
                 pdf.set_text_color(0, 0, 0)
             else:
-                pdf.cell(160, 10, f"{seq}  ________", align="C")
+                pdf.cell(80, 10, "Circle the larger number", align="R")
 
-        elif topic == "True or False Equations":
-            pdf.set_font("ComicNeue", "B", 18)
+        # 12. Count by 5's Layout
+        elif "Count by 5's" in topic:
             pdf.set_xy(26, y_start + 8)
-            pdf.cell(70, 10, f"{q['a']}   +   {q['b']}   =   {q['disp_ans']}", align="L")
+            seq = q['seq']
             if is_answer_key:
-                pdf.set_text_color(220, 50, 50)
-                ans_tf = "[ TRUE ]       FALSE" if q['is_true'] else "TRUE       [ FALSE ]"
-                pdf.cell(80, 10, ans_tf, align="R")
+                pdf.cell(80, 10, f"{seq[0]},  ", align="R")
+                pdf.set_text_color(*ans_color)
+                pdf.cell(80, 10, f"{seq[1]},  {seq[2]},  {seq[3]}", align="L")
                 pdf.set_text_color(0, 0, 0)
             else:
-                pdf.cell(80, 10, "TRUE    /    FALSE", align="R")
+                pdf.cell(160, 10, f"{seq[0]},  ____,  ____,  ____", align="C")
 
-        elif topic == "Number Words (Names)":
-            pdf.set_font("ComicNeue", "B", 18)
-            pdf.set_xy(26, y_start + 8)
-            pdf.cell(80, 10, f"{q['word']}  =", align="R")
-            ans_val = f"  {q['val']}" if is_answer_key else "  _______"
-            if is_answer_key: pdf.set_text_color(220, 50, 50)
-            pdf.cell(40, 10, ans_val, align="L")
-            pdf.set_text_color(0, 0, 0)
+        # 13. Roll It On Layout
+        elif "Roll It On" in topic:
+            pdf.set_xy(26, y_start + 12)
+            pdf.cell(60, 10, f"Dice 1: [{q['d1']}]    Dice 2: [{q['d2']}]", align="L")
+            if is_answer_key:
+                pdf.set_text_color(*ans_color)
+                pdf.cell(100, 10, f"Total: {q['ans']}", align="R")
+                pdf.set_text_color(0, 0, 0)
+            else:
+                pdf.cell(100, 10, "Total: ______", align="R")
 
         pdf.set_y(y_start + box_h + 4)
 
     temp_dir = tempfile.gettempdir()
     file_prefix = "Answer_Key_" if is_answer_key else "Worksheet_"
-    safe_topic = topic.replace(" ", "_").replace("/", "_").replace("(", "").replace(")", "")
-    file_path = os.path.join(temp_dir, f"{file_prefix}{level}_{safe_topic}.pdf")
+    safe_topic = topic.split(". ")[1].replace(" ", "_").replace("'", "")
+    file_path = os.path.join(temp_dir, f"{file_prefix}{safe_topic}.pdf")
     pdf.output(file_path)
     return file_path
 
 # ==========================================
-# 4. Secure PDF Preview (Image based)
+# PART 4: Streamlit UI and Execution
 # ==========================================
-def display_pdf_preview_as_image(file_path):
+def display_pdf_preview(file_path):
+    """ฟังก์ชันสำหรับแปลง PDF เป็นรูปภาพเพื่อแสดงพรีวิวบนหน้าเว็บ (ป้องกันเบราว์เซอร์บล็อก)"""
     try:
         doc = fitz.open(file_path)
         page = doc.load_page(0)
         pix = page.get_pixmap(dpi=150)
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        
+        # เพิ่มเงาให้รูปภาพดูเหมือนกระดาษจริง
+        st.markdown(
+            """
+            <style>
+            .paper-shadow {
+                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+                transition: 0.3s;
+                border-radius: 5px;
+                padding: 10px;
+                background-color: white;
+            }
+            </style>
+            """, unsafe_allow_html=True
+        )
         st.image(img, use_container_width=True)
         doc.close()
     except Exception as e:
-        st.error(f"Preview generation failed: {e}")
+        st.error(f"Preview Error: {e}")
 
-# ==========================================
-# 5. Streamlit UI (Live Auto-Update System)
-# ==========================================
-st.set_page_config(page_title="TpT Math Worksheet Creator", page_icon="✏️", layout="wide")
+# ตั้งค่าหน้าเว็บ Streamlit
+st.set_page_config(page_title="Ultimate TpT Worksheet Generator", page_icon="📝", layout="wide")
+st.title("📝 Ultimate TpT Worksheet Generator")
+st.markdown("ระบบสร้างใบงานตามเนื้อหาจริงจากไฟล์ PDF ทั้ง 13 รูปแบบ พร้อมตีเส้นตีกรอบ เตรียมพื้นที่ว่างให้คุณนำไปลากวางรูป Clipart ต่อใน Canva ได้ทันที")
 
-st.title("✏️ TpT Math Worksheet Creator")
-st.markdown("Create high-quality, professional math worksheets tailored for the US elementary market.")
-
+# แถบเมนูด้านข้าง (Sidebar)
 st.sidebar.header("⚙️ Worksheet Settings")
 
-level = st.sidebar.selectbox("1. Grade Level:", ["Pre-K", "Kindergarten", "1st Grade"])
+all_topics = [
+    "1. Teen Numbers (11-20)",
+    "2. What Comes Next?",
+    "3. Order Numbers (Smallest to Largest)",
+    "4. Write Number's Name",
+    "5. Missing Addends",
+    "6. Picture Subtraction",
+    "7. Color by Answer",
+    "8. How Many Sides?",
+    "9. Tens and Ones",
+    "10. True or False",
+    "11. Which is More?",
+    "12. Count by 5's",
+    "13. Roll It On"
+]
 
-if level == "Pre-K":
-    topics = ["Counting 1 to 10", "Number Tracing (1-10)", "Teen Numbers (11-20)", "What Comes Next?"]
-elif level == "Kindergarten":
-    topics = ["Addition to 10", "Picture Subtraction", "Missing Addends (Up to 10)", "2D & 3D Shapes (Sides)", "Place Value (Tens and Ones)"]
-else:
-    topics = ["Addition & Subtraction to 50", "Skip Counting (by 2s, 5s, 10s)", "True or False Equations", "Number Words (Names)"]
-
-topic = st.sidebar.selectbox("2. Math Skill / Topic:", topics)
-theme = st.sidebar.selectbox("3. Clipart Theme:", ["Cute Animals", "Outer Space", "Dinosaurs", "Ocean Life", "Friendly Monsters"])
-num_q = st.sidebar.slider("4. Questions per Page:", min_value=1, max_value=8, value=4)
-include_answer_key = st.sidebar.checkbox("✅ Include Answer Key", value=True)
+topic = st.sidebar.selectbox("🎯 Select Worksheet Activity:", all_topics)
+theme = st.sidebar.selectbox("🎨 Clipart Theme:", ["Space", "Ocean", "Animals", "Monsters", "School", "Food", "Dinosaurs"])
+num_q = st.sidebar.slider("📌 Questions per Page:", min_value=1, max_value=8, value=4)
+include_ans = st.sidebar.checkbox("✅ Include Answer Key", value=True)
 
 st.sidebar.markdown("---")
-
-# ปุ่มสำหรับสุ่มโจทย์ใหม่โดยตรง (ถ้ารู้สึกว่าตัวเลขยังไม่ถูกใจ)
-if st.sidebar.button("🎲 Reroll Numbers (สุ่มโจทย์ใหม่)", use_container_width=True):
-    # เปลี่ยนค่าเพื่อบังคับให้ระบบสุ่มใหม่
+# ปุ่มสำหรับสุ่มตัวเลขใหม่
+if st.sidebar.button("🎲 Generate & Shuffle Numbers", use_container_width=True):
     st.session_state.force_reroll = True
 
-# ตรวจสอบว่ามีการเปลี่ยน Setting หรือไม่ เพื่อให้ระบบ Auto-Update
-current_settings = f"{level}_{topic}_{theme}_{num_q}_{include_answer_key}"
+# ตรวจสอบการอัปเดตแบบเรียลไทม์
+current_settings = f"{topic}_{theme}_{num_q}_{include_ans}"
 if 'last_settings' not in st.session_state or st.session_state.last_settings != current_settings or st.session_state.get('force_reroll', False):
-    # 1. สร้างชุดข้อมูลโจทย์ (และป้องกันการซ้ำ)
-    st.session_state.q_data = generate_questions_data(topic, num_q)
-    
-    # 2. นำโจทย์ที่ได้ไปวาดลงใบงานและหน้าเฉลย (รับประกันว่าเลขตรงกัน)
-    st.session_state.ws_path = render_pdf_worksheet(level, topic, theme, st.session_state.q_data, is_answer_key=False)
-    if include_answer_key:
-        st.session_state.ans_path = render_pdf_worksheet(level, topic, theme, st.session_state.q_data, is_answer_key=True)
-    
-    st.session_state.last_settings = current_settings
-    st.session_state.force_reroll = False # รีเซ็ตปุ่มสุ่ม
+    with st.spinner("กำลังเรนเดอร์ใบงาน..."):
+        # 1. สร้างชุดข้อมูลโจทย์
+        st.session_state.q_data = generate_questions_data(topic, num_q)
+        # 2. วาด PDF
+        st.session_state.ws_path = render_pdf_worksheet(topic, theme, st.session_state.q_data, is_answer_key=False)
+        if include_ans:
+            st.session_state.ans_path = render_pdf_worksheet(topic, theme, st.session_state.q_data, is_answer_key=True)
+        
+        st.session_state.last_settings = current_settings
+        st.session_state.force_reroll = False
 
-# ==========================================
-# ส่วนแสดงผลหน้าจอพรีวิว
-# ==========================================
-st.subheader("🔍 Live Worksheet Preview (อัปเดตอัตโนมัติ)")
+# พื้นที่แสดงผลหลัก (Main Area)
+st.subheader("🔍 Live Preview")
 
-tab_list = ["📄 Student Worksheet"]
-if include_answer_key and 'ans_path' in st.session_state:
-    tab_list.append("🔑 Answer Key")
-    
-tabs = st.tabs(tab_list)
+# ระบบ Tabs สำหรับแยกดูโจทย์และเฉลย
+tabs = st.tabs(["📄 Worksheet", "🔑 Answer Key"]) if include_ans else st.tabs(["📄 Worksheet"])
 
+# แท็บใบงาน
 with tabs[0]:
-    with open(st.session_state.ws_path, "rb") as f:
+    with open(st.session_state.ws_path, "rb") as f: 
         ws_bytes = f.read()
     col1, col2 = st.columns([1, 2])
     with col1:
         st.download_button(
-            label="📥 Download Student Worksheet (PDF)",
-            data=ws_bytes,
-            file_name=f"Worksheet_{level}_{topic.replace(' ', '_')}.pdf",
-            mime="application/pdf",
-            type="primary",
-            use_container_width=True
+            label="📥 Download Worksheet (PDF)", 
+            data=ws_bytes, 
+            file_name=f"Worksheet_{topic.split('.')[1].strip().replace(' ', '_')}.pdf", 
+            mime="application/pdf", 
+            use_container_width=True,
+            type="primary"
         )
-        st.success("✅ Auto-Updated! จำนวนข้อเปลี่ยนแปลงตามที่คุณเลื่อนปรับเรียบร้อยแล้ว ลองทดสอบปรับจำนวนหรือเปลี่ยนหัวข้อดูได้เลยครับ!")
-    with col2:
-        display_pdf_preview_as_image(st.session_state.ws_path)
+        st.success(f"✨ รูปแบบที่เลือก: {topic.split('.')[1].strip()}\nระบบตีกล่องและจัดหน้าไว้ให้เรียบร้อยแล้ว!")
+        st.info("💡 สามารถนำไฟล์ PDF ที่ดาวน์โหลดไปเปิดใน Canva เพื่อลาก Clipart น่ารักๆ ที่เตรียมไว้มาวางในพื้นที่ว่างได้เลยครับ")
+    with col2: 
+        display_pdf_preview(st.session_state.ws_path)
 
-if include_answer_key and 'ans_path' in st.session_state:
+# แท็บเฉลย
+if include_ans:
     with tabs[1]:
-        with open(st.session_state.ans_path, "rb") as f:
+        with open(st.session_state.ans_path, "rb") as f: 
             ans_bytes = f.read()
         col1, col2 = st.columns([1, 2])
         with col1:
             st.download_button(
-                label="📥 Download Answer Key (PDF)",
-                data=ans_bytes,
-                file_name=f"AnswerKey_{level}_{topic.replace(' ', '_')}.pdf",
-                mime="application/pdf",
+                label="📥 Download Answer Key (PDF)", 
+                data=ans_bytes, 
+                file_name=f"AnswerKey_{topic.split('.')[1].strip().replace(' ', '_')}.pdf", 
+                mime="application/pdf", 
                 use_container_width=True
             )
-        with col2:
-            display_pdf_preview_as_image(st.session_state.ans_path)
+        with col2: 
+            display_pdf_preview(st.session_state.ans_path)
