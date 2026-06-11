@@ -66,127 +66,157 @@ class PremiumWorksheetPDF(FPDF):
         self.ln(10)
 
     def footer(self):
-        # ขยับข้อความลิขสิทธิ์ไปที่มุมขวาล่างอย่างสมดุล (ห่างจากขอบล่าง 15 มม.)
-        self.set_y(-15)
+        # ✨ แก้ไขพิกัด: ขยับขึ้นมาที่ -18 มม. และปรับลดความสูงเซลล์เหลือ 4 มม. เพื่อให้อยู่ในกรอบอย่างปลอดภัย ไม่ทับเส้น
+        self.set_y(-18)
         self.set_x(14)
         self.set_font("ComicNeue", "", 9)
         self.set_text_color(140, 140, 140)
         
-        # แสดงผลชื่อร้านค้า (Dynamic Store Name) ไว้ที่ฝั่งขวา (Align Right)
         copyright_text = f"(c) {self.store_name}  |  All Rights Reserved."
-        self.cell(182, 10, copyright_text, align="R")
+        self.cell(182, 4, copyright_text, align="R")
         self.set_text_color(0, 0, 0)
-
+        
 # ==========================================
-# PART 2: Math Question Generation Engine
+# PART 2: Math Question Generation Engine (Anti-Duplicate)
 # ==========================================
 def generate_questions_data(topic, num_questions):
-    questions = []
-    
-    # ตรวจสอบระบบเลเอาต์: หากเป็นแบบ 2 คอลัมน์ จะปรับจำนวนโจทย์ให้เป็นเลขคู่เสมอเพื่อความสมดุล (Symmetry Grid)
+    # ตรวจสอบระบบเลเอาต์: หากเป็นแบบ 2 คอลัมน์ จะปรับจำนวนโจทย์ให้เป็นเลขคู่เสมอเพื่อความสมดุล
     is_two_col = any(k in topic for k in ["Next", "Name", "Missing", "True", "More", "5's", "Roll"])
     if is_two_col and num_questions % 2 != 0:
         num_questions += 1
 
-    for _ in range(num_questions):
-        # 1. Teen Numbers (11-20)
-        if "Teen Numbers" in topic:
-            num = random.randint(11, 20)
-            questions.append({"num": num})
+    questions = []
+    used_keys = set()  # ตัวแปรสำหรับเช็คความซ้ำซ้อนของโจทย์
+    
+    # 💎 จัดเตรียมสระสุ่มแบบไม่ใส่คืน (Unique Pool) ล่วงหน้าสำหรับหัวข้อที่ตัวเลขจำกัด
+    if "Teen Numbers" in topic or "Write Number's Name" in topic:
+        chosen_nums = random.sample(range(11, 21), min(num_questions, 10))
+    elif "What Comes Next" in topic:
+        chosen_starts = random.sample(range(1, 17), min(num_questions, 16))
+    elif "Count by 5's" in topic:
+        # แก้ปัญหารูปแบบดั้งเดิม โดยการสุ่มสุ่มตัวเริ่มแบบไม่ซ้ำจาก Pool ทั้งหมดที่มี
+        pool_5s = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80]
+        chosen_starts = random.sample(pool_5s, min(num_questions, len(pool_5s)))
+    elif "How Many Sides" in topic:
+        shapes_pool = [
+            {"shape": "Triangle", "sides": 3}, {"shape": "Square", "sides": 4},
+            {"shape": "Rectangle", "sides": 4}, {"shape": "Pentagon", "sides": 5},
+            {"shape": "Hexagon", "sides": 6}, {"shape": "Circle", "sides": 0}
+        ]
+        extended_pool = shapes_pool.copy()
+        random.shuffle(extended_pool)
+        while len(extended_pool) < num_questions:
+            extra = shapes_pool.copy()
+            random.shuffle(extra)
+            extended_pool.extend(extra)
+
+    # วงลูปสร้างโจทย์และตรวจสอบความซ้ำซ้อนระดับสมบูรณ์
+    for i in range(num_questions):
+        attempts = 0
+        while attempts < 100:  # จำกัดจำนวนรอบเพื่อป้องกัน infinite loop
+            attempts += 1
+            q_item = None
+            key = None  # ใช้คีย์นี้ระบุเอกลักษณ์ของโจทย์แต่ละข้อ
             
-        # 2. What Comes Next?
-        elif "What Comes Next" in topic:
-            start = random.randint(1, 17)
-            seq = [start, start + 1, start + 2]
-            ans = start + 3
-            questions.append({"seq": seq, "ans": ans})
-            
-        # 3. Order Numbers (Smallest to Largest)
-        elif "Order Numbers" in topic:
-            nums = random.sample(range(1, 21), 4)
-            sorted_nums = sorted(nums)
-            questions.append({"nums": nums, "sorted": sorted_nums})
-            
-        # 4. Write Number's Name
-        elif "Write Number's Name" in topic:
-            num = random.randint(11, 20)
-            words_map = {
-                11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
-                16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen", 20: "twenty"
-            }
-            questions.append({"num": num, "word": words_map[num]})
-            
-        # 5. Missing Addends
-        elif "Missing Addends" in topic:
-            ans = random.randint(5, 20)
-            a = random.randint(1, ans - 1)
-            b = ans - a
-            questions.append({"a": a, "b": b, "ans": ans})
-            
-        # 6. Picture Subtraction
-        elif "Picture Subtraction" in topic:
-            a = random.randint(5, 10)
-            b = random.randint(1, a)
-            ans = a - b
-            questions.append({"a": a, "b": b, "ans": ans})
-            
-        # 7. Color by Answer
-        elif "Color by Answer" in topic:
-            a = random.randint(1, 5)
-            b = random.randint(1, 5)
-            ans = a + b
-            colors = ["Red", "Blue", "Green", "Yellow", "Pink", "Purple", "Orange"]
-            questions.append({"a": a, "b": b, "ans": ans, "color": random.choice(colors)})
-            
-        # 8. How Many Sides?
-        elif "How Many Sides" in topic:
-            shapes = [
-                {"shape": "Triangle", "sides": 3},
-                {"shape": "Square", "sides": 4},
-                {"shape": "Rectangle", "sides": 4},
-                {"shape": "Pentagon", "sides": 5},
-                {"shape": "Hexagon", "sides": 6},
-                {"shape": "Circle", "sides": 0}
-            ]
-            questions.append(random.choice(shapes))
-            
-        # 9. Tens and Ones
-        elif "Tens and Ones" in topic:
-            tens = random.randint(1, 2)
-            ones = random.randint(0, 9)
-            total = (tens * 10) + ones
-            questions.append({"tens": tens, "ones": ones, "total": total})
-            
-        # 10. True or False
-        elif "True or False" in topic:
-            a = random.randint(1, 10)
-            b = random.randint(1, 10)
-            is_true = random.choice([True, False])
-            if is_true:
-                eq_ans = a + b
-            else:
-                eq_ans = a + b + random.choice([-2, -1, 1, 2])
-                if eq_ans < 0: eq_ans = a + b + 1
-                if eq_ans == a + b: eq_ans += 1
-            questions.append({"a": a, "b": b, "eq_ans": eq_ans, "is_true": (a + b == eq_ans)})
-            
-        # 11. Which is More?
-        elif "Which is More" in topic:
-            a, b = random.sample(range(1, 21), 2)
-            questions.append({"a": a, "b": b, "more": max(a, b)})
-            
-        # 12. Count by 5's
-        elif "Count by 5's" in topic:
-            start = random.choice([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80])
-            seq = [start, start + 5, start + 10, start + 15]
-            questions.append({"seq": seq})
-            
-        # 13. Roll It On
-        elif "Roll It On" in topic:
-            d1 = random.randint(1, 6)
-            d2 = random.randint(1, 6)
-            ans = d1 + d2
-            questions.append({"d1": d1, "d2": d2, "ans": ans})
+            if "Teen Numbers" in topic:
+                num = chosen_nums[i % len(chosen_nums)]
+                q_item = {"num": num}
+                key = num
+                
+            elif "What Comes Next" in topic:
+                start = chosen_starts[i % len(chosen_starts)]
+                seq = [start, start + 1, start + 2]
+                ans = start + 3
+                q_item = {"seq": seq, "ans": ans}
+                key = start
+                
+            elif "Order Numbers" in topic:
+                nums = random.sample(range(1, 21), 4)
+                sorted_nums = sorted(nums)
+                q_item = {"nums": nums, "sorted": sorted_nums}
+                key = tuple(sorted_nums)
+                
+            elif "Write Number's Name" in topic:
+                num = chosen_nums[i % len(chosen_nums)]
+                words_map = {
+                    11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen",
+                    16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen", 20: "twenty"
+                }
+                q_item = {"num": num, "word": words_map[num]}
+                key = num
+                
+            elif "Missing Addends" in topic:
+                ans = random.randint(5, 20)
+                a = random.randint(1, ans - 1)
+                b = ans - a
+                q_item = {"a": a, "b": b, "ans": ans}
+                key = (a, b, ans)
+                
+            elif "Picture Subtraction" in topic:
+                a = random.randint(5, 10)
+                b = random.randint(1, a)
+                ans = a - b
+                q_item = {"a": a, "b": b, "ans": ans}
+                key = (a, b)
+                
+            elif "Color by Answer" in topic:
+                a = random.randint(1, 5)
+                b = random.randint(1, 5)
+                ans = a + b
+                colors = ["Red", "Blue", "Green", "Yellow", "Pink", "Purple", "Orange"]
+                chosen_color = colors[i % len(colors)]  # เกลี่ยสีให้ไม่ซ้ำซ้อนกันในหน้าเดียว
+                q_item = {"a": a, "b": b, "ans": ans, "color": chosen_color}
+                key = (a, b)
+                
+            elif "How Many Sides" in topic:
+                q_item = extended_pool[i]
+                key = i  # ผ่านการจัดระเบียบในขั้นกระจายพูลแล้ว
+                
+            elif "Tens and Ones" in topic:
+                tens = random.randint(1, 2)
+                ones = random.randint(0, 9)
+                total = (tens * 10) + ones
+                q_item = {"tens": tens, "ones": ones, "total": total}
+                key = total
+                
+            elif "True or False" in topic:
+                a = random.randint(1, 10)
+                b = random.randint(1, 10)
+                is_true = random.choice([True, False])
+                if is_true:
+                    eq_ans = a + b
+                else:
+                    eq_ans = a + b + random.choice([-2, -1, 1, 2])
+                    if eq_ans < 0: eq_ans = a + b + 1
+                    if eq_ans == a + b: eq_ans += 1
+                q_item = {"a": a, "b": b, "eq_ans": eq_ans, "is_true": (a + b == eq_ans)}
+                key = (a, b, eq_ans)
+                
+            elif "Which is More" in topic:
+                a, b = random.sample(range(1, 21), 2)
+                q_item = {"a": a, "b": b, "more": max(a, b)}
+                key = tuple(sorted([a, b]))
+                
+            elif "Count by 5's" in topic:
+                start = chosen_starts[i % len(chosen_starts)]
+                seq = [start, start + 5, start + 10, start + 15]
+                q_item = {"seq": seq}
+                key = start
+                
+            elif "Roll It On" in topic:
+                d1 = random.randint(1, 6)
+                d2 = random.randint(1, 6)
+                q_item = {"d1": d1, "d2": d2, "ans": d1 + d2}
+                key = (d1, d2)
+
+            # ตรวจสอบว่าชุดตัวเลข/คำถามนี้ เคยใช้หรือยัง ถ้ายังไม่เคย ให้บันทึกและผ่านข้อนี้ไปได้
+            if key not in used_keys:
+                used_keys.add(key)
+                questions.append(q_item)
+                break
+        else:
+            # กรณีหลุดการสุ่มมาได้ (Fallback)
+            questions.append(q_item)
             
     return questions
 
