@@ -79,7 +79,7 @@ class PremiumWorksheetPDF(FPDF):
         self.set_text_color(0, 0, 0)
 
 # ==========================================
-# PART 2: Math Question Generation Engine (PreK - K2 Adaptive)
+# PART 2: Math Question Generation Engine (Anti-Duplicate & Adaptive)
 # ==========================================
 def generate_questions_data(topic, num_questions, grade_level):
     is_two_col = any(k in topic for k in ["Next", "Name", "Missing", "True", "More", "5's", "Roll"])
@@ -88,19 +88,20 @@ def generate_questions_data(topic, num_questions, grade_level):
 
     questions = []
     used_keys = set()
+    last_key = None # ตัวแปรจำข้อล่าสุด เพื่อป้องกันโจทย์ซ้ำติดกัน
     
     if grade_level == "Pre-K":
-        num_pool = range(1, 6)
+        num_pool = list(range(1, 6))
         sum_limit = 5
-        dice_pool = range(1, 4)
+        dice_pool = list(range(1, 4))
     elif grade_level == "K1":
-        num_pool = range(1, 11)
+        num_pool = list(range(1, 11))
         sum_limit = 10
-        dice_pool = range(1, 7)
+        dice_pool = list(range(1, 7))
     else: # K2
-        num_pool = range(11, 21)
+        num_pool = list(range(11, 21))
         sum_limit = 15
-        dice_pool = range(1, 7)
+        dice_pool = list(range(1, 7))
 
     for i in range(num_questions):
         attempts = 0
@@ -109,7 +110,6 @@ def generate_questions_data(topic, num_questions, grade_level):
             q_item = None
             key = None
             
-            # ✨ อัปเดตรองรับชื่อหัวข้อที่เปลี่ยนไปตามวัย
             if any(k in topic for k in ["Count the Objects", "Count to Ten", "Teen Numbers"]):
                 num = random.choice(num_pool)
                 q_item = {"num": num}
@@ -122,7 +122,8 @@ def generate_questions_data(topic, num_questions, grade_level):
                 key = start
                 
             elif "Order Numbers" in topic:
-                nums = random.sample(num_pool, 4)
+                sample_size = min(4, len(num_pool))
+                nums = random.sample(num_pool, sample_size)
                 q_item = {"nums": nums, "sorted": sorted(nums)}
                 key = tuple(sorted(nums))
                 
@@ -194,14 +195,25 @@ def generate_questions_data(topic, num_questions, grade_level):
             elif "Roll It On" in topic:
                 d1, d2 = random.choice(dice_pool), random.choice(dice_pool)
                 q_item = {"d1": d1, "d2": d2, "ans": d1 + d2}
-                key = (d1, d2)
+                key = (tuple(sorted([d1, d2])))
 
+            # --- ระบบ Anti-Duplicate แบบ Smart Reset ---
             if key not in used_keys:
                 used_keys.add(key)
+                last_key = key
                 questions.append(q_item)
                 break
+            
+            # หากสุ่มมาแล้ว 50 รอบยังเจอแต่ข้อซ้ำ แปลว่าเลขในระดับชั้นนั้นถูกใช้จนหมดแล้ว
+            # เราจะทำการรีเซ็ตความจำให้สุ่มเลขชุดเดิมได้ แต่ "บังคับให้บล็อกเลขล่าสุดไว้เสมอ" กันการออกติดกัน
+            if attempts == 50:
+                used_keys.clear()
+                if last_key is not None:
+                    used_keys.add(last_key)
         else:
+            # กรณีที่หายากมาก (หลุดลูป 100 รอบ) ให้เพิ่มข้อลงไปเลยเพื่อกันโปรแกรมแครช
             questions.append(q_item)
+            last_key = key
             
     return questions
 
