@@ -221,7 +221,7 @@ def generate_questions_data(topic, num_questions):
     return questions
 
 # ==========================================
-# PART 3: Premium Grid Render Layout Engine (Fixed Overlapping)
+# PART 3: Premium Grid Render Layout Engine (Fixed Roll It On)
 # ==========================================
 def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_answer_key=False):
     # ส่งตัวแปร store_name เข้าไปในคลาสเพื่อแสดงที่ Footer มุมขวาล่าง
@@ -256,7 +256,7 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
         "10. True or False": "Directions: Check the addition equation. Circle TRUE if it is correct, or FALSE if it is wrong.",
         "11. Which is More?": "Directions: Look at both numbers in the pair. Circle the number that is the largest.",
         "12. Count by 5's": "Directions: Skip count forward by 5s. Fill in the missing numbers in the blanks.",
-        "13. Roll It On": "Directions: Read the dots on the dice, write the numbers, and count on to find the sum."
+        "13. Roll It On": "Directions: Count the dots on the dice. Write the total sum in the box below."
     }
     pdf.multi_cell(182, 6, directions_map.get(topic, "Directions: Solve the math problems on this worksheet carefully."))
     pdf.ln(4)
@@ -303,7 +303,7 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
         
         ans_color = (220, 50, 50) if is_answer_key else (0, 0, 0)
         
-        # --- เริ่มเรนเดอร์ดีไซน์ตามเงื่อนไขรายหัวข้อ (แก้ไขการชนกันของข้อความทั้งหมดแล้ว) ---
+        # --- เริ่มเรนเดอร์ดีไซน์ตามเงื่อนไขรายหัวข้อ ---
         if "Teen Numbers" in topic:
             pdf.set_draw_color(200, 200, 200)
             pdf.set_line_width(0.2)
@@ -338,7 +338,6 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.cell(78, 12, full_str, align="C")
 
         elif "Order Numbers" in topic:
-            # ✨ ปรับปรุงจุดนี้: แยกเลเอาต์โจทย์ไว้บรรทัดบน กล่องตอบไว้บรรทัดล่าง จัดกึ่งกลางสวยงาม ไม่ชนกันเด็ดขาด
             pdf.set_font("ComicNeue", "B", 16)
             pdf.set_xy(x_start + 10, y_start + 6)
             num_str = "   ,   ".join(map(str, q.get('nums', [])))
@@ -499,7 +498,6 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.cell(40, 12, str(q.get('b', '')), align="C")
 
         elif "Count by 5's" in topic:
-            # ✨ ปรับปรุงจุดนี้: ให้ข้อความเชื่อมกันเป็นสตริงเดียว จัดกลาง ไม่ใช้มัลติเซลล์ลดความเสี่ยงตัวหนังสือขี่กัน
             pdf.set_font("ComicNeue", "B", 18)
             pdf.set_xy(x_start + 5, y_start + 12)
             seq = q.get('seq', [0,0,0,0])
@@ -512,12 +510,22 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.cell(78, 12, full_seq, align="C")
 
         elif "Roll It On" in topic:
-            pdf.set_font("ComicNeue", "B", 14)
-            pdf.set_xy(x_start + 4, y_start + 8)
-            pdf.cell(80, 8, f"Dice:  [{q.get('d1', '')}]  +  [{q.get('d2', '')}]", align="C")
+            # ✨ สร้างกรอบเส้นประและคำใบ้เพื่อเว้นที่ให้วางลูกเต๋า
+            pdf.set_draw_color(200, 200, 200)
+            pdf.set_line_width(0.2)
+            pdf.set_dash_pattern(dash=1.5, gap=1.5)
+            pdf.rect(x_start + 10, y_start + 6, 68, 14, style="D")
+            pdf.set_dash_pattern()
             
+            pdf.set_font("ComicNeue", "", 9)
+            pdf.set_text_color(150, 150, 150)
+            pdf.set_xy(x_start + 10, y_start + 10)
+            pdf.cell(68, 6, f"[ Place Dice {q.get('d1', '')} & {q.get('d2', '')} Here ]", align="C")
+            
+            # บรรทัดสรุปผลรวมด้านล่างสุดของช่อง
+            pdf.set_text_color(0, 0, 0)
             pdf.set_font("ComicNeue", "B", 18)
-            pdf.set_xy(x_start + 4, y_start + 20)
+            pdf.set_xy(x_start + 4, y_start + 22)
             if is_answer_key:
                 pdf.set_text_color(*ans_color)
                 pdf.cell(80, 10, f"Total  =  {q.get('ans', '')}", align="C")
