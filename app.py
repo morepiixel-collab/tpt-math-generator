@@ -79,7 +79,7 @@ class PremiumWorksheetPDF(FPDF):
         self.set_text_color(0, 0, 0)
 
 # ==========================================
-# PART 2: Math Question Generation Engine (Anti-Duplicate & Adaptive)
+# PART 2: Math Question Generation Engine (Bulletproof Anti-Duplicate)
 # ==========================================
 def generate_questions_data(topic, num_questions, grade_level):
     is_two_col = any(k in topic for k in ["Next", "Name", "Missing", "True", "More", "5's", "Roll"])
@@ -88,24 +88,24 @@ def generate_questions_data(topic, num_questions, grade_level):
 
     questions = []
     used_keys = set()
-    last_key = None # ตัวแปรจำข้อล่าสุด เพื่อป้องกันโจทย์ซ้ำติดกัน
     
+    # 🌟 ขยายฐานตัวเลข (Number Pool) ให้กว้างพอที่จะสร้างโจทย์ 8 ข้อได้โดยไม่ซ้ำเลย
     if grade_level == "Pre-K":
-        num_pool = list(range(1, 6))
-        sum_limit = 5
+        num_pool = list(range(1, 11))  # ขยายเพดานจาก 1-5 เป็น 1-10 ให้ตัวเลือกเพียงพอ
+        sum_limit = 9
         dice_pool = list(range(1, 4))
     elif grade_level == "K1":
-        num_pool = list(range(1, 11))
-        sum_limit = 10
+        num_pool = list(range(1, 16))  # ขยายเป็น 1-15
+        sum_limit = 15
         dice_pool = list(range(1, 7))
     else: # K2
-        num_pool = list(range(11, 21))
-        sum_limit = 15
+        num_pool = list(range(10, 21)) # ขยายเป็น 10-20
+        sum_limit = 20
         dice_pool = list(range(1, 7))
 
     for i in range(num_questions):
         attempts = 0
-        while attempts < 100:
+        while attempts < 200: # เพิ่มรอบการสุ่มหาข้อไม่ซ้ำ
             attempts += 1
             q_item = None
             key = None
@@ -116,14 +116,14 @@ def generate_questions_data(topic, num_questions, grade_level):
                 key = num
                 
             elif "What Comes Next" in topic:
-                start_max = 2 if grade_level == "Pre-K" else (7 if grade_level == "K1" else 16)
+                # ลดขนาดตัวเริ่มลง 3 ช่อง เพื่อเว้นที่ให้ตัวเลขคำตอบไม่เกินเพดานที่ตั้งไว้
+                start_max = len(num_pool) - 3
                 start = random.randint(1, start_max)
                 q_item = {"seq": [start, start+1, start+2], "ans": start+3}
                 key = start
                 
             elif "Order Numbers" in topic:
-                sample_size = min(4, len(num_pool))
-                nums = random.sample(num_pool, sample_size)
+                nums = random.sample(num_pool, 4)
                 q_item = {"nums": nums, "sorted": sorted(nums)}
                 key = tuple(sorted(nums))
                 
@@ -135,7 +135,7 @@ def generate_questions_data(topic, num_questions, grade_level):
                     11:"eleven", 12:"twelve", 13:"thirteen", 14:"fourteen", 15:"fifteen",
                     16:"sixteen", 17:"seventeen", 18:"eighteen", 19:"nineteen", 20:"twenty"
                 }
-                q_item = {"num": num, "word": words_map[num]}
+                q_item = {"num": num, "word": words_map.get(num, str(num))}
                 key = num
                 
             elif "Missing Addends" in topic:
@@ -187,7 +187,7 @@ def generate_questions_data(topic, num_questions, grade_level):
                 key = tuple(sorted([a, b]))
                 
             elif "Count by 5's" in topic:
-                start_pool = [5, 10, 15] if grade_level == "Pre-K" else [5, 10, 15, 20, 25, 30, 35, 40]
+                start_pool = [5, 10, 15, 20] if grade_level == "Pre-K" else [5, 10, 15, 20, 25, 30, 35, 40]
                 start = random.choice(start_pool)
                 q_item = {"seq": [start, start + 5, start + 10, start + 15]}
                 key = start
@@ -197,23 +197,17 @@ def generate_questions_data(topic, num_questions, grade_level):
                 q_item = {"d1": d1, "d2": d2, "ans": d1 + d2}
                 key = (tuple(sorted([d1, d2])))
 
-            # --- ระบบ Anti-Duplicate แบบ Smart Reset ---
+            # --- ระบบ Anti-Duplicate ตรวจจับความซ้ำ ---
             if key not in used_keys:
                 used_keys.add(key)
-                last_key = key
                 questions.append(q_item)
                 break
-            
-            # หากสุ่มมาแล้ว 50 รอบยังเจอแต่ข้อซ้ำ แปลว่าเลขในระดับชั้นนั้นถูกใช้จนหมดแล้ว
-            # เราจะทำการรีเซ็ตความจำให้สุ่มเลขชุดเดิมได้ แต่ "บังคับให้บล็อกเลขล่าสุดไว้เสมอ" กันการออกติดกัน
-            if attempts == 50:
-                used_keys.clear()
-                if last_key is not None:
-                    used_keys.add(last_key)
         else:
-            # กรณีที่หายากมาก (หลุดลูป 100 รอบ) ให้เพิ่มข้อลงไปเลยเพื่อกันโปรแกรมแครช
+            # Fallback ฉุกเฉิน: หากสุ่มถึง 200 รอบแล้วโจทย์ตันจริงๆ (เช่น กรณี How Many Sides ของ Pre-K ที่มีแค่ 4 รูปทรง)
+            # ระบบจะลบความจำเดิมทิ้ง แล้วบังคับใส่ค่าลอจิกล่าสุดเข้าไป เพื่อหลีกเลี่ยงโจทย์ซ้อนติดกันให้มากที่สุด
+            used_keys.clear()
+            used_keys.add(key)
             questions.append(q_item)
-            last_key = key
             
     return questions
 
