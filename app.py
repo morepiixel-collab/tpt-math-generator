@@ -79,7 +79,7 @@ class PremiumWorksheetPDF(FPDF):
         self.set_text_color(0, 0, 0)
 
 # ==========================================
-# PART 2: Math Question Generation Engine (Bulletproof Anti-Duplicate)
+# PART 2: Math Question Generation Engine (Mathematical Bulletproof)
 # ==========================================
 def generate_questions_data(topic, num_questions, grade_level):
     is_two_col = any(k in topic for k in ["Next", "Name", "Missing", "True", "More", "5's", "Roll"])
@@ -89,23 +89,23 @@ def generate_questions_data(topic, num_questions, grade_level):
     questions = []
     used_keys = set()
     
-    # 🌟 ขยายฐานตัวเลข (Number Pool) ให้กว้างพอที่จะสร้างโจทย์ 8 ข้อได้โดยไม่ซ้ำเลย
+    # 🌟 ขยายฐานตัวเลขให้รองรับการสร้าง 8 ข้อโดยไม่มีทางซ้ำกันตามหลักคณิตศาสตร์
     if grade_level == "Pre-K":
-        num_pool = list(range(1, 11))  # ขยายเพดานจาก 1-5 เป็น 1-10 ให้ตัวเลือกเพียงพอ
-        sum_limit = 9
+        num_pool = list(range(1, 13))  # ขยายเป็น 1-12 เพื่อให้โจทย์มีตัวเลือกเหลือเฟือ
+        sum_limit = 10
         dice_pool = list(range(1, 4))
     elif grade_level == "K1":
-        num_pool = list(range(1, 16))  # ขยายเป็น 1-15
+        num_pool = list(range(1, 16))
         sum_limit = 15
         dice_pool = list(range(1, 7))
     else: # K2
-        num_pool = list(range(10, 21)) # ขยายเป็น 10-20
+        num_pool = list(range(10, 21))
         sum_limit = 20
         dice_pool = list(range(1, 7))
 
     for i in range(num_questions):
         attempts = 0
-        while attempts < 200: # เพิ่มรอบการสุ่มหาข้อไม่ซ้ำ
+        while attempts < 200:
             attempts += 1
             q_item = None
             key = None
@@ -116,8 +116,8 @@ def generate_questions_data(topic, num_questions, grade_level):
                 key = num
                 
             elif "What Comes Next" in topic:
-                # ลดขนาดตัวเริ่มลง 3 ช่อง เพื่อเว้นที่ให้ตัวเลขคำตอบไม่เกินเพดานที่ตั้งไว้
-                start_max = len(num_pool) - 3
+                # คำนวณให้ดึงจุดเริ่มต้นที่ไปไม่เกินเพดานตัวเลข และรับประกันว่าเพียงพอสำหรับ num_questions
+                start_max = max(num_questions + 1, len(num_pool) - 3) 
                 start = random.randint(1, start_max)
                 q_item = {"seq": [start, start+1, start+2], "ans": start+3}
                 key = start
@@ -158,15 +158,20 @@ def generate_questions_data(topic, num_questions, grade_level):
                 key = (a, ans)
                 
             elif "How Many Sides" in topic:
-                shapes = [{"shape": "Triangle", "sides": 3}, {"shape": "Square", "sides": 4},
-                          {"shape": "Rectangle", "sides": 4}, {"shape": "Circle", "sides": 0}]
+                # เพิ่มรูปทรงให้มีเกิน 8 แบบ ป้องกันการสุ่ม 8 ข้อแล้วรูปทรงหมด
+                shapes = [
+                    {"shape": "Triangle", "sides": 3}, {"shape": "Square", "sides": 4},
+                    {"shape": "Rectangle", "sides": 4}, {"shape": "Circle", "sides": 0},
+                    {"shape": "Star", "sides": 10}, {"shape": "Oval", "sides": 0},
+                    {"shape": "Diamond", "sides": 4}, {"shape": "Heart", "sides": 0}
+                ]
                 if grade_level != "Pre-K": 
                     shapes.extend([{"shape": "Pentagon", "sides": 5}, {"shape": "Hexagon", "sides": 6}])
                 q_item = random.choice(shapes)
                 key = q_item["shape"]
                 
             elif "Tens and Ones" in topic:
-                if grade_level == "Pre-K": tens, ones = 1, random.randint(0, 5)
+                if grade_level == "Pre-K": tens, ones = 1, random.randint(0, 9) # ขยายให้ออก 10-19 ได้
                 elif grade_level == "K1": tens, ones = 1, random.randint(0, 9)
                 else: tens, ones = random.randint(1, 2), random.randint(0, 9)
                 q_item = {"tens": tens, "ones": ones, "total": (tens * 10) + ones}
@@ -187,24 +192,26 @@ def generate_questions_data(topic, num_questions, grade_level):
                 key = tuple(sorted([a, b]))
                 
             elif "Count by 5's" in topic:
-                start_pool = [5, 10, 15, 20] if grade_level == "Pre-K" else [5, 10, 15, 20, 25, 30, 35, 40]
+                start_pool = [5, 10, 15, 20, 25, 30, 35, 40] # ขยายเป็น 8 ตัวเลือก
                 start = random.choice(start_pool)
                 q_item = {"seq": [start, start + 5, start + 10, start + 15]}
                 key = start
                 
             elif "Roll It On" in topic:
-                d1, d2 = random.choice(dice_pool), random.choice(dice_pool)
+                if grade_level == "Pre-K":
+                    d1, d2 = random.randint(1, 4), random.randint(1, 4) # ผสมเต๋า 4 หน้า ได้โจทย์หลากหลายขึ้น
+                else:
+                    d1, d2 = random.choice(dice_pool), random.choice(dice_pool)
                 q_item = {"d1": d1, "d2": d2, "ans": d1 + d2}
                 key = (tuple(sorted([d1, d2])))
 
-            # --- ระบบ Anti-Duplicate ตรวจจับความซ้ำ ---
+            # --- ตรวจจับความซ้ำ ---
             if key not in used_keys:
                 used_keys.add(key)
                 questions.append(q_item)
                 break
         else:
-            # Fallback ฉุกเฉิน: หากสุ่มถึง 200 รอบแล้วโจทย์ตันจริงๆ (เช่น กรณี How Many Sides ของ Pre-K ที่มีแค่ 4 รูปทรง)
-            # ระบบจะลบความจำเดิมทิ้ง แล้วบังคับใส่ค่าลอจิกล่าสุดเข้าไป เพื่อหลีกเลี่ยงโจทย์ซ้อนติดกันให้มากที่สุด
+            # Fallback หากหาข้อใหม่ไม่ได้จริงๆ
             used_keys.clear()
             used_keys.add(key)
             questions.append(q_item)
