@@ -8,7 +8,7 @@ import fitz  # PyMuPDF
 from PIL import Image
 
 # ==========================================
-# PART 1: Premium Setup & Visual Template
+# PART 1: Ultra-Premium Setup & Colorful Template
 # ==========================================
 def download_cute_fonts():
     fonts = {
@@ -25,62 +25,63 @@ def download_cute_fonts():
 download_cute_fonts()
 
 class PremiumWorksheetPDF(FPDF):
-    def __init__(self, store_name="Your TpT Store", *args, **kwargs):
+    def __init__(self, store_name="Your TpT Store", grade_level="KINDERGARTEN", *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.store_name = store_name  # รับค่าชื่อร้านค้าเพื่อไปแสดงผลที่ Footer
+        self.store_name = store_name
+        self.grade_level = grade_level  # รับค่าระดับชั้นเพื่อไปแสดงผลที่หัวกระดาษ
         if os.path.exists("ComicNeue-Regular.ttf"):
             self.add_font("ComicNeue", style="", fname="ComicNeue-Regular.ttf")
         if os.path.exists("ComicNeue-Bold.ttf"):
             self.add_font("ComicNeue", style="B", fname="ComicNeue-Bold.ttf")
 
     def header(self):
-        # กรอบนอกคู่ (Double Elegant Border)
-        self.set_line_width(0.8)
+        self.set_fill_color(224, 243, 255)
+        self.rect(10, 10, 190, 24, style="F")
+        
+        self.set_draw_color(40, 60, 90)
+        self.set_line_width(1.0)
         self.rect(10, 10, 190, 277)
-        self.set_line_width(0.2)
-        self.rect(11.5, 11.5, 187, 274)
+        self.set_line_width(0.3)
+        self.rect(12, 12, 186, 273)
         
-        # ป้ายระบุระดับชั้น (Kindergarten Badge)
-        self.set_fill_color(240, 240, 240)
-        self.rect(14, 14, 55, 8, style="F")
+        self.set_fill_color(255, 223, 100)
+        self.rect(15, 14, 55, 8, style="DF")
         self.set_font("ComicNeue", "B", 10)
-        self.set_text_color(60, 60, 60)
-        self.set_xy(14, 14)
-        self.cell(55, 8, "  KINDERGARTEN MATH  ", align="C")
+        self.set_text_color(20, 20, 20)
+        self.set_xy(15, 14)
+        # ✨ เปลี่ยนชื่อบนป้ายเหลืองตามระดับชั้นที่เลือก
+        self.cell(55, 8, f"  {self.grade_level.upper()} MATH  ", align="C")
         
-        # ช่องกรอกชื่อ วันที่ คะแนน ด้านบนขวา
         self.set_text_color(0, 0, 0)
         self.set_font("ComicNeue", "B", 11)
         self.set_xy(110, 14)
         self.cell(85, 8, "Name: _____________________", align="R")
         
-        self.set_xy(14, 23)
-        self.set_font("ComicNeue", "", 10)
+        self.set_xy(15, 24)
+        self.set_font("ComicNeue", "B", 10)
         self.cell(50, 6, "Date: _______________", align="L")
-        self.set_xy(140, 23)
+        self.set_xy(140, 24)
         self.cell(55, 6, "Score: _________ / _________", align="R")
         
-        # เส้นคั่นหัวกระดาษ
-        self.set_line_width(0.4)
-        self.line(14, 31, 196, 31)
-        self.ln(10)
+        self.set_draw_color(40, 60, 90)
+        self.set_line_width(0.6)
+        self.line(10, 34, 200, 34)
+        self.ln(12)
 
     def footer(self):
-        # ✨ แก้ไขพิกัด: ขยับขึ้นมาที่ -18 มม. และปรับลดความสูงเซลล์เหลือ 4 มม. เพื่อให้อยู่ในกรอบอย่างปลอดภัย ไม่ทับเส้น
         self.set_y(-18)
         self.set_x(14)
-        self.set_font("ComicNeue", "", 9)
-        self.set_text_color(140, 140, 140)
+        self.set_font("ComicNeue", "B", 9)
+        self.set_text_color(120, 130, 150)
         
         copyright_text = f"(c) {self.store_name}  |  All Rights Reserved."
         self.cell(182, 4, copyright_text, align="R")
         self.set_text_color(0, 0, 0)
-        
+
 # ==========================================
 # PART 2: Math Question Generation Engine (PreK - K2 Adaptive)
 # ==========================================
 def generate_questions_data(topic, num_questions, grade_level):
-    # ปรับสมดุลหน้ากระดาษเป็นเลขคู่สำหรับ 2 คอลัมน์
     is_two_col = any(k in topic for k in ["Next", "Name", "Missing", "True", "More", "5's", "Roll"])
     if is_two_col and num_questions % 2 != 0:
         num_questions += 1
@@ -88,21 +89,19 @@ def generate_questions_data(topic, num_questions, grade_level):
     questions = []
     used_keys = set()
     
-    # 💎 ตั้งค่าช่วงตัวเลขตามระดับชั้น (PreK, K1, K2)
     if grade_level == "Pre-K":
-        num_pool = range(1, 6)       # เลข 1-5
-        sum_limit = 5                # ผลรวมไม่เกิน 5
-        dice_pool = range(1, 4)      # ลูกเต๋าหน้า 1-3
+        num_pool = range(1, 6)
+        sum_limit = 5
+        dice_pool = range(1, 4)
     elif grade_level == "K1":
-        num_pool = range(1, 11)      # เลข 1-10
-        sum_limit = 10               # ผลรวมไม่เกิน 10
-        dice_pool = range(1, 7)      # ลูกเต๋าหน้า 1-6
+        num_pool = range(1, 11)
+        sum_limit = 10
+        dice_pool = range(1, 7)
     else: # K2
-        num_pool = range(11, 21)     # เลข 11-20
-        sum_limit = 15               # ผลรวมไม่เกิน 15-20
+        num_pool = range(11, 21)
+        sum_limit = 15
         dice_pool = range(1, 7)
 
-    # วงลูปสร้างโจทย์และตรวจสอบความซ้ำซ้อน
     for i in range(num_questions):
         attempts = 0
         while attempts < 100:
@@ -110,7 +109,8 @@ def generate_questions_data(topic, num_questions, grade_level):
             q_item = None
             key = None
             
-            if "Teen Numbers" in topic: # แปลงเป็น Counting Objects ทั่วไปตามระดับ
+            # ✨ อัปเดตรองรับชื่อหัวข้อที่เปลี่ยนไปตามวัย
+            if any(k in topic for k in ["Count the Objects", "Count to Ten", "Teen Numbers"]):
                 num = random.choice(num_pool)
                 q_item = {"num": num}
                 key = num
@@ -165,9 +165,9 @@ def generate_questions_data(topic, num_questions, grade_level):
                 key = q_item["shape"]
                 
             elif "Tens and Ones" in topic:
-                if grade_level == "Pre-K": tens, ones = 1, random.randint(0, 5) # 10-15
-                elif grade_level == "K1": tens, ones = 1, random.randint(0, 9)  # 10-19
-                else: tens, ones = random.randint(1, 2), random.randint(0, 9)   # 10-29
+                if grade_level == "Pre-K": tens, ones = 1, random.randint(0, 5)
+                elif grade_level == "K1": tens, ones = 1, random.randint(0, 9)
+                else: tens, ones = random.randint(1, 2), random.randint(0, 9)
                 q_item = {"tens": tens, "ones": ones, "total": (tens * 10) + ones}
                 key = (tens, ones)
                 
@@ -204,16 +204,15 @@ def generate_questions_data(topic, num_questions, grade_level):
             questions.append(q_item)
             
     return questions
+
 # ==========================================
-# PART 3: Premium Grid Render Layout Engine (Fixed Roll It On)
+# PART 3: Premium Grid Render Layout Engine
 # ==========================================
-def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_answer_key=False):
-    # ส่งตัวแปร store_name เข้าไปในคลาสเพื่อแสดงที่ Footer มุมขวาล่าง
-    pdf = PremiumWorksheetPDF(store_name=store_name, orientation="P", unit="mm", format="A4")
+def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, grade_level, is_answer_key=False):
+    pdf = PremiumWorksheetPDF(store_name=store_name, grade_level=grade_level, orientation="P", unit="mm", format="A4")
     pdf.add_page()
     pdf.set_auto_page_break(auto=False)
     
-    # Title - หัวข้อหลักขนาดใหญ่สมดุลกลางหน้า
     pdf.set_font("ComicNeue", "B", 22)
     title_text = topic.split(". ")[1]
     if is_answer_key:
@@ -224,11 +223,14 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
     pdf.set_text_color(0, 0, 0)
     pdf.ln(1)
 
-    # Directions - คำสั่งแยกตามพฤติกรรมการเรียนรู้ของเด็กอนุบาล
     pdf.set_font("ComicNeue", "B", 12)
     pdf.set_x(14)
+    
+    # อัปเดตคำสั่งชี้แจงให้เข้ากับหัวข้อที่ถูกเปลี่ยนชื่อ
     directions_map = {
-        "1. Teen Numbers (11-20)": f"Directions: Count the cute {theme.lower()} items and write the correct teen number in the box.",
+        "1. Count the Objects": f"Directions: Count the cute {theme.lower()} items and write the number in the box.",
+        "1. Count to Ten": f"Directions: Count the cute {theme.lower()} items and write the number in the box.",
+        "1. Teen Numbers": f"Directions: Count the cute {theme.lower()} items and write the correct teen number in the box.",
         "2. What Comes Next?": "Directions: Look at the number pattern. Write the missing number that comes next.",
         "3. Order Numbers (Smallest to Largest)": "Directions: Look at the group of numbers. Write them in order from smallest to largest.",
         "4. Write Number's Name": "Directions: Read the number block and write its matching word name on the line.",
@@ -242,15 +244,15 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
         "12. Count by 5's": "Directions: Skip count forward by 5s. Fill in the missing numbers in the blanks.",
         "13. Roll It On": "Directions: Count the dots on the dice. Write the total sum in the box below."
     }
-    pdf.multi_cell(182, 6, directions_map.get(topic, "Directions: Solve the math problems on this worksheet carefully."))
+    # ใช้ค่า Fallback ถ้าไม่มีตรงตัว
+    matched_direction = directions_map.get(topic, "Directions: Solve the math problems on this worksheet carefully.")
+    pdf.multi_cell(182, 6, matched_direction)
     pdf.ln(4)
 
-    # เช็คประเภทเพื่อกำหนดขนาดกรอบและระบบคอลัมน์ (2 Columns vs 1 Column)
     is_two_col = any(k in topic for k in ["Next", "Name", "Missing", "True", "More", "5's", "Roll"])
     col_w = 88 if is_two_col else 182
     box_h = 36 if is_two_col else 46
     
-    # ปรับแต่งความสูงกล่องตามความจำเป็นของกราฟิก
     if "Order Numbers" in topic: box_h = 32
     if "Subtraction" in topic or "Color by" in topic or "Ones" in topic: box_h = 52
 
@@ -259,9 +261,8 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
 
     for i, q in enumerate(questions_data, start=1):
         if is_two_col:
-            col_idx = (i - 1) % 2  # 0 = ซ้าย, 1 = ขวา
+            col_idx = (i - 1) % 2 
             x_start = 14 if col_idx == 0 else 108
-            
             if col_idx == 0 and (pdf.get_y() + box_h > 265):
                 pdf.add_page()
                 pdf.set_y(42)
@@ -273,12 +274,10 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.set_y(42)
             y_start = pdf.get_y()
         
-        # วาดกรอบสี่เหลี่ยมพื้นหลัง
         pdf.set_draw_color(180, 180, 180)
         pdf.set_line_width(0.4)
         pdf.rect(x_start, y_start, col_w, box_h, style="D")
         
-        # ป้ายเลขข้อดีไซน์โมเดิร์น
         pdf.set_font("ComicNeue", "B", 11)
         pdf.set_text_color(110, 110, 110)
         pdf.set_xy(x_start + 3, y_start + 3)
@@ -287,8 +286,8 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
         
         ans_color = (220, 50, 50) if is_answer_key else (0, 0, 0)
         
-        # --- เริ่มเรนเดอร์ดีไซน์ตามเงื่อนไขรายหัวข้อ ---
-        if "Teen Numbers" in topic:
+        # --- เช็คเงื่อนไขตามชื่อหัวข้อ ---
+        if any(k in topic for k in ["Count the Objects", "Count to Ten", "Teen Numbers"]):
             pdf.set_draw_color(200, 200, 200)
             pdf.set_line_width(0.2)
             pdf.set_dash_pattern(dash=1.5, gap=1.5)
@@ -494,7 +493,6 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
                 pdf.cell(78, 12, full_seq, align="C")
 
         elif "Roll It On" in topic:
-            # ✨ สร้างกรอบเส้นประและคำใบ้เพื่อเว้นที่ให้วางลูกเต๋า
             pdf.set_draw_color(200, 200, 200)
             pdf.set_line_width(0.2)
             pdf.set_dash_pattern(dash=1.5, gap=1.5)
@@ -506,7 +504,6 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
             pdf.set_xy(x_start + 10, y_start + 10)
             pdf.cell(68, 6, f"[ Place Dice {q.get('d1', '')} & {q.get('d2', '')} Here ]", align="C")
             
-            # บรรทัดสรุปผลรวมด้านล่างสุดของช่อง
             pdf.set_text_color(0, 0, 0)
             pdf.set_font("ComicNeue", "B", 18)
             pdf.set_xy(x_start + 4, y_start + 22)
@@ -530,7 +527,7 @@ def render_pdf_worksheet_updated(topic, theme, questions_data, store_name, is_an
     temp_dir = tempfile.gettempdir()
     file_prefix = "Answer_Key_" if is_answer_key else "Worksheet_"
     safe_topic = topic.split(". ")[1].replace(" ", "_").replace("'", "").replace("?", "")
-    file_path = os.path.join(temp_dir, f"{file_prefix}{safe_topic}.pdf")
+    file_path = os.path.join(temp_dir, f"{grade_level}_{file_prefix}{safe_topic}.pdf")
     pdf.output(file_path)
     return file_path
 
@@ -569,9 +566,8 @@ st.title("✏️ PreK - K2 Math Worksheet Generator")
 st.markdown(
     """
     <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ffaa00; margin-bottom: 20px;'>
-        <strong>🌟 อัปเกรดระบบปรับระดับชั้น (Adaptive Difficulty)</strong><br>
-        ระบบถูกจูนมาเพื่อตลาดใบงานเด็กเล็ก (Early Math) โดยเฉพาะ คุณสามารถเลือกระดับ <strong>Pre-K, K1, หรือ K2</strong> 
-        แล้วระบบจะปรับตัวเลข ผลลัพธ์ และความยากของโจทย์ให้เหมาะสมกับพัฒนาการของเด็กในแต่ละวัยอัตโนมัติ!
+        <strong>🌟 อัปเกรดระบบปรับระดับชั้นแบบเต็มรูปแบบ (Adaptive Syllabus)</strong><br>
+        เมื่อคุณเลือกระดับชั้น (Pre-K, K1, K2) หัวข้อกิจกรรมใน Dropdown จะถูกคัดกรองให้เหลือเฉพาะบทเรียนที่เหมาะสมกับวัยนั้นๆ โดยอัตโนมัติ พร้อมทั้งปรับป้ายชื่อบนหัวใบงานให้ตรงกับระดับที่คุณเลือกด้วย!
     </div>
     """, unsafe_allow_html=True
 )
@@ -579,18 +575,31 @@ st.markdown(
 st.sidebar.header("⚙️ การตั้งค่าใบงาน (Settings)")
 
 tpt_store_name = st.sidebar.text_input("🏪 ชื่อร้านค้าของคุณ (TpT Store):", value="Kindergarten Learning Press")
-
-# ✨ ฟีเจอร์ใหม่: ให้เลือกระดับความยากที่ส่งผลต่อตัวเลขทั้งหน้ากระดาษ
 grade_level = st.sidebar.radio("📚 เลือกระดับชั้น (Difficulty Level):", ["Pre-K", "K1", "K2"], index=1)
 
-all_topics = [
-    "1. Teen Numbers (11-20)", "2. What Comes Next?", "3. Order Numbers (Smallest to Largest)",
-    "4. Write Number's Name", "5. Missing Addends", "6. Picture Subtraction",
-    "7. Color by Answer", "8. How Many Sides?", "9. Tens and Ones",
-    "10. True or False", "11. Which is More?", "12. Count by 5's", "13. Roll It On"
-]
+# ✨ อัปเกรดจุดนี้: กรองลิสต์หัวข้อให้เหมาะสมกับระดับชั้นที่เลือก
+if grade_level == "Pre-K":
+    available_topics = [
+        "1. Count the Objects", "2. What Comes Next?", "3. Order Numbers (Smallest to Largest)",
+        "4. Write Number's Name", "6. Picture Subtraction", "8. How Many Sides?", 
+        "11. Which is More?", "13. Roll It On"
+    ]
+elif grade_level == "K1":
+    available_topics = [
+        "1. Count to Ten", "2. What Comes Next?", "3. Order Numbers (Smallest to Largest)",
+        "4. Write Number's Name", "5. Missing Addends", "6. Picture Subtraction",
+        "7. Color by Answer", "8. How Many Sides?", "10. True or False",
+        "11. Which is More?", "13. Roll It On"
+    ]
+else: # K2
+    available_topics = [
+        "1. Teen Numbers", "2. What Comes Next?", "3. Order Numbers (Smallest to Largest)",
+        "4. Write Number's Name", "5. Missing Addends", "6. Picture Subtraction",
+        "7. Color by Answer", "8. How Many Sides?", "9. Tens and Ones",
+        "10. True or False", "11. Which is More?", "12. Count by 5's", "13. Roll It On"
+    ]
 
-topic = st.sidebar.selectbox("🎯 เลือกหัวข้อกิจกรรม:", all_topics)
+topic = st.sidebar.selectbox("🎯 เลือกหัวข้อกิจกรรม:", available_topics)
 theme = st.sidebar.selectbox("🎨 เลือกธีมตัวละคร Clipart:", ["Space", "Ocean", "Animals", "Monsters", "School", "Food", "Dinosaurs"])
 num_q = st.sidebar.slider("📌 จำนวนโจทย์ต่อหน้า:", min_value=2, max_value=8, value=4, step=2)
 include_ans = st.sidebar.checkbox("✅ สร้างใบงานคู่ขนานพร้อมแผ่นเฉลย", value=True)
@@ -600,21 +609,18 @@ st.sidebar.markdown("---")
 if st.sidebar.button("🎲 สุ่มตัวเลขโจทย์ใหม่ (Shuffle Numbers)", use_container_width=True):
     st.session_state.force_reroll = True
 
-# ตรวจสอบการเปลี่ยนแปลง (รวม grade_level เข้าไปในเงื่อนไขด้วย)
 current_settings = f"{topic}_{theme}_{num_q}_{include_ans}_{tpt_store_name}_{grade_level}"
 if 'last_settings' not in st.session_state or st.session_state.last_settings != current_settings or st.session_state.get('force_reroll', False):
     with st.spinner(f"กำลังเรนเดอร์โครงสร้างกระดาษระดับ {grade_level}..."):
-        # ส่งค่า grade_level ไปให้ Part 2 คำนวณ
         st.session_state.q_data = generate_questions_data(topic, num_q, grade_level)
-        
-        st.session_state.ws_path = render_pdf_worksheet_updated(topic, theme, st.session_state.q_data, tpt_store_name, is_answer_key=False)
+        st.session_state.ws_path = render_pdf_worksheet_updated(topic, theme, st.session_state.q_data, tpt_store_name, grade_level, is_answer_key=False)
         if include_ans:
-            st.session_state.ans_path = render_pdf_worksheet_updated(topic, theme, st.session_state.q_data, tpt_store_name, is_answer_key=True)
+            st.session_state.ans_path = render_pdf_worksheet_updated(topic, theme, st.session_state.q_data, tpt_store_name, grade_level, is_answer_key=True)
         
         st.session_state.last_settings = current_settings
         st.session_state.force_reroll = False
 
-st.subheader("🔍 พรีวิวหน้ากระดาษจริง (Live Preview)")
+st.subheader(f"🔍 พรีวิวหน้ากระดาษ ({grade_level} Level)")
 tabs = st.tabs(["📄 Worksheet", "🔑 Answer Key"]) if include_ans else st.tabs(["📄 Worksheet"])
 
 with tabs[0]:
@@ -628,7 +634,8 @@ with tabs[0]:
             mime="application/pdf", 
             use_container_width=True, type="primary"
         )
-        st.markdown(f"**ระดับที่เลือก:** {grade_level} (ปรับสเกลตัวเลขอัตโนมัติแล้ว)")
+        st.markdown(f"**ระดับที่เลือก:** {grade_level}")
+        st.markdown(f"**หัวข้อ:** {topic}")
     with col2: 
         st.markdown("<div class='premium-paper'>", unsafe_allow_html=True)
         display_pdf_preview(st.session_state.ws_path)
@@ -648,5 +655,4 @@ if include_ans:
         with col2: 
             st.markdown("<div class='premium-paper'>", unsafe_allow_html=True)
             display_pdf_preview(st.session_state.ans_path)
-            st.markdown("</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
