@@ -538,28 +538,45 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         tw_finish = pdf.get_string_width("FINISH")
         pdf.text(start_x + (4*box_s) + (box_s/2) - (tw_finish/2), start_y + (5*box_s) + 5, "FINISH")
 
-    elif "make target" in clean_sub:
+    elif "color to make target" in clean_sub:
         pdf.cell(0, 10, f" Directions: We need {target_num} in total. Color more items to make {target_num}.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
-            have = random.randint(1, target_num - 1) if target_num > 1 else 0
-            need = target_num - have
+            filled = random.randint(0, target_num - 1) if target_num > 1 else 0
+            to_color = target_num - filled
             
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
-            start_x = center_x - (160 / 2)
             
-            draw_rounded_box(pdf, start_x, y+5, 100, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Add {target_num} items. Show {have} filled, {need} empty ~", font_size=10)
+            # 1. กล่องฝั่งซ้าย (ใส่รูปภาพ)
+            draw_rounded_box(pdf, 20, y+5, 95, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Add {target_num} items. Show {filled} filled, {to_color} empty ~", font_size=11)
             
-            pdf.set_font("ComicNeue", "", 16)
-            pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(start_x + 105, y + 20, f"I colored")
+            # 2. ฝั่งขวา (ข้อความ + กล่องคำตอบ + ข้อความ)
+            right_x = 120
             
-            ans_txt = str(need) if pdf.is_key else ""
-            draw_rounded_box(pdf, start_x + 130, y+10, 20, 20, r=4, bg_color=(255,255,255), text=ans_txt, font_size=16)
-            pdf.text(start_x + 152, y + 25, "more.")
+            # ดึงความกว้างของข้อความเพื่อนำมาคำนวณตำแหน่งช่องไฟ
+            pdf.set_font("ComicNeue", "", 18)
+            pdf.set_text_color(*theme_colors["text"])
+            w_colored = pdf.get_string_width("I colored ")
+            
+            # ข้อความแรก "I colored" 
+            # (กำหนด y+26 เพื่อให้ฐานตัวอักษรอยู่ตรงกึ่งกลางของกล่องพอดี)
+            pdf.text(right_x, y + 26, "I colored")
+            
+            # กล่องสำหรับใส่คำตอบ (กำหนดให้กล่องสูง 20 และดันขึ้นไปเริ่มที่ y+12.5 เพื่อให้อยู่กึ่งกลาง)
+            box_w = 20
+            box_h = 20
+            ans_text = str(to_color) if pdf.is_key else ""
+            draw_rounded_box(pdf, right_x + w_colored, y + 12.5, box_w, box_h, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
+            
+            # ข้อความหลัง "more."
+            # ฟังก์ชันวาดกล่องข้างบนจะรีเซ็ตฟอนต์เป็น 11 เสมอ ต้องเซ็ตกลับเป็น 18 ก่อนพิมพ์
+            pdf.set_font("ComicNeue", "", 18)
+            pdf.set_text_color(*theme_colors["text"])
+            pdf.text(right_x + w_colored + box_w + 4, y + 26, "more.")
+            
             pdf.ln(55)
 
     elif "draw and color" in clean_sub:
