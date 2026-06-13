@@ -440,27 +440,27 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             
             start_x = center_x - (170 / 2)
             
-            # 1. กล่องรูปภาพกลุ่มแรก 
+            # 1. กล่องรูปภาพกลุ่มแรก
             draw_rounded_box(pdf, start_x, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n1} items ~", font_size=11)
             
             # 2. เครื่องหมายบวก (+) 
+            # แก้ไข: ดันตำแหน่งขึ้น (เปลี่ยนจาก y+28 เป็น y+25) เพื่อให้อยู่กึ่งกลางแนวตั้งพอดี
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
             w_plus = pdf.get_string_width("+")
-            pdf.text(start_x + 46 - (w_plus/2), y + 28, "+")
+            pdf.text(start_x + 46 - (w_plus/2), y + 25, "+")
             
-            # 3. กล่องรูปภาพกลุ่มที่สอง 
-            # (ฟังก์ชันนี้จะแอบเปลี่ยนฟอนต์เป็น 11 ซึ่งคือต้นเหตุของปัญหา)
+            # 3. กล่องรูปภาพกลุ่มที่สอง
             draw_rounded_box(pdf, start_x + 52, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} items ~", font_size=11)
             
             # 4. เครื่องหมายเท่ากับ (=) 
-            # [แก้ไขแล้ว] บังคับเซ็ตฟอนต์ให้กลับมาเป็น 28 อีกครั้ง ฐานตัวอักษรจะได้เสมอกัน
+            # แก้ไข: ดันตำแหน่งขึ้น (y+25) ให้เสมอกับเครื่องหมายบวก
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
             w_eq = pdf.get_string_width("=")
-            pdf.text(start_x + 98 - (w_eq/2), y + 28, "=")
+            pdf.text(start_x + 98 - (w_eq/2), y + 25, "=")
             
-            # 5. ตัวเลือกวงกลม 3 ตัวเลือก 
+            # 5. ตัวเลือกวงกลม 3 ตัวเลือก
             choices = [target_num]
             while len(choices) < 3:
                 wrong = random.randint(1, 10)
@@ -472,7 +472,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_solid_circle(pdf, start_x + 152, y+11.5, 18, str(choices[2]), font_size=20, is_path=(choices[2]==target_num))
             
             pdf.ln(55)
-
     elif "take away and color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Look at the pictures. Cross out the number given, then color the rest.", ln=True)
         pdf.ln(5)
