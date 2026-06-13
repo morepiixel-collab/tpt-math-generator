@@ -673,16 +673,19 @@ with st.sidebar:
     shop_name = st.text_input("🏪 ชื่อร้าน (Copyright):", value="Kindergarten Learning Press")
     st.markdown("---")
     
-    main_topic = "1. Number Sense (การรู้ค่าตัวเลข)" 
-    sub_topic = st.selectbox("🎯 1. เลือกกิจกรรม (Activity):", PRE_K_CURRICULUM[main_topic])
+    # ----------------------------------------------------
+    # [แก้ไขที่นี่] ปลดล็อกให้สามารถเลือก หมวดหมู่หลัก ได้แล้ว!
+    # ----------------------------------------------------
+    main_topic = st.selectbox("📚 1. เลือกหมวดหมู่หลัก (Category):", list(PRE_K_CURRICULUM.keys()))
+    sub_topic = st.selectbox("🎯 2. เลือกกิจกรรม (Activity):", PRE_K_CURRICULUM[main_topic])
     
-    theme_choice = st.selectbox("🖌️ 2. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
+    theme_choice = st.selectbox("🖌️ 3. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
     selected_colors = THEME_COLORS[theme_choice]
     
     st.markdown("---")
-    target_num = st.selectbox("🎯 3. เลือกตัวเลขเป้าหมาย (Focus Number):", list(range(1, 11)))
+    target_num = st.selectbox("🎯 4. เลือกตัวเลขเป้าหมาย (Focus Number):", list(range(1, 11)))
     
-    num_q = st.slider("📝 4. จำนวนข้อต่อหน้า:", min_value=2, max_value=5, value=3)
+    num_q = st.slider("📝 5. จำนวนข้อต่อหน้า:", min_value=2, max_value=5, value=3)
     
     st.markdown("---")
     generate_btn = st.button("🚀 สร้างโครงร่าง (Generate PDF)", use_container_width=True)
@@ -719,4 +722,4 @@ if generate_btn:
                 use_container_width=True
             )
 else:
-    st.info("👈 กรุณาเลือก **ตัวเลขที่ต้องการ** แล้วกดปุ่มสร้างใบงานได้เลยครับ (ไม่มีปัญหากรอบเหลี่ยม หรือการจัดหน้าเบี้ยวแน่นอนครับ!)")
+    st.info("👈 กรุณาเลือก **หมวดหมู่ กิจกรรม และตัวเลขที่ต้องการ** จากนั้นกดปุ่มสร้างใบงานได้เลยครับ 🚀")
