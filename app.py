@@ -3,6 +3,21 @@ from fpdf import FPDF
 import random
 import fitz  
 from PIL import Image
+import os
+import urllib.request
+
+# ==========================================
+# 0. ระบบดาวน์โหลดฟอนต์น่ารักๆ อัตโนมัติ (Cute Font)
+# ==========================================
+FONT_FILE = "CuteFont.ttf"
+# ใช้ฟอนต์ Comic Neue (Bold) ที่กลม น่ารัก และอ่านง่ายสำหรับเด็ก
+FONT_URL = "https://github.com/google/fonts/raw/main/ofl/comicneue/ComicNeue-Bold.ttf"
+
+if not os.path.exists(FONT_FILE):
+    try:
+        urllib.request.urlretrieve(FONT_URL, FONT_FILE)
+    except Exception as e:
+        st.error(f"⚠️ ไม่สามารถดาวน์โหลดฟอนต์ได้: {e}")
 
 # ==========================================
 # 1. ฐานข้อมูลหัวข้อ
@@ -36,9 +51,15 @@ class PremiumTpTPDF(FPDF):
         self.topic_name = topic_name
         self.colors = color_theme
         self.shop_name = shop_name 
-        self.target_num = target_num # รับตัวเลขแบบเจาะจงมา
+        self.target_num = target_num 
         self.is_key = is_key
         self.set_auto_page_break(auto=True, margin=15)
+        
+        # โหลดฟอนต์น่ารักเข้าสู่ระบบ PDF
+        if os.path.exists(FONT_FILE):
+            self.add_font("CuteFont", "", FONT_FILE)
+        else:
+            self.add_font("CuteFont", "", "helvetica") # สำรองกรณีโหลดไม่สำเร็จ
 
     def header(self):
         self.set_line_width(2.0)
@@ -57,12 +78,11 @@ class PremiumTpTPDF(FPDF):
         self.set_fill_color(*self.colors["primary"])
         self.rect(11, 11, 194, 28, style='F')
         
-        self.set_font("helvetica", "B", 10)
+        self.set_font("CuteFont", "", 12)
         self.set_text_color(255, 255, 255)
         self.cell(0, 8, " P R E - K   M A T H", ln=True, align="C")
         
-        # แสดงชื่อหัวข้อ พร้อม "ตัวเลขที่โฟกัส" อย่างชัดเจนบนหัวกระดาษ
-        self.set_font("helvetica", "B", 22)
+        self.set_font("CuteFont", "", 24)
         clean_topic = self.topic_name.split(". ", 1)[-1].upper()
         title = f"{clean_topic} : NUMBER {self.target_num}" + (" (KEY)" if self.is_key else "")
         self.cell(0, 10, title, ln=True, align="C")
@@ -73,7 +93,7 @@ class PremiumTpTPDF(FPDF):
         self.set_line_width(0.2)
         self.rect(11, 41, 194, 12, style='DF')
         
-        self.set_font("helvetica", "B", 12)
+        self.set_font("CuteFont", "", 14)
         self.set_text_color(100, 100, 100)
         self.set_y(44)
         self.cell(10, 5, "", ln=0)
@@ -83,14 +103,14 @@ class PremiumTpTPDF(FPDF):
 
     def footer(self):
         self.set_y(-15)
-        self.set_font("helvetica", "I", 9)
+        self.set_font("CuteFont", "", 10)
         self.set_text_color(150, 150, 150)
         self.cell(0, 10, f"© {self.shop_name} | All Rights Reserved.", align="C")
 
 # ==========================================
-# 3. Helpers สำหรับวาด
+# 3. Helpers สำหรับวาด 
 # ==========================================
-def draw_placeholder(pdf, x, y, w, h, text=""):
+def draw_placeholder(pdf, x, y, w, h, text="", font_size=12):
     pdf.set_fill_color(*pdf.colors["box"])
     pdf.set_draw_color(180, 180, 180)
     pdf.set_line_width(0.5)
@@ -102,24 +122,44 @@ def draw_placeholder(pdf, x, y, w, h, text=""):
         pdf.rect(x, y, w, h, style='DF')
     
     if text:
-        pdf.set_font("helvetica", "I", 10)
+        pdf.set_font("CuteFont", "", font_size)
         pdf.set_text_color(150, 150, 150)
         text_w = pdf.get_string_width(text)
-        pdf.text(x + (w/2) - (text_w/2), y + (h/2) + 2, text)
+        text_h_offset = (font_size * 0.352777) / 2.8 
+        pdf.text(x + (w/2) - (text_w/2), y + (h/2) + text_h_offset, text)
 
-def draw_solid_box(pdf, x, y, w, h, text="", font_size=18):
+def draw_solid_circle(pdf, x, y, d, text="", font_size=20):
     pdf.set_fill_color(255, 255, 255)
     pdf.set_draw_color(*pdf.colors["primary"])
     pdf.set_line_width(0.8)
-    pdf.rect(x, y, w, h, style='DF')
+    pdf.ellipse(x, y, d, d, style='DF') 
     if text:
-        pdf.set_font("helvetica", "B", font_size)
+        pdf.set_font("CuteFont", "", font_size)
         pdf.set_text_color(*pdf.colors["primary"])
         text_w = pdf.get_string_width(text)
-        pdf.text(x + (w/2) - (text_w/2), y + (h/2) + (font_size/3), text)
+        text_h_offset = (font_size * 0.352777) / 2.8 
+        pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
+
+def draw_circle_placeholder(pdf, x, y, d, text="?"):
+    pdf.set_fill_color(*pdf.colors["box"])
+    pdf.set_draw_color(180, 180, 180)
+    pdf.set_line_width(0.5)
+    if hasattr(pdf, 'set_dash_pattern'):
+        pdf.set_dash_pattern(dash=3, gap=3)
+        pdf.ellipse(x, y, d, d, style='DF')
+        pdf.set_dash_pattern()
+    else:
+        pdf.ellipse(x, y, d, d, style='DF')
+        
+    if text:
+        pdf.set_font("CuteFont", "", 20)
+        pdf.set_text_color(150, 150, 150)
+        text_w = pdf.get_string_width(text)
+        text_h_offset = (20 * 0.352777) / 2.8
+        pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
 
 # ==========================================
-# 4. BESPOKE LAYOUT ENGINE (Focus Number แบบ 100%)
+# 4. BESPOKE LAYOUT ENGINE 
 # ==========================================
 def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is_key=False):
     pdf = PremiumTpTPDF(sub_topic, theme_colors, shop_name, target_num, is_key)
@@ -128,42 +168,38 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
     clean_sub = sub_topic.lower()
     ans_color = (255, 75, 75) if is_key else (150, 150, 150)
     
-    pdf.set_font("helvetica", "B", 12)
+    pdf.set_font("CuteFont", "", 14)
     pdf.set_text_color(80, 80, 80)
 
-    # 1. FIND THE NUMBER (หาเลขที่โฟกัส)
+    # 1. FIND THE NUMBER
     if "find" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find and circle the number {target_num} in the picture below.", ln=True)
         pdf.ln(5)
-        pdf.set_font("helvetica", "B", 18)
+        pdf.set_font("CuteFont", "", 20)
         pdf.set_text_color(*theme_colors["primary"])
         pdf.cell(0, 10, f"Target: {target_num}", ln=True, align="C")
-        draw_placeholder(pdf, 15, 85, 185, 160, f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~")
+        draw_placeholder(pdf, 15, 85, 185, 160, f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~", font_size=14)
 
-    # 2. TRACE THE NUMBERS (ลากเส้นประเฉพาะเลขที่โฟกัส)
+    # 2. TRACE THE NUMBERS
     elif "trace" in clean_sub:
         pdf.cell(0, 10, f" Directions: Trace and write the number {target_num}.", ln=True)
         pdf.ln(5)
-        for i in range(num_q + 1): # ทำบรรทัดตามที่กำหนด
+        for i in range(num_q + 1): 
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
-            # ซ้าย: รูปภาพนำสายตา
             draw_placeholder(pdf, 20, y, 30, 30, f"~ {target_num} Items ~")
-            # ขวา: กล่องใส่เส้นประเลขนั้นๆ
             draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Dotted number {target_num} {target_num} {target_num} ~")
             pdf.ln(40)
 
-    # 3. COUNTING (นับจำนวนที่มีค่าเท่ากับเลขโฟกัส)
+    # 3. COUNTING 
     elif "counting" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Count the objects. Circle the number.", ln=True)
+        pdf.cell(0, 10, f" Directions: Count the objects. Circle the correct number.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
-            # มี 1 ข้อที่เป็นเลขเป้าหมายเสมอ ข้ออื่นอาจจะสุ่มเพื่อให้เด็กแยกแยะ
             actual_count = target_num if i == 0 else random.choice([target_num, random.randint(1, 10)])
-            
             choices = [actual_count]
             while len(choices) < 3:
                 wrong = random.randint(1, 10)
@@ -171,41 +207,38 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
                     choices.append(wrong)
             random.shuffle(choices) 
             
-            draw_placeholder(pdf, 25, y, 80, 40, f"~ Add {actual_count} items ~")
-            draw_solid_box(pdf, 120, y+10, 20, 20, str(choices[0]))
-            draw_solid_box(pdf, 145, y+10, 20, 20, str(choices[1]))
-            draw_solid_box(pdf, 170, y+10, 20, 20, str(choices[2]))
+            draw_placeholder(pdf, 25, y, 80, 35, f"~ Add {actual_count} items ~")
+            draw_solid_circle(pdf, 120, y+5, 25, str(choices[0]))
+            draw_solid_circle(pdf, 150, y+5, 25, str(choices[1]))
+            draw_solid_circle(pdf, 180, y+5, 25, str(choices[2]))
             pdf.ln(50)
 
-    # 4. COUNT AND MATCH (โยงภาพที่เท่ากับเลขโฟกัส)
+    # 4. COUNT AND MATCH 
     elif "match" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
         pdf.ln(5)
-        # นำเลขมาวางตรงกลาง 1 กล่องใหญ่
-        draw_solid_box(pdf, 90, 120, 35, 35, str(target_num), font_size=24)
+        draw_solid_circle(pdf, 85, 120, 45, str(target_num), font_size=42)
         
-        # วางกล่องรอบๆ 4 มุม ให้โยงเข้าหาตรงกลาง
         draw_placeholder(pdf, 20, 80, 45, 35, f"~ {target_num} dots ~")
         draw_placeholder(pdf, 150, 80, 45, 35, f"~ {target_num} fingers ~")
-        draw_placeholder(pdf, 20, 160, 45, 35, f"~ {random.randint(1, 10)} items ~") # หลอก
+        draw_placeholder(pdf, 20, 160, 45, 35, f"~ {random.randint(1, 10)} items ~") 
         draw_placeholder(pdf, 150, 160, 45, 35, f"~ {target_num} animals ~")
 
-    # 5. MORE OR LESS (เปรียบเทียบกับเลขโฟกัส)
+    # 5. MORE OR LESS 
     elif "more" in clean_sub:
         pdf.cell(0, 10, f" Directions: Circle the group that has {target_num} items.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
-            
             wrong = random.choice([x for x in range(1, 11) if x != target_num])
             options = [target_num, wrong]
             random.shuffle(options)
             
             draw_placeholder(pdf, 30, y, 60, 45, f"~ {options[0]} items ~")
-            pdf.set_font("helvetica", "B", 18)
+            pdf.set_font("CuteFont", "", 20)
             pdf.set_text_color(*theme_colors["secondary"])
-            pdf.text(100, y + 25, "VS")
+            pdf.text(102, y + 28, "VS")
             draw_placeholder(pdf, 125, y, 60, 45, f"~ {options[1]} items ~")
             pdf.ln(55)
 
@@ -217,17 +250,16 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         pdf.set_fill_color(*theme_colors["box"])
         pdf.rect(15, y, 185, 20, style='F')
         
-        pdf.set_font("helvetica", "B", 14)
+        pdf.set_font("CuteFont", "", 16)
         pdf.set_text_color(100, 100, 100)
-        # โฟกัสเลขเดียว หรือ 3 เลขใกล้เคียง
-        pdf.text(35, y + 13, f"{target_num} = Red")
-        pdf.text(90, y + 13, f"{target_num+1 if target_num<10 else target_num-1} = Blue")
-        pdf.text(145, y + 13, f"{target_num+2 if target_num<9 else target_num-2} = Yellow")
+        pdf.text(35, y + 14, f"{target_num} = Red")
+        pdf.text(90, y + 14, f"{target_num+1 if target_num<10 else target_num-1} = Blue")
+        pdf.text(145, y + 14, f"{target_num+2 if target_num<9 else target_num-2} = Yellow")
             
         pdf.ln(30)
-        draw_placeholder(pdf, 15, pdf.get_y(), 185, 150, f"~ Canva: Coloring Image focusing on {target_num} ~")
+        draw_placeholder(pdf, 15, pdf.get_y(), 185, 150, f"~ Canva: Coloring Image focusing on {target_num} ~", font_size=14)
 
-    # 7. MISSING NUMBERS
+    # 7. MISSING NUMBERS 
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers to reach {target_num}.", ln=True)
         pdf.ln(10)
@@ -235,22 +267,19 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
-            # จัดให้ target_num อยู่ในขบวนเสมอ
             start_val = max(1, target_num - random.randint(0, 4))
             seq = [start_val + k for k in range(5)]
             
-            # บังคับให้ซ่อน target_num
             hidden = [seq.index(target_num)] if target_num in seq else [2]
-            # ซ่อนเพิ่มอีก 1 ตัว
             other_hidden = random.choice([x for x in range(5) if x not in hidden])
             hidden.append(other_hidden)
             
             for j in range(5):
                 x = 20 + (j * 35)
                 if j in hidden:
-                    draw_placeholder(pdf, x, y, 30, 30, "?")
+                    draw_circle_placeholder(pdf, x, y, 32, "?")
                 else:
-                    draw_solid_box(pdf, x, y, 30, 30, str(seq[j]))
+                    draw_solid_circle(pdf, x, y, 32, str(seq[j]), font_size=24)
             pdf.ln(50)
 
     # 8. NUMBER MAZES
@@ -262,14 +291,16 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         start_x = 45
         start_y = pdf.get_y() + 10
         box_s = 25
-        pdf.set_font("helvetica", "B", 12)
+        pdf.set_font("CuteFont", "", 16)
         pdf.set_text_color(*theme_colors["primary"])
         pdf.text(start_x, start_y - 5, "START")
+        
         for row in range(5):
             for col in range(5):
                 val = str(target_num) if random.random() > 0.5 else str(wrong_maze)
-                draw_solid_box(pdf, start_x + (col*box_s), start_y + (row*box_s), box_s, box_s, val)
-        pdf.text(start_x + (4*box_s), start_y + (5*box_s) + 10, "FINISH")
+                draw_solid_circle(pdf, start_x + (col*box_s), start_y + (row*box_s), box_s - 2, val, font_size=18)
+                
+        pdf.text(start_x + (4*box_s), start_y + (5*box_s) + 5, "FINISH")
 
     return bytes(pdf.output(dest='S'))
 
@@ -309,7 +340,7 @@ st.markdown("""
 </style>
 <div class="main-header">
     <h1 style="margin:0; font-weight:800;">🔢 Pre-K Focus Number Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">สร้างใบงานแบบเจาะจงตัวเลขทีละชุด (1-10) สำหรับจัดขายเป็น Product Bundle บน TpT!</p>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">(อัปเดตฟอนต์น่ารัก & เลย์เอาต์วงกลมกึ่งกลางเป๊ะ)</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -325,9 +356,8 @@ with st.sidebar:
     theme_choice = st.selectbox("🖌️ 2. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
     selected_colors = THEME_COLORS[theme_choice]
     
-    # -------- ระบบเลือกตัวเลขแบบเจาะจง 1-10 --------
     st.markdown("---")
-    target_num = st.selectbox("🎯 3. เลือกตัวเลขเป้าหมาย (Focus Number):", list(range(1, 11)), help="ระบบจะสร้างใบงานที่โฟกัสเฉพาะตัวเลขนี้เท่านั้น")
+    target_num = st.selectbox("🎯 3. เลือกตัวเลขเป้าหมาย (Focus Number):", list(range(1, 11)))
     
     num_q = st.slider("📝 4. จำนวนข้อต่อหน้า:", min_value=2, max_value=5, value=3)
     
@@ -335,7 +365,7 @@ with st.sidebar:
     generate_btn = st.button("🚀 สร้างโครงร่าง (Generate PDF)", use_container_width=True)
 
 if generate_btn:
-    with st.spinner(f"กำลังสร้างใบงานที่โฟกัสเลข {target_num}..."):
+    with st.spinner(f"กำลังสร้างใบงานและดาวน์โหลดฟอนต์น่ารัก โฟกัสเลข {target_num}..."):
         ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, is_key=False)
         ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, is_key=True)
 
