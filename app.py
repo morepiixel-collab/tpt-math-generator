@@ -577,12 +577,15 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (170 / 2)
             
+            # 1. ช่องใส่รูปภาพ (ทำหน้าที่เป็นตัวตั้ง)
             draw_rounded_box(pdf, start_x, y+5, 60, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {target_num} items ~", font_size=11)
             
+            # 2. เครื่องหมายลบและตัวลบ (แก้ไข: เอา target_num ตัวแรกออก และขยับตำแหน่งไปที่ start_x + 75 ให้บาลานซ์)
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(start_x + 65, y + 28, f"{target_num} - {take} =")
+            pdf.text(start_x + 75, y + 28, f"- {take} =")
             
+            # 3. ช่องสำหรับใส่คำตอบ
             ans_txt = str(left) if pdf.is_key else ""
             draw_rounded_box(pdf, start_x + 130, y+5, 35, 35, r=5, bg_color=(255,255,255), text=ans_txt, font_size=28)
             
