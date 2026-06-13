@@ -93,7 +93,13 @@ class PremiumTpTPDF(FPDF):
         
         self.set_font("ComicNeue", "", 24)
         clean_topic = self.topic_name.split(". ", 1)[-1].upper()
-        title = f"{clean_topic} : NUMBER {self.target_num}" + (" (KEY)" if self.is_key else "")
+        
+        # เช็คว่าถ้าเป็น Color by number ให้ซ่อนตัวเลข
+        if "color by number" in clean_topic.lower():
+            title = f"{clean_topic}" + (" (KEY)" if self.is_key else "")
+        else:
+            title = f"{clean_topic} : NUMBER {self.target_num}" + (" (KEY)" if self.is_key else "")
+            
         self.cell(0, 10, title, ln=True, align="C")
         self.ln(6)
         
