@@ -400,14 +400,23 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (160 / 2)
             
+            # 1. กล่องรูปภาพกลุ่มแรก
             draw_rounded_box(pdf, start_x, y+5, 50, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n1} outlines ~", font_size=11)
-            pdf.set_font("ComicNeue", "", 24)
+            
+            # 2. เครื่องหมายบวก (+) ปรับขนาดใหญ่ขึ้นเป็น 28 และจัดให้อยู่กึ่งกลางช่องไฟ
+            pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(start_x + 56, y + 27, "+")
+            pdf.text(start_x + 55, y + 28, "+")
             
+            # 3. กล่องรูปภาพกลุ่มที่สอง
             draw_rounded_box(pdf, start_x + 65, y+5, 50, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} outlines ~", font_size=11)
-            pdf.text(start_x + 121, y + 27, "=")
             
+            # 4. เครื่องหมายเท่ากับ (=) แก้ไข: บังคับขนาดใหญ่เป็น 28 เท่ากับเครื่องหมายบวก
+            pdf.set_font("ComicNeue", "", 28)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(start_x + 120, y + 28, "=")
+            
+            # 5. กล่องสำหรับเติมคำตอบ
             ans_val = str(target_num) if pdf.is_key else ""
             draw_rounded_box(pdf, start_x + 130, y+5, 30, 35, r=5, bg_color=(255,255,255), text=ans_val, font_size=28)
             
