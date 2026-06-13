@@ -1,6 +1,8 @@
 import streamlit as st
 from fpdf import FPDF
 import base64
+import fitz  # เพิ่ม PyMuPDF
+from PIL import Image # เพิ่ม Pillow
 
 # ==========================================
 # 1. ฐานข้อมูลหลักสูตร Pre-K (4 หลัก x 8 ย่อย)
@@ -194,11 +196,37 @@ def generate_pdf_layout(main_topic, sub_topic, theme, num_q, shop_name, is_key=F
 
     return bytes(pdf.output(dest='S'))
 
-# ฟังก์ชันสำหรับ Preview PDF ในเว็บเบราว์เซอร์
+# ฟังก์ชันสำหรับ Preview PDF (แปลงเป็นรูปภาพ ป้องกันเบราว์เซอร์บล็อก)
 def show_pdf_preview(pdf_bytes):
-    base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="700" type="application/pdf"></iframe>'
-    st.markdown(pdf_display, unsafe_allow_html=True)
+    try:
+        # เปิดไฟล์ PDF จากหน่วยความจำ (Bytes)
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        page = doc.load_page(0)  # ดึงหน้าแรกมาแสดง
+        pix = page.get_pixmap(dpi=150) # ความคมชัด
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        
+        # ใส่ CSS ให้กระดาษดูมีมิติเหมือนวางบนโต๊ะ
+        st.markdown(
+            """
+            <style>
+            .premium-paper {
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+                border-radius: 8px;
+                background: white;
+                padding: 4px;
+                border: 1px solid #e0e0e0;
+                display: inline-block;
+            }
+            </style>
+            """, unsafe_allow_html=True
+        )
+        
+        st.markdown("<div class='premium-paper'>", unsafe_allow_html=True)
+        st.image(img, use_container_width=True) # แสดงเป็นรูปภาพ
+        st.markdown("</div>", unsafe_allow_html=True)
+        doc.close()
+    except Exception as e:
+        st.error(f"⚠️ ไม่สามารถแสดงพรีวิวได้: {e}")
 
 # ==========================================
 # 4. Streamlit UI
