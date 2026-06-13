@@ -196,20 +196,21 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
     # 2. TRACE THE NUMBERS
     elif "trace" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Trace and write the number {target_num}.", ln=True)
+        # แก้ไขคำสั่ง: เพิ่มให้ระบายสีรูปภาพด้วย
+        pdf.cell(0, 10, f" Directions: Color the pictures. Then trace and write the number {target_num}.", ln=True)
         pdf.ln(5)
         for i in range(num_q): 
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
-            # กรอบใหญ่พื้นหลัง
+            # กรอบใหญ่พื้นหลัง (กว้าง 185)
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
             
-            # 1. ช่องใส่รูปภาพฝั่งซ้าย - ขยายให้กว้าง 95 เพื่อให้มีพื้นที่วางรูปได้สบายๆ
-            draw_rounded_box(pdf, 20, y+5, 95, 35, r=5, bg_color=(255,255,255), text=f"~ {target_num} Items ~", font_size=11)
+            # 1. ช่องใส่รูปภาพฝั่งซ้าย - ขยายให้กว้างขึ้นอีกเป็น 110
+            draw_rounded_box(pdf, 20, y+5, 110, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {target_num} Items to color ~", font_size=11)
             
-            # 2. ช่องลากเส้นฝั่งขวา - ปรับลดความกว้างเหลือ 75 ให้พอดีสำหรับการเขียนรอยปะ
-            draw_rounded_box(pdf, 120, y+5, 75, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Dotted number {target_num} ~", font_size=11)
+            # 2. ช่องลากเส้นฝั่งขวา - ลดความกว้างลงเหลือ 60 ให้พอดีกับตัวเลข
+            draw_rounded_box(pdf, 135, y+5, 60, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Dotted {target_num} ~", font_size=11)
             
             pdf.ln(55)
 
