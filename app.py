@@ -9,7 +9,7 @@ import urllib.request
 # ==========================================
 # 0. ระบบดาวน์โหลดฟอนต์น่ารักๆ อัตโนมัติ (Cute Font)
 # ==========================================
-FONT_FILE = "CuteFont.ttf"
+FONT_FILE = "ComicNeue-Bold.ttf"
 FONT_URL = "https://github.com/google/fonts/raw/main/ofl/comicneue/ComicNeue-Bold.ttf"
 
 if not os.path.exists(FONT_FILE):
