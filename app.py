@@ -7,9 +7,9 @@ import os
 import urllib.request
 
 # ==========================================
-# 0. ระบบดาวน์โหลดฟอนต์น่ารักๆ อัตโนมัติ (Cute Font)
+# 0. ระบบดาวน์โหลดฟอนต์อัตโนมัติ (Comic Neue)
 # ==========================================
-FONT_FILE = "ComicNeue-Bold.ttf"
+FONT_FILE = "ComicNeue.ttf"
 FONT_URL = "https://github.com/google/fonts/raw/main/ofl/comicneue/ComicNeue-Bold.ttf"
 
 if not os.path.exists(FONT_FILE):
@@ -57,9 +57,9 @@ class PremiumTpTPDF(FPDF):
         self.set_auto_page_break(auto=True, margin=15)
         
         if os.path.exists(FONT_FILE):
-            self.add_font("CuteFont", "", FONT_FILE)
+            self.add_font("ComicNeue", "", FONT_FILE)
         else:
-            self.add_font("CuteFont", "", "helvetica") 
+            self.add_font("ComicNeue", "", "helvetica") 
 
     def header(self):
         self.set_line_width(2.0)
@@ -78,11 +78,11 @@ class PremiumTpTPDF(FPDF):
         self.set_fill_color(*self.colors["primary"])
         self.rect(11, 11, 194, 28, style='F')
         
-        self.set_font("CuteFont", "", 12)
+        self.set_font("ComicNeue", "", 12)
         self.set_text_color(255, 255, 255)
         self.cell(0, 8, " P R E - K   M A T H", ln=True, align="C")
         
-        self.set_font("CuteFont", "", 24)
+        self.set_font("ComicNeue", "", 24)
         clean_topic = self.topic_name.split(". ", 1)[-1].upper()
         title = f"{clean_topic} : NUMBER {self.target_num}" + (" (KEY)" if self.is_key else "")
         self.cell(0, 10, title, ln=True, align="C")
@@ -93,7 +93,7 @@ class PremiumTpTPDF(FPDF):
         self.set_line_width(0.2)
         self.rect(11, 41, 194, 12, style='DF')
         
-        self.set_font("CuteFont", "", 14)
+        self.set_font("ComicNeue", "", 14)
         self.set_text_color(100, 100, 100)
         self.set_y(44)
         self.cell(10, 5, "", ln=0)
@@ -103,7 +103,7 @@ class PremiumTpTPDF(FPDF):
 
     def footer(self):
         self.set_y(-15)
-        self.set_font("CuteFont", "", 10)
+        self.set_font("ComicNeue", "", 10)
         self.set_text_color(150, 150, 150)
         self.cell(0, 10, f"© {self.shop_name} | All Rights Reserved.", align="C")
 
@@ -122,7 +122,7 @@ def draw_placeholder(pdf, x, y, w, h, text="", font_size=12):
         pdf.rect(x, y, w, h, style='DF')
     
     if text:
-        pdf.set_font("CuteFont", "", font_size)
+        pdf.set_font("ComicNeue", "", font_size)
         pdf.set_text_color(150, 150, 150)
         text_w = pdf.get_string_width(text)
         text_h_offset = (font_size * 0.352777) / 2.8 
@@ -143,7 +143,7 @@ def draw_solid_circle(pdf, x, y, d, text="", font_size=28):
     pdf.ellipse(x, y, d, d, style='DF') 
     
     if text:
-        pdf.set_font("CuteFont", "", font_size)
+        pdf.set_font("ComicNeue", "", font_size)
         pdf.set_text_color(*text_color)
         text_w = pdf.get_string_width(text)
         text_h_offset = (font_size * 0.352777) / 3.0 
@@ -161,7 +161,7 @@ def draw_circle_placeholder(pdf, x, y, d, text="?"):
         pdf.ellipse(x, y, d, d, style='DF')
         
     if text:
-        pdf.set_font("CuteFont", "", 28)
+        pdf.set_font("ComicNeue", "", 28)
         pdf.set_text_color(150, 150, 150)
         text_w = pdf.get_string_width(text)
         text_h_offset = (28 * 0.352777) / 3.0
@@ -175,14 +175,14 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
     pdf.add_page()
     
     clean_sub = sub_topic.lower()
-    pdf.set_font("CuteFont", "", 14)
+    pdf.set_font("ComicNeue", "", 14)
     pdf.set_text_color(80, 80, 80)
 
     # 1. FIND THE NUMBER
     if "find" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find and color the number {target_num} in the picture below.", ln=True)
         pdf.ln(5)
-        pdf.set_font("CuteFont", "", 20)
+        pdf.set_font("ComicNeue", "", 20)
         pdf.set_text_color(*theme_colors["primary"])
         pdf.cell(0, 10, f"Target: {target_num}", ln=True, align="C")
         draw_placeholder(pdf, 15, 85, 185, 160, f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~", font_size=14)
@@ -270,7 +270,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             txt_right = f"~ {options[1]} items ~" + (" (CORRECT)" if (pdf.is_key and options[1] == target_num) else "")
             
             draw_placeholder(pdf, 30, y, 60, 45, txt_left)
-            pdf.set_font("CuteFont", "", 20)
+            pdf.set_font("ComicNeue", "", 20)
             pdf.set_text_color(*theme_colors["secondary"])
             pdf.text(102, y + 28, "VS")
             draw_placeholder(pdf, 125, y, 60, 45, txt_right)
@@ -285,7 +285,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         pdf.set_fill_color(*theme_colors["box"])
         pdf.rect(15, y, 185, 20, style='F')
         
-        pdf.set_font("CuteFont", "", 16)
+        pdf.set_font("ComicNeue", "", 16)
         pdf.set_text_color(100, 100, 100)
         pdf.text(35, y + 14, f"{target_num} = Red")
         pdf.text(90, y + 14, f"{target_num+1 if target_num<10 else target_num-1} = Blue")
@@ -328,7 +328,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         start_x = 45
         start_y = pdf.get_y() + 10
         box_s = 25
-        pdf.set_font("CuteFont", "", 16)
+        pdf.set_font("ComicNeue", "", 16)
         pdf.set_text_color(*theme_colors["primary"])
         pdf.text(start_x, start_y - 5, "START")
         
@@ -404,7 +404,7 @@ with st.sidebar:
     generate_btn = st.button("🚀 สร้างโครงร่าง (Generate PDF)", use_container_width=True)
 
 if generate_btn:
-    with st.spinner(f"กำลังสร้างใบงานและดาวน์โหลดฟอนต์น่ารัก โฟกัสเลข {target_num}..."):
+    with st.spinner(f"กำลังสร้างใบงานด้วยฟอนต์ ComicNeue โฟกัสเลข {target_num}..."):
         ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, is_key=False)
         ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, is_key=True)
 
