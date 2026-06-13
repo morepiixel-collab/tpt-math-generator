@@ -438,27 +438,29 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
             
-            # คำนวณความกว้างรวมทั้งหมด:
-            # กล่อง 40 + ช่องไฟ 12 + กล่อง 40 + ช่องไฟ 12 + วงกลม (18+6+18+6+18 = 66) = 170
             start_x = center_x - (170 / 2)
             
-            # 1. กล่องรูปภาพกลุ่มแรก (กว้าง 40)
+            # 1. กล่องรูปภาพกลุ่มแรก 
             draw_rounded_box(pdf, start_x, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n1} items ~", font_size=11)
             
-            # 2. เครื่องหมายบวก (+) จัดให้อยู่กึ่งกลางช่องไฟ 12 (ระหว่าง 40 ถึง 52 -> จุดกึ่งกลางคือ 46)
+            # 2. เครื่องหมายบวก (+) 
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
             w_plus = pdf.get_string_width("+")
             pdf.text(start_x + 46 - (w_plus/2), y + 28, "+")
             
-            # 3. กล่องรูปภาพกลุ่มที่สอง (กว้าง 40 เริ่มที่ 52)
+            # 3. กล่องรูปภาพกลุ่มที่สอง 
+            # (ฟังก์ชันนี้จะแอบเปลี่ยนฟอนต์เป็น 11 ซึ่งคือต้นเหตุของปัญหา)
             draw_rounded_box(pdf, start_x + 52, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} items ~", font_size=11)
             
-            # 4. เครื่องหมายเท่ากับ (=) จัดให้อยู่กึ่งกลางช่องไฟ 12 (ระหว่าง 92 ถึง 104 -> จุดกึ่งกลางคือ 98)
+            # 4. เครื่องหมายเท่ากับ (=) 
+            # [แก้ไขแล้ว] บังคับเซ็ตฟอนต์ให้กลับมาเป็น 28 อีกครั้ง ฐานตัวอักษรจะได้เสมอกัน
+            pdf.set_font("ComicNeue", "", 28)
+            pdf.set_text_color(*theme_colors["primary"])
             w_eq = pdf.get_string_width("=")
             pdf.text(start_x + 98 - (w_eq/2), y + 28, "=")
             
-            # 5. ตัวเลือกวงกลม 3 ตัวเลือก (เริ่มที่ 104 ระยะห่างวงละ 6)
+            # 5. ตัวเลือกวงกลม 3 ตัวเลือก 
             choices = [target_num]
             while len(choices) < 3:
                 wrong = random.randint(1, 10)
