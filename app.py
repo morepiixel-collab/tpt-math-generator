@@ -1,11 +1,11 @@
 import streamlit as st
 from fpdf import FPDF
 import random
-import fitz  # PyMuPDF
+import fitz  
 from PIL import Image
 
 # ==========================================
-# 1. ฐานข้อมูลหัวข้อ Pre-K แท้ๆ (วัย 3-4 ขวบ)
+# 1. ฐานข้อมูลหัวข้อ
 # ==========================================
 PRE_K_CURRICULUM = {
     "1. Number Sense (การรู้ค่าตัวเลข)": [
@@ -17,40 +17,9 @@ PRE_K_CURRICULUM = {
         "6. Color by Number",
         "7. Missing Numbers 1-5",
         "8. Number Mazes"
-    ],
-    "2. Geometry (เรขาคณิต)": [
-        "1. Trace Basic Shapes",
-        "2. Shape Recognition",
-        "3. Match the Shapes",
-        "4. Match Shapes to Real Objects",
-        "5. Sort the Shapes",
-        "6. Color by Shape",
-        "7. Big and Small Shapes",
-        "8. Draw the Shape"
-    ],
-    "3. Measurement (การวัด)": [
-        "1. Big or Small?",
-        "2. Tall or Short?",
-        "3. Long or Short?",
-        "4. Heavy or Light?",
-        "5. Same Size",
-        "6. Order by Size",
-        "7. Measure with Blocks",
-        "8. Which Holds More?"
-    ],
-    "4. Algebraic Thinking (พีชคณิตเบื้องต้น)": [
-        "1. Complete the AB Pattern",
-        "2. Complete the AAB Pattern",
-        "3. Create Your Own Pattern",
-        "4. Sort by Color",
-        "5. Sort by Category",
-        "6. Same or Different?",
-        "7. Spot the Odd One Out",
-        "8. Matching Pairs"
     ]
 }
 
-# โทนสีพาสเทลพรีเมียมสำหรับ Wireframe
 THEME_COLORS = {
     "Cotton Candy (ฟ้า-ชมพู)": {"primary": (118, 165, 234), "secondary": (244, 164, 185), "box": (248, 250, 255)},
     "Minty Fresh (เขียวมิ้นต์)": {"primary": (104, 195, 163), "secondary": (243, 156, 18), "box": (245, 255, 250)},
@@ -59,7 +28,7 @@ THEME_COLORS = {
 }
 
 # ==========================================
-# 2. คลาสสร้างหน้ากระดาษ (Premium Layout)
+# 2. คลาสหน้ากระดาษ (Premium Border)
 # ==========================================
 class PremiumTpTPDF(FPDF):
     def __init__(self, topic_name, color_theme, is_key=False):
@@ -70,12 +39,10 @@ class PremiumTpTPDF(FPDF):
         self.set_auto_page_break(auto=True, margin=15)
 
     def header(self):
-        # 1. กรอบกระดาษขอบหนา
         self.set_line_width(2.0)
         self.set_draw_color(*self.colors["primary"])
         self.rect(8, 8, 200, 263)
         
-        # 2. กรอบด้านใน (เช็คเพื่อกัน Error Streamlit)
         self.set_line_width(0.3)
         self.set_draw_color(*self.colors["secondary"])
         if hasattr(self, 'set_dash_pattern'):
@@ -85,7 +52,6 @@ class PremiumTpTPDF(FPDF):
         else:
             self.rect(11, 11, 194, 257) 
 
-        # 3. แถบ Header สีสันสดใส
         self.set_fill_color(*self.colors["primary"])
         self.rect(11, 11, 194, 28, style='F')
         
@@ -99,7 +65,6 @@ class PremiumTpTPDF(FPDF):
         self.cell(0, 10, title, ln=True, align="C")
         self.ln(6)
         
-        # 4. กล่องใส่ชื่อและวันที่
         self.set_fill_color(245, 245, 245)
         self.set_draw_color(200, 200, 200)
         self.set_line_width(0.2)
@@ -114,13 +79,12 @@ class PremiumTpTPDF(FPDF):
         self.ln(8)
 
 # ==========================================
-# 3. ฟังก์ชันวาดกล่อง Placeholder แบบน่ารัก
+# 3. Helpers สำหรับวาด
 # ==========================================
-def draw_cute_placeholder(pdf, x, y, w, h, text="[ Drop Clipart Here ]"):
+def draw_placeholder(pdf, x, y, w, h, text=""):
     pdf.set_fill_color(*pdf.colors["box"])
     pdf.set_draw_color(180, 180, 180)
     pdf.set_line_width(0.5)
-    
     if hasattr(pdf, 'set_dash_pattern'):
         pdf.set_dash_pattern(dash=3, gap=3)
         pdf.rect(x, y, w, h, style='DF')
@@ -128,142 +92,188 @@ def draw_cute_placeholder(pdf, x, y, w, h, text="[ Drop Clipart Here ]"):
     else:
         pdf.rect(x, y, w, h, style='DF')
     
-    pdf.set_font("helvetica", "I", 11)
-    pdf.set_text_color(150, 150, 150)
-    text_w = pdf.get_string_width(text)
-    pdf.text(x + (w/2) - (text_w/2), y + (h/2) + 2, text)
+    if text:
+        pdf.set_font("helvetica", "I", 10)
+        pdf.set_text_color(150, 150, 150)
+        text_w = pdf.get_string_width(text)
+        pdf.text(x + (w/2) - (text_w/2), y + (h/2) + 2, text)
+
+def draw_solid_box(pdf, x, y, w, h, text=""):
+    pdf.set_fill_color(255, 255, 255)
+    pdf.set_draw_color(*pdf.colors["primary"])
+    pdf.set_line_width(0.8)
+    pdf.rect(x, y, w, h, style='DF')
+    if text:
+        pdf.set_font("helvetica", "B", 18)
+        pdf.set_text_color(*pdf.colors["primary"])
+        text_w = pdf.get_string_width(text)
+        pdf.text(x + (w/2) - (text_w/2), y + (h/2) + 6, text)
 
 # ==========================================
-# 4. เอนจินสร้างเลย์เอาต์สำหรับ Pre-K โดยเฉพาะ
+# 4. BESPOKE LAYOUT ENGINE (หัวใจหลักที่แก้ใหม่)
 # ==========================================
 def generate_worksheet(sub_topic, theme_colors, num_q, is_key=False):
     pdf = PremiumTpTPDF(sub_topic, theme_colors, is_key)
     pdf.add_page()
     
     clean_sub = sub_topic.lower()
-    q_instruction = sub_topic.split(". ", 1)[-1] if ". " in sub_topic else sub_topic
     ans_color = (255, 75, 75) if is_key else (150, 150, 150)
     
     pdf.set_font("helvetica", "B", 12)
     pdf.set_text_color(80, 80, 80)
-    pdf.cell(0, 10, " Directions: Follow the instructions to complete the activity.", ln=True)
-    pdf.ln(2)
-    
-    # ---------------------------------------------------------
-    # Layout 1: เปรียบเทียบ (Measurement / Comparisons)
-    # ---------------------------------------------------------
-    if any(k in clean_sub for k in ["big", "tall", "long", "heavy", "more", "different", "odd"]):
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
-            
-            # เลขข้อ
-            pdf.set_fill_color(*theme_colors["secondary"])
-            pdf.rect(15, pdf.get_y(), 10, 10, style='F')
-            pdf.set_font("helvetica", "B", 12)
-            pdf.set_text_color(255, 255, 255)
-            pdf.text(17, pdf.get_y() + 6, f"{i+1}")
-            
-            pdf.set_font("helvetica", "B", 12)
-            pdf.set_text_color(80, 80, 80)
-            pdf.text(30, pdf.get_y() + 6, f"Find the {q_instruction.split(' ')[0]} one!")
-            
-            # กล่องซ้าย
-            draw_cute_placeholder(pdf, 30, pdf.get_y()+10, 60, 40, "~ Picture A ~")
-            # คำว่า VS
-            pdf.set_font("helvetica", "B", 16)
-            pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(100, pdf.get_y() + 32, "VS")
-            # กล่องขวา
-            draw_cute_placeholder(pdf, 115, pdf.get_y()+10, 60, 40, "~ Picture B ~")
-            
-            if is_key:
-                pdf.set_font("helvetica", "B", 24)
-                pdf.set_text_color(*ans_color)
-                pdf.text(185, pdf.get_y() + 32, "?")
-            
-            pdf.ln(55)
 
-    # ---------------------------------------------------------
-    # Layout 2: อนุกรมและลวดลาย (Patterns)
-    # ---------------------------------------------------------
-    elif "pattern" in clean_sub:
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
-            
-            pdf.set_fill_color(*theme_colors["secondary"])
-            pdf.rect(15, pdf.get_y(), 10, 10, style='F')
-            pdf.set_font("helvetica", "B", 12)
-            pdf.set_text_color(255, 255, 255)
-            pdf.text(17, pdf.get_y() + 6, f"{i+1}")
-            
-            for col in range(4):
-                draw_cute_placeholder(pdf, 30 + (col * 35), pdf.get_y(), 30, 30, "Pic")
-                
-            # กล่องคำตอบ 
-            pdf.set_draw_color(*theme_colors["primary"])
-            pdf.set_line_width(1.0)
-            pdf.set_fill_color(255, 255, 255)
-            pdf.rect(170, pdf.get_y(), 30, 30, style='DF')
-            
-            if is_key:
-                pdf.set_font("helvetica", "B", 20)
-                pdf.set_text_color(*ans_color)
-                pdf.text(180, pdf.get_y() + 18, "?")
-            else:
-                pdf.set_font("helvetica", "B", 10)
-                pdf.set_text_color(150, 150, 150)
-                pdf.text(173, pdf.get_y() + 16, "Next?")
-            
+    # ----------------------------------------
+    # 1. FIND THE NUMBER (ฉากซ่อนหา)
+    # ----------------------------------------
+    if "find" in clean_sub:
+        pdf.cell(0, 10, " Directions: Find and circle the target number in the picture below.", ln=True)
+        pdf.ln(5)
+        
+        target = random.randint(1, 5)
+        pdf.set_font("helvetica", "B", 16)
+        pdf.set_text_color(*theme_colors["primary"])
+        pdf.cell(0, 10, f"Find the number:  {target}", ln=True, align="C")
+        
+        draw_placeholder(pdf, 15, 85, 185, 160, f"~ Canva: Add a large scene. Scatter number {target} inside ~")
+
+    # ----------------------------------------
+    # 2. TRACE THE NUMBERS (กล่องลากเส้นประ)
+    # ----------------------------------------
+    elif "trace" in clean_sub:
+        pdf.cell(0, 10, " Directions: Trace the numbers.", ln=True)
+        pdf.ln(5)
+        
+        for i in range(1, 6): # ทำ 5 บรรทัด เลข 1-5
+            y = pdf.get_y()
+            # กล่องรูปภาพเล็กๆ ด้านซ้าย
+            draw_placeholder(pdf, 20, y, 30, 30, f"Pic x{i}")
+            # พื้นที่ลากเส้น
+            draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Add dotted number {i} here ~")
             pdf.ln(40)
 
-    # ---------------------------------------------------------
-    # Layout 3: นับจำนวน (Counting 1-5)
-    # ---------------------------------------------------------
-    elif any(k in clean_sub for k in ["count", "match", "how many", "number"]):
+    # ----------------------------------------
+    # 3. COUNTING 1-5 (นับแล้ววงกลมเลข)
+    # ----------------------------------------
+    elif "counting" in clean_sub:
+        pdf.cell(0, 10, " Directions: Count the objects and circle the correct number.", ln=True)
+        pdf.ln(5)
+        
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
             
-            pdf.set_fill_color(*theme_colors["secondary"])
-            pdf.rect(15, pdf.get_y(), 10, 10, style='F')
-            pdf.set_font("helvetica", "B", 12)
-            pdf.set_text_color(255, 255, 255)
-            pdf.text(17, pdf.get_y() + 6, f"{i+1}")
+            # กล่องรูปภาพ
+            draw_placeholder(pdf, 25, y, 80, 40, f"~ Add {random.randint(1,5)} items ~")
             
-            draw_cute_placeholder(pdf, 30, pdf.get_y(), 120, 35, f"~ Add 1-5 Items for {q_instruction} ~")
-            
-            # กล่องคำตอบ
-            pdf.set_draw_color(*theme_colors["primary"])
-            pdf.set_line_width(0.8)
-            pdf.set_fill_color(255, 255, 255)
-            pdf.rect(160, pdf.get_y(), 35, 35, style='DF')
-            
-            if is_key:
-                pdf.set_font("helvetica", "B", 24)
-                pdf.set_text_color(*ans_color)
-                pdf.text(172, pdf.get_y() + 20, "?")
-            else:
-                pdf.set_font("helvetica", "B", 10)
-                pdf.set_text_color(150, 150, 150)
-                pdf.text(168, pdf.get_y() + 18, "Ans")
-            
-            pdf.ln(45)
-
-    # ---------------------------------------------------------
-    # Layout 4: รูปทรงและลากเส้น (Trace / Shapes)
-    # ---------------------------------------------------------
-    else:
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
-            
-            pdf.set_fill_color(*theme_colors["secondary"])
-            pdf.rect(15, pdf.get_y(), 10, 10, style='F')
-            pdf.set_font("helvetica", "B", 12)
-            pdf.set_text_color(255, 255, 255)
-            pdf.text(17, pdf.get_y() + 6, f"{i+1}")
-            
-            draw_cute_placeholder(pdf, 30, pdf.get_y(), 165, 40, f"~ Add Traceable Lines / Shapes for {q_instruction} ~")
+            # ตัวเลือก 3 วงกลม (ใช้ Box แทนเพื่อให้รองรับ FPDF)
+            draw_solid_box(pdf, 120, y+10, 20, 20, "1")
+            draw_solid_box(pdf, 145, y+10, 20, 20, "3")
+            draw_solid_box(pdf, 170, y+10, 20, 20, "5")
             
             pdf.ln(50)
+
+    # ----------------------------------------
+    # 4. COUNT AND MATCH (โยงเส้นจับคู่ 2 คอลัมน์)
+    # ----------------------------------------
+    elif "match" in clean_sub:
+        pdf.cell(0, 10, " Directions: Count the objects and draw a line to the correct number.", ln=True)
+        pdf.ln(10)
+        
+        for i in range(4): # 4 ข้อต่อหน้าพอดี
+            y = pdf.get_y()
+            # ฝั่งซ้าย (รูป)
+            draw_placeholder(pdf, 30, y, 50, 35, f"~ Clipart Group {i+1} ~")
+            # ฝั่งขวา (เลข)
+            draw_solid_box(pdf, 140, y, 35, 35, f"{random.randint(1,5)}")
+            pdf.ln(45)
+
+    # ----------------------------------------
+    # 5. MORE OR LESS (เปรียบเทียบซ้ายขวา)
+    # ----------------------------------------
+    elif "more" in clean_sub:
+        pdf.cell(0, 10, " Directions: Look at the two boxes. Circle the box that has MORE.", ln=True)
+        pdf.ln(5)
+        
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            draw_placeholder(pdf, 30, y, 60, 45, "~ Group A ~")
+            
+            pdf.set_font("helvetica", "B", 18)
+            pdf.set_text_color(*theme_colors["secondary"])
+            pdf.text(100, y + 25, "VS")
+            
+            draw_placeholder(pdf, 125, y, 60, 45, "~ Group B ~")
+            pdf.ln(55)
+
+    # ----------------------------------------
+    # 6. COLOR BY NUMBER (รหัสสี + รูปใหญ่)
+    # ----------------------------------------
+    elif "color" in clean_sub:
+        pdf.cell(0, 10, " Directions: Color the picture using the color code.", ln=True)
+        pdf.ln(5)
+        
+        # Legend (รหัสสี)
+        y = pdf.get_y()
+        pdf.set_fill_color(*theme_colors["box"])
+        pdf.rect(15, y, 185, 30, style='F')
+        
+        colors = ["1 = Red", "2 = Blue", "3 = Green", "4 = Yellow"]
+        pdf.set_font("helvetica", "B", 12)
+        pdf.set_text_color(100, 100, 100)
+        for i, c in enumerate(colors):
+            pdf.text(30 + (i*40), y + 18, c)
+            
+        pdf.ln(40)
+        
+        # กล่องระบายสี
+        draw_placeholder(pdf, 15, pdf.get_y(), 185, 140, "~ Canva: Add a large Coloring Image with numbers 1-4 inside ~")
+
+    # ----------------------------------------
+    # 7. MISSING NUMBERS (ขบวนรถไฟ / กล่องต่อกัน)
+    # ----------------------------------------
+    elif "missing" in clean_sub:
+        pdf.cell(0, 10, " Directions: Fill in the missing numbers.", ln=True)
+        pdf.ln(10)
+        
+        for i in range(num_q):
+            if pdf.get_y() > 240: pdf.add_page()
+            y = pdf.get_y()
+            
+            seq = [1, 2, 3, 4, 5]
+            hidden = random.sample([0,1,2,3,4], 2) # ซ่อน 2 ตัว
+            
+            for j in range(5):
+                x = 20 + (j * 35)
+                if j in hidden:
+                    draw_placeholder(pdf, x, y, 30, 30, "?") # ว่าง
+                else:
+                    draw_solid_box(pdf, x, y, 30, 30, str(seq[j])) # มีเลข
+                    
+            pdf.ln(50)
+
+    # ----------------------------------------
+    # 8. NUMBER MAZES (ตารางเขาวงกต)
+    # ----------------------------------------
+    elif "maze" in clean_sub:
+        pdf.cell(0, 10, " Directions: Color the number 3 to find the way out of the maze!", ln=True)
+        pdf.ln(5)
+        
+        # วาด Grid 5x5
+        start_x = 45
+        start_y = pdf.get_y() + 10
+        box_s = 25
+        
+        pdf.set_font("helvetica", "B", 12)
+        pdf.set_text_color(*theme_colors["primary"])
+        pdf.text(start_x, start_y - 5, "START")
+        
+        for row in range(5):
+            for col in range(5):
+                draw_solid_box(pdf, start_x + (col*box_s), start_y + (row*box_s), box_s, box_s, "3" if random.random() > 0.5 else "4")
+                
+        pdf.text(start_x + (4*box_s), start_y + (5*box_s) + 10, "FINISH")
 
     return bytes(pdf.output(dest='S'))
 
@@ -280,17 +290,7 @@ def display_pdf_preview(pdf_bytes):
         st.markdown(
             """
             <style>
-            .premium-paper {
-                box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-                border-radius: 12px;
-                background: white;
-                padding: 10px;
-                border: 1px solid #f0f0f0;
-                transition: transform 0.3s ease;
-            }
-            .premium-paper:hover {
-                transform: scale(1.02);
-            }
+            .premium-paper { box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-radius: 12px; background: white; padding: 10px; border: 1px solid #f0f0f0; }
             </style>
             """, unsafe_allow_html=True
         )
@@ -308,69 +308,39 @@ st.set_page_config(page_title="Pre-K Premium Generator", layout="wide", page_ico
 
 st.markdown("""
 <style>
-    .main-header {
-        background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
-        padding: 2rem;
-        border-radius: 15px;
-        color: #2c3e50;
-        text-align: center;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    }
-    div.stButton > button {
-        background-color: #ff9a9e;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        transition: all 0.3s;
-    }
-    div.stButton > button:hover {
-        background-color: #ff758c;
-    }
+    .main-header { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); padding: 2rem; border-radius: 15px; color: #2c3e50; text-align: center; margin-bottom: 2rem; }
+    div.stButton > button { background-color: #ff9a9e; color: white; border: none; border-radius: 8px; font-weight: bold; }
 </style>
 <div class="main-header">
-    <h1 style="margin:0; font-weight:800;">✨ Premium Pre-K Wireframe Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">สร้างโครงกระดูกใบงานเตรียมอนุบาล (3-4 ขวบ) สไตล์พรีเมียม นำไปแต่งต่อใน Canva</p>
+    <h1 style="margin:0; font-weight:800;">✨ Pre-K Bespoke Layout Generator</h1>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">อัปเกรดเลย์เอาต์! แยกโครงสร้างการจัดหน้าตามประเภทกิจกรรมโดยเฉพาะ (ไม่ซ้ำซาก)</p>
 </div>
 """, unsafe_allow_html=True)
 
 with st.sidebar:
     st.header("🎨 ตกแต่งใบงาน (Customize)")
     
-    main_topic = st.selectbox("📌 1. เลือกหมวดหลัก (Core Math):", list(PRE_K_CURRICULUM.keys()))
-    sub_topic = st.selectbox("🎯 2. เลือกกิจกรรม (Activity):", PRE_K_CURRICULUM[main_topic])
+    # ตอนนี้รองรับเฉพาะหมวดแรก เพื่อโชว์ความสามารถของ Bespoke Layout
+    main_topic = "1. Number Sense (การรู้ค่าตัวเลข)" 
+    sub_topic = st.selectbox("🎯 1. เลือกกิจกรรม (Activity):", PRE_K_CURRICULUM[main_topic])
     
-    theme_choice = st.selectbox("🖌️ 3. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
+    theme_choice = st.selectbox("🖌️ 2. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
     selected_colors = THEME_COLORS[theme_choice]
     
-    # Pre-K เน้นรูปใหญ่ จำนวนข้อเลยต้องน้อยๆ 2-4 ข้อต่อหน้าพอ
-    num_q = st.slider("🔢 4. จำนวนข้อต่อหน้า:", min_value=2, max_value=4, value=3)
+    num_q = st.slider("🔢 3. จำนวนข้อต่อหน้า:", min_value=2, max_value=4, value=3)
 
-# Generate Live
 ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, is_key=False)
-ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, is_key=True)
 
 col1, col2 = st.columns([1.5, 1])
-
 with col1:
     display_pdf_preview(ws_bytes)
-
 with col2:
     st.subheader("📥 ดาวน์โหลดไฟล์ (Ready for Canva)")
-    st.markdown("1. ดาวน์โหลดไฟล์ PDF ด้านล่าง\n2. เปิดในเว็บ **Canva**\n3. ลาก Clipart น่ารักๆ (จำนวน 1-5 ชิ้น) ไปวางทับในเส้นประได้เลย!")
-    
+    st.markdown("ตอนนี้เลย์เอาต์เปลี่ยนตามกิจกรรมแล้ว! ลองเปลี่ยนหัวข้อดูความแตกต่างในหน้าพรีวิวนะครับ")
     st.download_button(
-        label="📄 ดาวน์โหลดใบงาน (Worksheet PDF)",
+        label="📄 ดาวน์โหลดโครงร่าง (Worksheet PDF)",
         data=ws_bytes,
         file_name=f"PreK_{sub_topic.split('. ')[1].replace(' ', '_')}.pdf",
-        mime="application/pdf",
-        use_container_width=True
-    )
-    st.download_button(
-        label="🔑 ดาวน์โหลดเฉลย (Answer Key PDF)",
-        data=ans_bytes,
-        file_name=f"PreK_KEY_{sub_topic.split('. ')[1].replace(' ', '_')}.pdf",
         mime="application/pdf",
         use_container_width=True
     )
