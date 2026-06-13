@@ -31,6 +31,16 @@ PRE_K_CURRICULUM = {
         "6. Color by Number",
         "7. Missing Numbers",
         "8. Number Mazes"
+    ],
+    "2. Operations (การดำเนินการทางคณิตศาสตร์)": [
+        "1. Color to Add",
+        "2. Count and Color Total",
+        "3. Take Away and Color",
+        "4. Color the Addition Path",
+        "5. Color to Make Target",
+        "6. Draw and Color More",
+        "7. Cross Out and Color",
+        "8. Color the Correct Sum"
     ]
 }
 
@@ -380,6 +390,240 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                 
         tw_finish = pdf.get_string_width("FINISH")
         pdf.text(start_x + (4*box_s) + (box_s/2) - (tw_finish/2), start_y + (5*box_s) + 5, "FINISH")
+
+
+
+
+    # ==========================================
+    # โซนแกนที่ 2 : OPERATIONS (Pre-K เน้นระบายสี)
+    # ==========================================
+
+    # 1. COLOR TO ADD (ระบายสี 2 กลุ่มรวมกันให้ได้ผลลัพธ์)
+    elif "color to add" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Color the pictures to add them together.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            n1 = random.randint(1, target_num - 1) if target_num > 1 else 1
+            n2 = target_num - n1 if target_num > 1 else 0
+            
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - (160 / 2)
+            
+            draw_rounded_box(pdf, start_x, y+5, 50, 35, r=5, bg_color=(255,255,255), text=f"~ Color {n1} ~")
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(start_x + 56, y + 27, "+")
+            
+            draw_rounded_box(pdf, start_x + 65, y+5, 50, 35, r=5, bg_color=(255,255,255), text=f"~ Color {n2} ~")
+            pdf.text(start_x + 121, y + 27, "=")
+            
+            draw_rounded_box(pdf, start_x + 130, y+5, 30, 35, r=5, bg_color=(255,255,255), text=str(target_num) if pdf.is_key else "?", font_size=28)
+            pdf.ln(50)
+
+    # 2. COUNT AND COLOR TOTAL (นับภาพรวมกันแล้วระบายสีวงกลมคำตอบ)
+    elif "count and color total" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Count all the items and color the correct circle.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            n1 = random.randint(1, target_num - 1) if target_num > 1 else 1
+            n2 = target_num - n1 if target_num > 1 else 0
+            
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - (170 / 2)
+            
+            draw_rounded_box(pdf, start_x, y+5, 45, 35, r=5, bg_color=(255,255,255), text=f"~ {n1} items ~")
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(start_x + 48, y + 27, "+")
+            
+            draw_rounded_box(pdf, start_x + 55, y+5, 45, 35, r=5, bg_color=(255,255,255), text=f"~ {n2} items ~")
+            pdf.text(start_x + 103, y + 27, "=")
+            
+            choices = [target_num]
+            while len(choices) < 3:
+                wrong = random.randint(1, 10)
+                if wrong not in choices: choices.append(wrong)
+            random.shuffle(choices)
+            
+            draw_solid_circle(pdf, start_x + 112, y+11.5, 18, str(choices[0]), font_size=20, is_path=(choices[0]==target_num))
+            draw_solid_circle(pdf, start_x + 132, y+11.5, 18, str(choices[1]), font_size=20, is_path=(choices[1]==target_num))
+            draw_solid_circle(pdf, start_x + 152, y+11.5, 18, str(choices[2]), font_size=20, is_path=(choices[2]==target_num))
+            pdf.ln(50)
+
+    # 3. TAKE AWAY AND COLOR (ฝึกการลบ ระบายสีกากบาทของที่เอาออก)
+    elif "take away and color" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Cross out the items to take away and color the rest.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            take = random.randint(1, target_num) if target_num > 1 else 1
+            left = target_num - take
+            
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - (160 / 2)
+            
+            draw_rounded_box(pdf, start_x, y+5, 90, 35, r=5, bg_color=(255,255,255), text=f"~ Total {target_num}. Cross out {take} ~", font_size=12)
+            
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(start_x + 95, y + 27, "->")
+            
+            ans_txt = f"Left: {left}" if pdf.is_key else "? Left"
+            draw_rounded_box(pdf, start_x + 110, y+5, 50, 35, r=5, bg_color=(255,255,255), text=ans_txt, font_size=16)
+            pdf.ln(50)
+
+    # 4. COLOR THE ADDITION PATH (ระบายสีทางเดินผลบวกที่ได้เท่ากับ Target)
+    elif "addition path" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Color the bubbles that add up to {target_num} to find the path!", ln=True)
+        pdf.ln(5)
+        
+        start_x = center_x - (125 / 2)
+        start_y = pdf.get_y() + 10
+        box_s = 25
+        
+        pdf.set_font("ComicNeue", "", 16)
+        pdf.set_text_color(*theme_colors["primary"])
+        tw_start = pdf.get_string_width("START")
+        pdf.text(start_x + (box_s/2) - (tw_start/2), start_y - 5, "START")
+        
+        path = set()
+        r, c = 0, 0
+        path.add((r, c))
+        while r < 4 or c < 4:
+            if r == 4: c += 1
+            elif c == 4: r += 1
+            else:
+                if random.choice([True, False]): r += 1
+                else: c += 1
+            path.add((r, c))
+            
+        for row in range(5):
+            for col in range(5):
+                is_correct = (row, col) in path
+                if is_correct:
+                    n1 = random.randint(0, target_num)
+                    n2 = target_num - n1
+                else:
+                    wrong_ans = random.choice([x for x in range(1, 11) if x != target_num])
+                    n1 = random.randint(0, wrong_ans)
+                    n2 = wrong_ans - n1
+                
+                text_eq = f"{n1}+{n2}"
+                draw_solid_circle(pdf, start_x + (col*box_s) + 2, start_y + (row*box_s) + 2, 20, text_eq, font_size=14, is_path=is_correct)
+                
+        tw_finish = pdf.get_string_width("FINISH")
+        pdf.text(start_x + (4*box_s) + (box_s/2) - (tw_finish/2), start_y + (5*box_s) + 5, "FINISH")
+
+    # 5. COLOR TO MAKE TARGET (ระบายสีส่วนที่ขาดให้ครบ Target)
+    elif "make target" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Color more items to make exactly {target_num}.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            have = random.randint(1, target_num - 1) if target_num > 1 else 0
+            need = target_num - have
+            
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - (160 / 2)
+            
+            draw_rounded_box(pdf, start_x, y+5, 70, 35, r=5, bg_color=(255,255,255), text=f"~ Have {have}. Color {need} more ~", font_size=12)
+            
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(start_x + 75, y + 27, "=")
+            
+            draw_rounded_box(pdf, start_x + 90, y+5, 70, 35, r=5, bg_color=(255,255,255), text=f"~ Total: {target_num} ~", font_size=16)
+            pdf.ln(50)
+
+    # 6. DRAW AND COLOR MORE (วาดและระบายสีเพิ่ม)
+    elif "draw and color" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Draw and color more items to reach {target_num}.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            have = random.randint(1, target_num - 1) if target_num > 1 else 0
+            
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - (160 / 2)
+            
+            draw_rounded_box(pdf, start_x, y+5, 160, 35, r=5, bg_color=(255,255,255), text=f"~ Start with {have}. Draw more to make {target_num} ~", font_size=12)
+            pdf.ln(50)
+
+    # 7. CROSS OUT AND COLOR (ลบรูปแบบกากบาทแล้วระบายผลลัพธ์)
+    elif "cross out" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Cross out the number given, then color the rest.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            take = random.randint(1, target_num) if target_num > 1 else 1
+            left = target_num - take
+            
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - (160 / 2)
+            
+            draw_rounded_box(pdf, start_x, y+5, 60, 35, r=5, bg_color=(255,255,255), text=f"~ Total {target_num} ~")
+            
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(start_x + 63, y + 27, "-")
+            
+            draw_rounded_box(pdf, start_x + 70, y+5, 40, 35, r=5, bg_color=(255,255,255), text=str(take), font_size=24)
+            
+            pdf.text(start_x + 113, y + 27, "=")
+            
+            ans_txt = str(left) if pdf.is_key else "?"
+            draw_rounded_box(pdf, start_x + 120, y+5, 40, 35, r=5, bg_color=(255,255,255), text=ans_txt, font_size=28)
+            pdf.ln(50)
+
+    # 8. COLOR THE CORRECT SUM (หาผลรวมแล้วระบายสีกล่องที่ตัวเลขถูกต้อง)
+    elif "correct sum" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Add the pictures and color the box with the correct number.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            n1 = random.randint(1, target_num - 1) if target_num > 1 else 1
+            n2 = target_num - n1 if target_num > 1 else 0
+            
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - (170 / 2)
+            
+            draw_rounded_box(pdf, start_x, y+5, 70, 35, r=5, bg_color=(255,255,255), text=f"~ {n1} items + {n2} items ~", font_size=12)
+            
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(start_x + 75, y + 27, "=")
+            
+            choices = [target_num]
+            while len(choices) < 3:
+                wrong = random.randint(1, 10)
+                if wrong not in choices: choices.append(wrong)
+            random.shuffle(choices)
+            
+            bg1 = theme_colors["secondary"] if (pdf.is_key and choices[0]==target_num) else (255,255,255)
+            bg2 = theme_colors["secondary"] if (pdf.is_key and choices[1]==target_num) else (255,255,255)
+            bg3 = theme_colors["secondary"] if (pdf.is_key and choices[2]==target_num) else (255,255,255)
+            
+            draw_rounded_box(pdf, start_x + 90, y+10, 22, 25, r=4, bg_color=bg1, text=str(choices[0]), font_size=20)
+            draw_rounded_box(pdf, start_x + 118, y+10, 22, 25, r=4, bg_color=bg2, text=str(choices[1]), font_size=20)
+            draw_rounded_box(pdf, start_x + 146, y+10, 22, 25, r=4, bg_color=bg3, text=str(choices[2]), font_size=20)
+            pdf.ln(50)
+    
 
     return bytes(pdf.output(dest='S'))
 
