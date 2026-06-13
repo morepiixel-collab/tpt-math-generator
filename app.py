@@ -194,17 +194,24 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.cell(0, 10, f"Target: {target_num}", ln=True, align="C")
         draw_rounded_box(pdf, 15, 85, 185, 160, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~", font_size=14)
 
+    # 2. TRACE THE NUMBERS
     elif "trace" in clean_sub:
         pdf.cell(0, 10, f" Directions: Trace and write the number {target_num}.", ln=True)
         pdf.ln(5)
-        for i in range(num_q + 1): 
-            if pdf.get_y() > 240: pdf.add_page()
+        for i in range(num_q): 
+            if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
-            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
-            start_x = center_x - (160 / 2)
-            draw_rounded_box(pdf, start_x, y+5, 30, 30, r=5, bg_color=(255, 255, 255), text=f"~ {target_num} Items ~")
-            draw_rounded_box(pdf, start_x+40, y+5, 120, 30, r=5, bg_color=(255, 255, 255), text=f"~ Canva: Dotted number {target_num} ~")
-            pdf.ln(45)
+            
+            # กรอบใหญ่พื้นหลัง
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            
+            # 1. ช่องใส่รูปภาพฝั่งซ้าย - ขยายให้กว้าง 95 เพื่อให้มีพื้นที่วางรูปได้สบายๆ
+            draw_rounded_box(pdf, 20, y+5, 95, 35, r=5, bg_color=(255,255,255), text=f"~ {target_num} Items ~", font_size=11)
+            
+            # 2. ช่องลากเส้นฝั่งขวา - ปรับลดความกว้างเหลือ 75 ให้พอดีสำหรับการเขียนรอยปะ
+            draw_rounded_box(pdf, 120, y+5, 75, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Dotted number {target_num} ~", font_size=11)
+            
+            pdf.ln(55)
 
     elif "counting" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the objects. Color the circle with the correct number.", ln=True)
