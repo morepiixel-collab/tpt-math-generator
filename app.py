@@ -1,233 +1,196 @@
 import streamlit as st
 from fpdf import FPDF
+import random
 import base64
-import fitz  # เพิ่ม PyMuPDF
-from PIL import Image # เพิ่ม Pillow
+import fitz  # PyMuPDF
+from PIL import Image
 
 # ==========================================
-# 1. ฐานข้อมูลหลักสูตร Pre-K (4 หลัก x 8 ย่อย)
+# 1. ฐานข้อมูลหัวข้อ (จากไฟล์อ้างอิงของคุณ)
 # ==========================================
-PRE_K_CURRICULUM = {
-    "1. Number Sense (ความเข้าใจตัวเลข)": [
-        "1. Find the Number",
-        "2. Trace the Numbers 1-5",
-        "3. Counting 1-5",
-        "4. Count and Match",
-        "5. More or Less?",
-        "6. Color by Number",
-        "7. Missing Numbers 1-5",
-        "8. Number Mazes"
-    ],
-    "2. Geometry (เรขาคณิต)": [
-        "1. Trace Basic Shapes",
-        "2. Shape Recognition",
-        "3. Match the Shapes",
-        "4. Match Shapes to Real Objects",
-        "5. Sort the Shapes",
-        "6. Color by Shape",
-        "7. Big and Small Shapes",
-        "8. Draw the Shape"
-    ],
-    "3. Measurement (การวัด)": [
-        "1. Big or Small?",
-        "2. Tall or Short?",
-        "3. Long or Short?",
-        "4. Heavy or Light?",
-        "5. Same Size",
-        "6. Order by Size",
-        "7. Measure with Blocks",
-        "8. Which Holds More?"
-    ],
-    "4. Algebraic Thinking (พีชคณิตเบื้องต้น)": [
-        "1. Complete the AB Pattern",
-        "2. Complete the AAB Pattern",
-        "3. Create Your Own Pattern",
-        "4. Sort by Color",
-        "5. Sort by Category",
-        "6. Same or Different?",
-        "7. Spot the Odd One Out",
-        "8. Matching Pairs"
-    ]
-}
+KINDERGARTEN_TOPICS = [
+    "1. Teen Numbers (11-20)",
+    "2. What Comes Next?",
+    "3. Order Numbers (Smallest to Largest)",
+    "4. Write Number's Name",
+    "5. Missing Addends",
+    "6. Picture Subtraction",
+    "7. Color by Answer",
+    "8. How Many Sides?",
+    "9. Tens and Ones",
+    "10. True or False",
+    "11. Which is More?",
+    "12. Count by 5's",
+    "13. Roll It On"
+]
 
 # ==========================================
-# 2. คลาสสร้างเอกสาร PDF (ขนาด US Letter)
+# 2. คลาสสร้างหน้ากระดาษ (US Letter)
 # ==========================================
-class MathWorksheetPDF(FPDF):
-    def __init__(self, theme_name, title, shop_name, is_answer_key=False):
-        super().__init__(orientation='P', unit='in', format='letter')
-        self.theme_name = theme_name
-        self.title_text = title
-        self.shop_name = shop_name  # รับชื่อร้านจากระบบ
-        self.is_answer_key = is_answer_key
-        self.set_auto_page_break(auto=True, margin=0.5)
+class TpTKindergartenPDF(FPDF):
+    def __init__(self, topic_name, is_key=False):
+        super().__init__(orientation='P', unit='mm', format='Letter')
+        self.topic_name = topic_name
+        self.is_key = is_key
+        self.set_auto_page_break(auto=True, margin=15)
 
     def header(self):
-        # กรอบเอกสารมาตรฐาน
-        self.set_line_width(0.05)
-        self.set_draw_color(44, 62, 80)
-        self.rect(0.25, 0.25, 8.0, 10.5)
-        
-        self.set_line_width(0.01)
-        self.set_draw_color(0, 0, 0)
-        self.rect(0.3, 0.3, 7.9, 10.4)
+        # กรอบขอบกระดาษ (Border)
+        self.set_line_width(0.5)
+        self.rect(10, 10, 196, 259)
+        self.set_line_width(0.2)
+        self.rect(12, 12, 192, 255)
 
-        # ช่องกรอกชื่อ-วันที่
+        # แถบ Header สีเทาด้านบน (สไตล์ TpT)
+        self.set_fill_color(230, 230, 230)
+        self.rect(10, 10, 196, 25, style='F')
+        
         self.set_font("helvetica", "B", 12)
+        self.set_text_color(100, 100, 100)
+        self.cell(0, 5, "KINDERGARTEN MATH", ln=True, align="L")
+        
+        # ชื่อหัวข้อ
+        self.set_font("helvetica", "B", 20)
         self.set_text_color(0, 0, 0)
-        self.cell(0, 0.5, "Name: _______________________      Date: ______________", ln=True, align="C")
+        clean_topic = self.topic_name.split(". ", 1)[-1]
+        title = clean_topic + (" (ANSWER KEY)" if self.is_key else "")
+        self.cell(0, 10, title, ln=True, align="C")
         
-        # ชื่อหัวข้อกิจกรรม
-        self.set_font("helvetica", "B", 16)
-        clean_title = self.title_text.split(". ", 1)[-1] if ". " in self.title_text else self.title_text
-        display_title = f"{clean_title} ({self.theme_name})"
-        
-        if self.is_answer_key:
-            display_title += " - KEY"
-            self.set_text_color(220, 20, 60)
-            
-        self.cell(0, 0.4, display_title, ln=True, align="C")
-        self.ln(0.2)
-        
-    def footer(self):
-        # แสดงชื่อร้าน (Copyright) ที่ท้ายกระดาษ
-        self.set_y(-0.5)
-        self.set_font("helvetica", "I", 8)
-        self.set_text_color(150, 150, 150)
-        # ใช้ข้อความลิขสิทธิ์สไตล์ TpT
-        self.cell(0, 0.2, f"© {self.shop_name} | All Rights Reserved.", align="C")
+        # ช่องกรอกชื่อ
+        self.set_font("helvetica", "B", 12)
+        self.cell(0, 10, "Name: _______________________   Date: _________", ln=True, align="R")
+        self.ln(5)
 
 # ==========================================
-# 3. ฟังก์ชันจัด Layout อัตโนมัติตามหัวข้อ (อัปเดตให้แสดงคำสั่งเฉพาะข้อชัดเจน)
+# 3. ฟังก์ชันวาดกรอบเว้นว่างสำหรับรูปภาพ (Placeholder)
 # ==========================================
-def generate_pdf_layout(main_topic, sub_topic, theme, num_q, shop_name, is_key=False):
-    pdf = MathWorksheetPDF(theme, sub_topic, shop_name, is_key)
+def draw_image_placeholder(pdf, x, y, w, h, text="[ Insert Image Here ]"):
+    pdf.set_fill_color(250, 250, 250)
+    pdf.set_draw_color(180, 180, 180)
+    pdf.set_dash_pattern(dash=2, gap=2) # ทำเส้นประ
+    pdf.rect(x, y, w, h, style='DF')
+    pdf.set_dash_pattern() # คืนค่าเส้นทึบ
+    
+    pdf.set_font("helvetica", "I", 10)
+    pdf.set_text_color(150, 150, 150)
+    pdf.text(x + (w/2) - (pdf.get_string_width(text)/2), y + (h/2) + 2, text)
+    pdf.set_text_color(0, 0, 0)
+
+# ==========================================
+# 4. ฟังก์ชันสร้างโจทย์และ Layout
+# ==========================================
+def generate_worksheet(topic, num_q, is_key=False):
+    pdf = TpTKindergartenPDF(topic, is_key)
     pdf.add_page()
-    pdf.set_font("helvetica", "", 12)
+    pdf.set_font("helvetica", "", 14)
     
-    clean_sub = sub_topic.lower()
-    # ดึงชื่อหัวข้อย่อยแบบตัดตัวเลขข้างหน้าออก เพื่อเอามาเป็นคำสั่งในแต่ละข้อ
-    q_instruction = sub_topic.split(". ", 1)[-1] if ". " in sub_topic else sub_topic
+    clean_topic = topic.split(". ", 1)[-1]
+    ans_color = (220, 20, 20) if is_key else (0, 0, 0)
     
-    # ---------------------------------------------------------
-    # Layout 1: เปรียบเทียบ (Measurement / Comparisons)
-    # ---------------------------------------------------------
-    if any(k in clean_sub for k in ["big", "tall", "long", "heavy", "more", "different", "odd"]):
-        pdf.cell(0, 0.3, "Directions: Compare the pictures and circle the correct answer.", ln=True)
-        pdf.ln(0.2)
+    # ------------------------------------------------
+    # รูปแบบ 1: แบบ 2 คอลัมน์ (โจทย์สั้นๆ / สมการ)
+    # ------------------------------------------------
+    if clean_topic in ["What Comes Next?", "Missing Addends", "True or False", "Which is More?", "Write Number's Name"]:
+        pdf.cell(0, 10, "Directions: Solve the math problems below.", ln=True)
+        pdf.ln(5)
+        
+        col_w = 90
+        box_h = 40
         for i in range(num_q):
-            if pdf.get_y() > 8.5: pdf.add_page()
+            col = i % 2
+            x = 15 if col == 0 else 15 + col_w + 10
+            if col == 0 and i > 0:
+                pdf.set_y(pdf.get_y() + box_h + 5)
+            if pdf.get_y() > 220:
+                pdf.add_page()
+                pdf.set_y(45)
             
-            # ✨ เพิ่มคำสั่งกำกับแต่ละข้อให้เห็นความต่างชัดเจน
+            # วาดกล่องโจทย์
+            pdf.set_draw_color(0, 0, 0)
+            pdf.rect(x, pdf.get_y(), col_w, box_h)
             pdf.set_font("helvetica", "B", 12)
-            pdf.cell(0, 0.3, f"{i+1}. Activity: {q_instruction}", ln=True)
-            pdf.set_font("helvetica", "", 12)
+            pdf.text(x + 5, pdf.get_y() + 8, f"Q{i+1}")
             
-            pdf.set_fill_color(245, 245, 245)
-            # กล่องซ้าย
-            pdf.rect(1.0, pdf.get_y(), 2.5, 1.5, style='FD')
-            pdf.text(1.2, pdf.get_y() + 0.8, f"[ {theme} A ]")
-            # คำว่า OR หรือ VS
-            pdf.set_font("helvetica", "B", 12)
-            pdf.text(4.0, pdf.get_y() + 0.8, "VS")
-            pdf.set_font("helvetica", "", 12)
-            # กล่องขวา
-            pdf.rect(4.8, pdf.get_y(), 2.5, 1.5, style='FD')
-            pdf.text(5.0, pdf.get_y() + 0.8, f"[ {theme} B ]")
-            
-            pdf.ln(1.8)
+            # เนื้อหาโจทย์
+            pdf.set_font("helvetica", "B", 18)
+            if clean_topic == "What Comes Next?":
+                start = random.randint(1, 15)
+                pdf.text(x + 15, pdf.get_y() + 25, f"{start},  {start+1},  {start+2},  _____")
+                if is_key:
+                    pdf.set_text_color(*ans_color)
+                    pdf.text(x + 65, pdf.get_y() + 24, str(start+3))
+                    pdf.set_text_color(0, 0, 0)
 
-    # ---------------------------------------------------------
-    # Layout 2: อนุกรมและลวดลาย (Patterns)
-    # ---------------------------------------------------------
-    elif "pattern" in clean_sub:
-        pdf.cell(0, 0.3, "Directions: Look at the pattern. Draw what comes next.", ln=True)
-        pdf.ln(0.2)
-        for i in range(num_q):
-            if pdf.get_y() > 8.5: pdf.add_page()
-            
-            # ✨ เพิ่มคำสั่งกำกับแต่ละข้อ
-            pdf.set_font("helvetica", "B", 12)
-            pdf.cell(0, 0.3, f"{i+1}. Pattern Type: {q_instruction}", ln=True)
-            pdf.set_font("helvetica", "", 12)
-            
-            for col in range(4):
-                pdf.rect(1.0 + (col * 1.3), pdf.get_y(), 1.0, 1.0, style='D')
-                pdf.text(1.1 + (col * 1.3), pdf.get_y() + 0.6, "Item")
-                
-            # กล่องคำตอบ
-            pdf.set_line_width(0.03)
-            pdf.rect(1.0 + (4 * 1.3), pdf.get_y(), 1.0, 1.0, style='D')
-            pdf.text(1.1 + (4 * 1.3), pdf.get_y() + 0.6, "Next?")
-            pdf.set_line_width(0.01)
-            
-            pdf.ln(1.4)
+            elif clean_topic == "True or False":
+                a, b = random.randint(1, 10), random.randint(1, 10)
+                is_true = random.choice([True, False])
+                ans = a + b if is_true else a + b + random.choice([1, -1])
+                pdf.text(x + 20, pdf.get_y() + 18, f"{a} + {b} = {ans}")
+                pdf.set_font("helvetica", "", 14)
+                if is_key:
+                    pdf.set_text_color(*ans_color)
+                    pdf.text(x + 20, pdf.get_y() + 32, "[ TRUE ]" if is_true else "[ FALSE ]")
+                    pdf.set_text_color(0, 0, 0)
+                else:
+                    pdf.text(x + 20, pdf.get_y() + 32, "TRUE      FALSE")
+                    
+            elif clean_topic == "Write Number's Name":
+                num = random.randint(11, 20)
+                words = {11:"Eleven", 12:"Twelve", 13:"Thirteen", 14:"Fourteen", 15:"Fifteen", 16:"Sixteen", 17:"Seventeen", 18:"Eighteen", 19:"Nineteen", 20:"Twenty"}
+                pdf.text(x + 15, pdf.get_y() + 25, f"{num}  =  ______________")
+                if is_key:
+                    pdf.set_text_color(*ans_color)
+                    pdf.text(x + 45, pdf.get_y() + 24, words[num])
+                    pdf.set_text_color(0, 0, 0)
 
-    # ---------------------------------------------------------
-    # Layout 3: นับจำนวนและวาด/เขียน (Counting / Matching)
-    # ---------------------------------------------------------
-    elif any(k in clean_sub for k in ["count", "match", "how many", "number"]):
-        pdf.cell(0, 0.3, f"Directions: Look at the {theme.lower()} and complete the task.", ln=True)
-        pdf.ln(0.2)
-        for i in range(num_q):
-            if pdf.get_y() > 8.5: pdf.add_page()
-            
-            # ✨ เพิ่มคำสั่งกำกับแต่ละข้อ
-            pdf.set_font("helvetica", "B", 12)
-            pdf.cell(0, 0.3, f"{i+1}. Task: {q_instruction}", ln=True)
-            pdf.set_font("helvetica", "", 12)
-            
-            # กล่องโจทย์กว้างๆ
-            pdf.set_fill_color(240, 248, 255)
-            pdf.rect(1.0, pdf.get_y(), 4.5, 1.5, style='FD')
-            pdf.text(2.0, pdf.get_y() + 0.8, f"[ Insert {theme} Here ]")
-            
-            # กล่องคำตอบ
-            pdf.rect(6.0, pdf.get_y() + 0.2, 1.0, 1.0, style='D')
-            pdf.text(6.1, pdf.get_y() + 0.8, "Ans")
-            
-            pdf.ln(1.8)
-
-    # ---------------------------------------------------------
-    # Layout 4: รูปทรงและฝึกเขียน (Tracing / Shapes / General)
-    # ---------------------------------------------------------
+    # ------------------------------------------------
+    # รูปแบบ 2: แบบมีช่องเว้นวางภาพ (Wireframe Placeholder)
+    # ------------------------------------------------
     else:
-        pdf.cell(0, 0.3, "Directions: Follow the instructions to complete the activity.", ln=True)
-        pdf.ln(0.2)
+        pdf.cell(0, 10, "Directions: Look at the pictures and solve the problems.", ln=True)
+        pdf.ln(5)
+        
         for i in range(num_q):
-            if pdf.get_y() > 8.5: pdf.add_page()
+            if pdf.get_y() > 220: pdf.add_page()
             
-            # ✨ เพิ่มคำสั่งกำกับแต่ละข้อ
+            # วาดเส้นประกล่องเว้นภาพ!
+            if clean_topic == "Tens and Ones":
+                draw_image_placeholder(pdf, 20, pdf.get_y(), 100, 35, "[ Add Tens & Ones Blocks ]")
+            elif clean_topic == "Roll It On":
+                draw_image_placeholder(pdf, 20, pdf.get_y(), 60, 35, "[ Add 2 Dice ]")
+            elif clean_topic == "Picture Subtraction":
+                draw_image_placeholder(pdf, 20, pdf.get_y(), 120, 35, "[ Add objects with 'X' crossed out ]")
+            elif clean_topic == "Teen Numbers (11-20)":
+                draw_image_placeholder(pdf, 20, pdf.get_y(), 120, 35, "[ Add 11-20 Clipart items ]")
+            else:
+                draw_image_placeholder(pdf, 20, pdf.get_y(), 100, 35, "[ Insert Clipart Here ]")
+                
+            # กล่องคำตอบด้านขวา
+            pdf.set_draw_color(0, 0, 0)
+            pdf.rect(150, pdf.get_y() + 5, 30, 25)
             pdf.set_font("helvetica", "B", 12)
-            pdf.cell(0, 0.3, f"{i+1}. Action: {q_instruction}", ln=True)
-            pdf.set_font("helvetica", "", 12)
+            pdf.text(152, pdf.get_y() + 3, "Answer:")
             
-            pdf.rect(1.0, pdf.get_y(), 6.5, 1.8, style='D')
-            pdf.set_font("helvetica", "I", 10)
-            pdf.text(1.2, pdf.get_y() + 0.9, f"[ Add {theme} Cliparts for {q_instruction} ]")
-            pdf.set_font("helvetica", "", 12)
+            if is_key:
+                pdf.set_font("helvetica", "B", 24)
+                pdf.set_text_color(*ans_color)
+                pdf.text(160, pdf.get_y() + 24, "?") # เป็น ? เพราะเฉลยขึ้นอยู่กับภาพที่คุณใส่
+                pdf.set_text_color(0, 0, 0)
             
-            pdf.ln(2.1)
-
-    if is_key:
-        pdf.add_page()
-        pdf.set_font("helvetica", "B", 14)
-        pdf.cell(0, 0.3, "Note for Teachers:", ln=True)
-        pdf.set_font("helvetica", "", 12)
-        pdf.multi_cell(0, 0.3, "Since this is a visual worksheet, answers will depend on the clip art you insert. Please fill in the correct answers/lines in red before saving the final PDF for your customers.")
+            pdf.ln(45)
 
     return bytes(pdf.output(dest='S'))
 
-# ฟังก์ชันสำหรับ Preview PDF (แปลงเป็นรูปภาพ ป้องกันเบราว์เซอร์บล็อก)
-def show_pdf_preview(pdf_bytes):
+# ==========================================
+# 5. ฟังก์ชันพรีวิวด้วย PyMuPDF 
+# ==========================================
+def display_pdf_preview(pdf_bytes):
     try:
-        # เปิดไฟล์ PDF จากหน่วยความจำ (Bytes)
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        page = doc.load_page(0)  # ดึงหน้าแรกมาแสดง
-        pix = page.get_pixmap(dpi=150) # ความคมชัด
+        page = doc.load_page(0) 
+        pix = page.get_pixmap(dpi=150)
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         
-        # ใส่ CSS ให้กระดาษดูมีมิติเหมือนวางบนโต๊ะ
         st.markdown(
             """
             <style>
@@ -242,75 +205,51 @@ def show_pdf_preview(pdf_bytes):
             </style>
             """, unsafe_allow_html=True
         )
-        
         st.markdown("<div class='premium-paper'>", unsafe_allow_html=True)
-        st.image(img, use_container_width=True) # แสดงเป็นรูปภาพ
+        st.image(img, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
         doc.close()
     except Exception as e:
         st.error(f"⚠️ ไม่สามารถแสดงพรีวิวได้: {e}")
 
 # ==========================================
-# 4. Streamlit UI
+# 6. Streamlit UI
 # ==========================================
-st.set_page_config(page_title="TpT Pre-K Generator", page_icon="🧸", layout="wide")
+st.set_page_config(page_title="TpT Layout Generator", layout="wide")
 
-st.title("🧸 TpT Worksheet Generator (Pre-K Edition)")
-st.markdown("ปรับแต่งตั้งค่าที่แถบด้านข้าง (Sidebar) แผงพรีวิวใบงานด้านขวาจะอัปเดตแบบ **Live Preview** ทันที!")
+st.title("🧩 TpT Worksheet Wireframe Generator")
+st.markdown("ระบบสร้างโครงกระดูกใบงาน (Wireframe) ที่ตีเส้นประเว้นช่องว่างให้คุณนำไฟล์ไปใส่รูปจาก Canva ต่อได้ทันที!")
 
-# --- Sidebar ---
 with st.sidebar:
     st.header("⚙️ การตั้งค่าใบงาน")
+    topic = st.selectbox("📌 เลือกหัวข้อกิจกรรม (Activity):", KINDERGARTEN_TOPICS)
     
-    # เพิ่มช่องใส่ชื่อร้าน
-    shop_name = st.text_input("🏪 ชื่อร้านค้าของคุณ (TpT Store Name)", value="Kindergarten Learning Press")
-    st.markdown("---")
-    
-    st.markdown("**ระดับชั้น:** Pre-K (เตรียมอนุบาล)")
-    
-    main_topic = st.selectbox("📌 1. เลือกหมวดหลัก", list(PRE_K_CURRICULUM.keys()))
-    sub_topic = st.selectbox("🎯 2. เลือกประเภทใบงาน", PRE_K_CURRICULUM[main_topic])
-    theme = st.selectbox("🎨 3. ธีมภาพประกอบ", ["Animals", "Space", "Dinosaurs", "Underwater", "Monsters"])
-    num_questions = st.slider("🔢 4. จำนวนข้อต่อหน้า", min_value=2, max_value=6, value=4)
+    is_two_col = topic.split(". ", 1)[-1] in ["What Comes Next?", "Missing Addends", "True or False", "Which is More?", "Write Number's Name"]
+    num_q = st.slider("🔢 จำนวนข้อต่อหน้า:", min_value=2, max_value=8, value=6 if is_two_col else 3)
 
-# --- ระบบ Generate แบบอัตโนมัติ (Live Preview) ---
-# เนื่องจากแอป Streamlit จะรีเฟรชเองทุกครั้งที่มีการเปลี่ยนค่า เราจึงเจน PDF สดๆ ได้เลย
-worksheet_pdf_bytes = generate_pdf_layout(main_topic, sub_topic, theme, num_questions, shop_name, is_key=False)
-answer_pdf_bytes = generate_pdf_layout(main_topic, sub_topic, theme, num_questions, shop_name, is_key=True)
+# Generate Live
+ws_bytes = generate_worksheet(topic, num_q, is_key=False)
+ans_bytes = generate_worksheet(topic, num_q, is_key=True)
 
-# --- แสดงผลใน Main Area ---
-col_preview, col_download = st.columns([2, 1])
+col1, col2 = st.columns([2, 1])
 
-with col_preview:
-    st.subheader(f"🔍 Live Preview: {sub_topic.split('. ')[-1]}")
-    # แสดงพรีวิวของ Worksheet
-    show_pdf_preview(worksheet_pdf_bytes)
+with col1:
+    st.subheader(f"🔍 พรีวิวโครงสร้าง: {topic.split('. ')[-1]}")
+    display_pdf_preview(ws_bytes)
 
-with col_download:
-    st.subheader("📥 ดาวน์โหลดไฟล์ (Ready to Export)")
-    st.info(f"**ธีม:** {theme}\n\n**จำนวนข้อ:** {num_questions} ข้อ\n\n**ลิขสิทธิ์ร้าน:** © {shop_name}")
-    
+with col2:
+    st.subheader("📥 ดาวน์โหลดไฟล์ไปเปิดใน Canva")
     st.download_button(
-        label="📄 ดาวน์โหลดใบงาน (Worksheet)",
-        data=worksheet_pdf_bytes,
-        file_name=f"PreK_{theme}_{sub_topic.split('. ')[-1].replace(' ', '_')}.pdf",
+        label="📄 ดาวน์โหลดใบงาน (Worksheet PDF)",
+        data=ws_bytes,
+        file_name=f"Wireframe_{topic.split('. ')[1].replace(' ', '_')}.pdf",
         mime="application/pdf",
         use_container_width=True
     )
-    
     st.download_button(
-        label="🔑 ดาวน์โหลดเฉลย (Answer Key)",
-        data=answer_pdf_bytes,
-        file_name=f"PreK_{theme}_{sub_topic.split('. ')[-1].replace(' ', '_')}_KEY.pdf",
+        label="🔑 ดาวน์โหลดเฉลย (Answer Key PDF)",
+        data=ans_bytes,
+        file_name=f"Wireframe_Key_{topic.split('. ')[1].replace(' ', '_')}.pdf",
         mime="application/pdf",
         use_container_width=True
     )
-    
-    st.markdown("---")
-    st.markdown("""
-    **💡 คำแนะนำการทำปก (Thumbnails)**
-    ในการนำขึ้นขายบน TpT:
-    1. นำไฟล์ PDF ไปเพิ่มรูปภาพใน Canva
-    2. เซฟภาพของใบงานออกมาเป็นไฟล์ `.png`
-    3. นำมาจัดวางในรูปแบบสี่เหลี่ยมจัตุรัส (Square Layout) เป็นหน้าปก เพื่อให้สะดุดตาลูกค้า
-    """)
