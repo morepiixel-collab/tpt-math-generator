@@ -10,7 +10,6 @@ import urllib.request
 # 0. ระบบดาวน์โหลดฟอนต์น่ารักๆ อัตโนมัติ (Cute Font)
 # ==========================================
 FONT_FILE = "CuteFont.ttf"
-# ใช้ฟอนต์ Comic Neue (Bold) ที่กลม น่ารัก และอ่านง่ายสำหรับเด็ก
 FONT_URL = "https://github.com/google/fonts/raw/main/ofl/comicneue/ComicNeue-Bold.ttf"
 
 if not os.path.exists(FONT_FILE):
@@ -43,7 +42,7 @@ THEME_COLORS = {
 }
 
 # ==========================================
-# 2. คลาสหน้ากระดาษ (Premium Border & Footer)
+# 2. คลาสหน้ากระดาษ 
 # ==========================================
 class PremiumTpTPDF(FPDF):
     def __init__(self, topic_name, color_theme, shop_name, target_num, is_key=False):
@@ -55,11 +54,10 @@ class PremiumTpTPDF(FPDF):
         self.is_key = is_key
         self.set_auto_page_break(auto=True, margin=15)
         
-        # โหลดฟอนต์น่ารักเข้าสู่ระบบ PDF
         if os.path.exists(FONT_FILE):
             self.add_font("CuteFont", "", FONT_FILE)
         else:
-            self.add_font("CuteFont", "", "helvetica") # สำรองกรณีโหลดไม่สำเร็จ
+            self.add_font("CuteFont", "", "helvetica") 
 
     def header(self):
         self.set_line_width(2.0)
@@ -128,7 +126,8 @@ def draw_placeholder(pdf, x, y, w, h, text="", font_size=12):
         text_h_offset = (font_size * 0.352777) / 2.8 
         pdf.text(x + (w/2) - (text_w/2), y + (h/2) + text_h_offset, text)
 
-def draw_solid_circle(pdf, x, y, d, text="", font_size=20):
+# ลดขนาดวงกลม ปรับตัวเลขให้ใหญ่และกึ่งกลางเป๊ะ
+def draw_solid_circle(pdf, x, y, d, text="", font_size=28):
     pdf.set_fill_color(255, 255, 255)
     pdf.set_draw_color(*pdf.colors["primary"])
     pdf.set_line_width(0.8)
@@ -137,7 +136,8 @@ def draw_solid_circle(pdf, x, y, d, text="", font_size=20):
         pdf.set_font("CuteFont", "", font_size)
         pdf.set_text_color(*pdf.colors["primary"])
         text_w = pdf.get_string_width(text)
-        text_h_offset = (font_size * 0.352777) / 2.8 
+        # ปรับการชดเชยเพื่อให้ตัวเลขอยู่กึ่งกลางวงกลมอย่างสมบูรณ์
+        text_h_offset = (font_size * 0.352777) / 3.0 
         pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
 
 def draw_circle_placeholder(pdf, x, y, d, text="?"):
@@ -152,10 +152,10 @@ def draw_circle_placeholder(pdf, x, y, d, text="?"):
         pdf.ellipse(x, y, d, d, style='DF')
         
     if text:
-        pdf.set_font("CuteFont", "", 20)
+        pdf.set_font("CuteFont", "", 28)
         pdf.set_text_color(150, 150, 150)
         text_w = pdf.get_string_width(text)
-        text_h_offset = (20 * 0.352777) / 2.8
+        text_h_offset = (28 * 0.352777) / 3.0
         pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
 
 # ==========================================
@@ -166,14 +166,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
     pdf.add_page()
     
     clean_sub = sub_topic.lower()
-    ans_color = (255, 75, 75) if is_key else (150, 150, 150)
     
     pdf.set_font("CuteFont", "", 14)
     pdf.set_text_color(80, 80, 80)
 
-    # 1. FIND THE NUMBER
+    # 1. FIND THE NUMBER (เน้นระบายสี)
     if "find" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Find and circle the number {target_num} in the picture below.", ln=True)
+        pdf.cell(0, 10, f" Directions: Find and color the number {target_num} in the picture below.", ln=True)
         pdf.ln(5)
         pdf.set_font("CuteFont", "", 20)
         pdf.set_text_color(*theme_colors["primary"])
@@ -188,12 +187,12 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             draw_placeholder(pdf, 20, y, 30, 30, f"~ {target_num} Items ~")
-            draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Dotted number {target_num} {target_num} {target_num} ~")
+            draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Dotted number {target_num} ~")
             pdf.ln(40)
 
-    # 3. COUNTING 
+    # 3. COUNTING (เปลี่ยนวงกลมให้เล็กลง และให้ระบายสี)
     elif "counting" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Count the objects. Circle the correct number.", ln=True)
+        pdf.cell(0, 10, f" Directions: Count the objects. Color the correct number.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
@@ -207,26 +206,27 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
                     choices.append(wrong)
             random.shuffle(choices) 
             
-            draw_placeholder(pdf, 25, y, 80, 35, f"~ Add {actual_count} items ~")
-            draw_solid_circle(pdf, 120, y+5, 25, str(choices[0]))
-            draw_solid_circle(pdf, 150, y+5, 25, str(choices[1]))
-            draw_solid_circle(pdf, 180, y+5, 25, str(choices[2]))
+            # ลดขนาดวงกลม (d=22) ขยับตำแหน่ง x เข้ามาเพื่อให้ห่างขอบขวา
+            draw_placeholder(pdf, 20, y, 80, 35, f"~ Add {actual_count} items ~")
+            draw_solid_circle(pdf, 115, y+6, 22, str(choices[0]), font_size=28)
+            draw_solid_circle(pdf, 145, y+6, 22, str(choices[1]), font_size=28)
+            draw_solid_circle(pdf, 175, y+6, 22, str(choices[2]), font_size=28)
             pdf.ln(50)
 
     # 4. COUNT AND MATCH 
     elif "match" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
         pdf.ln(5)
-        draw_solid_circle(pdf, 85, 120, 45, str(target_num), font_size=42)
+        draw_solid_circle(pdf, 85, 120, 45, str(target_num), font_size=50)
         
         draw_placeholder(pdf, 20, 80, 45, 35, f"~ {target_num} dots ~")
         draw_placeholder(pdf, 150, 80, 45, 35, f"~ {target_num} fingers ~")
         draw_placeholder(pdf, 20, 160, 45, 35, f"~ {random.randint(1, 10)} items ~") 
         draw_placeholder(pdf, 150, 160, 45, 35, f"~ {target_num} animals ~")
 
-    # 5. MORE OR LESS 
+    # 5. MORE OR LESS (ให้ระบายสีกล่อง)
     elif "more" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Circle the group that has {target_num} items.", ln=True)
+        pdf.cell(0, 10, f" Directions: Color the box that has {target_num} items.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
@@ -275,11 +275,12 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             hidden.append(other_hidden)
             
             for j in range(5):
-                x = 20 + (j * 35)
+                # ขยับช่องไฟให้พอดี ปรับขนาดวงกลมเป็น 28 และตัวเลข 28
+                x = 18 + (j * 34)
                 if j in hidden:
-                    draw_circle_placeholder(pdf, x, y, 32, "?")
+                    draw_circle_placeholder(pdf, x, y, 28, "?")
                 else:
-                    draw_solid_circle(pdf, x, y, 32, str(seq[j]), font_size=24)
+                    draw_solid_circle(pdf, x, y, 28, str(seq[j]), font_size=28)
             pdf.ln(50)
 
     # 8. NUMBER MAZES
@@ -298,7 +299,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         for row in range(5):
             for col in range(5):
                 val = str(target_num) if random.random() > 0.5 else str(wrong_maze)
-                draw_solid_circle(pdf, start_x + (col*box_s), start_y + (row*box_s), box_s - 2, val, font_size=18)
+                # ปรับวงกลมให้เล็กลง (d=20) และตัวเลขกึ่งกลาง
+                draw_solid_circle(pdf, start_x + (col*box_s) + 2, start_y + (row*box_s) + 2, 20, val, font_size=22)
                 
         pdf.text(start_x + (4*box_s), start_y + (5*box_s) + 5, "FINISH")
 
@@ -331,7 +333,7 @@ def display_pdf_preview(pdf_bytes):
 # ==========================================
 # 6. Streamlit UI
 # ==========================================
-st.set_page_config(page_title="Pre-K Focus Number Gen", layout="wide", page_icon="🔢")
+st.set_page_config(page_title="Pre-K Focus Number Gen", layout="wide", page_icon="🎨")
 
 st.markdown("""
 <style>
@@ -339,8 +341,8 @@ st.markdown("""
     div.stButton > button { background-color: #ff9a9e; color: white; border: none; border-radius: 8px; font-weight: bold; }
 </style>
 <div class="main-header">
-    <h1 style="margin:0; font-weight:800;">🔢 Pre-K Focus Number Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">(อัปเดตฟอนต์น่ารัก & เลย์เอาต์วงกลมกึ่งกลางเป๊ะ)</p>
+    <h1 style="margin:0; font-weight:800;">🎨 Pre-K Focus Number Generator</h1>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">(อัปเดต: เน้นกิจกรรมระบายสี, ขนาดวงกลมพอดีขอบ, ตัวเลขใหญ่กึ่งกลางเป๊ะ)</p>
 </div>
 """, unsafe_allow_html=True)
 
