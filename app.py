@@ -183,7 +183,9 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     pdf.set_font("ComicNeue", "", 14)
     pdf.set_text_color(80, 80, 80)
 
-    # 1. FIND THE NUMBER
+    # ==========================================
+    # โซนแกนที่ 1 : NUMBER SENSE
+    # ==========================================
     if "find" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find and color the number {target_num} in the picture below.", ln=True)
         pdf.ln(5)
@@ -192,7 +194,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.cell(0, 10, f"Target: {target_num}", ln=True, align="C")
         draw_rounded_box(pdf, 15, 85, 185, 160, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~", font_size=14)
 
-    # 2. TRACE THE NUMBERS
     elif "trace" in clean_sub:
         pdf.cell(0, 10, f" Directions: Trace and write the number {target_num}.", ln=True)
         pdf.ln(5)
@@ -205,7 +206,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, start_x+40, y+5, 120, 30, r=5, bg_color=(255, 255, 255), text=f"~ Canva: Dotted number {target_num} ~")
             pdf.ln(45)
 
-    # 3. COUNTING OBJECTS
     elif "counting" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the objects. Color the circle with the correct number.", ln=True)
         pdf.ln(5)
@@ -235,7 +235,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_solid_circle(pdf, start_x+146, y+11.5, 22, str(choices[2]), font_size=28, is_path=(choices[2]==target_num))
             pdf.ln(50)
 
-    # 4. COUNT AND MATCH
     elif "match" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
         pdf.ln(5)
@@ -255,7 +254,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         draw_rounded_box(pdf, 25, 160, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[2]) 
         draw_rounded_box(pdf, 140, 160, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[3])
 
-    # 5. MORE OR LESS
     elif "more" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the box that has exactly {target_num} items.", ln=True)
         pdf.ln(5)
@@ -287,8 +285,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, start_x+90, y+5, 60, 45, r=5, bg_color=(255, 255, 255), text=txt_right)
             pdf.ln(60)
 
-    # 6. COLOR BY NUMBER
-    elif "color" in clean_sub:
+    # [แก้ไขจุดบั๊กที่ 1] รัดกุมคำค้นหาเป็น "color by number" 
+    elif "color by number" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find and color all the number {target_num}s.", ln=True)
         pdf.ln(5)
         y = pdf.get_y()
@@ -308,7 +306,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.ln(30)
         draw_rounded_box(pdf, 15, pdf.get_y(), 185, 150, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Add a picture with hidden {target_num}s to color ~", font_size=14)
 
-    # 7. MISSING NUMBERS
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers. Can you find where {target_num} goes?", ln=True)
         pdf.ln(10)
@@ -341,7 +338,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                     draw_solid_circle(pdf, x, y+8.5, 28, str(seq[j]), font_size=28)
             pdf.ln(50)
 
-    # 8. NUMBER MAZES (แก้ไข: สุ่มตัวเลขหลอกหลากหลาย 100%)
     elif "maze" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the number {target_num} to find the way out of the maze!", ln=True)
         pdf.ln(5)
@@ -355,7 +351,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         tw_start = pdf.get_string_width("START")
         pdf.text(start_x + (box_s/2) - (tw_start/2), start_y - 5, "START")
         
-        # --- อัลกอริทึมสร้างเส้นทางที่ถูกต้อง (Path Generator) ---
         path = set()
         r, c = 0, 0
         path.add((r, c))
@@ -369,18 +364,15 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                 else: c += 1
             path.add((r, c))
             
-        # สร้าง List ตัวเลือกหลอกที่ไม่ใช่คำตอบ (1-10)
         wrong_options = [x for x in range(1, 11) if x != target_num]
             
         for row in range(5):
             for col in range(5):
-                # ตรวจสอบว่าช่องนี้อยู่ในเส้นทางที่ถูกต้องหรือไม่
                 is_correct_path = (row, col) in path
                 
                 if is_correct_path:
                     val = str(target_num)
                 else:
-                    # สุ่มหลอกด้วยเลขเป้าหมายนิดหน่อย แต่ส่วนใหญ่เป็นเลขหลอก "ที่สุ่มมาหลากหลาย" 
                     if random.random() > 0.85:
                         val = str(target_num)
                     else:
@@ -392,13 +384,9 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.text(start_x + (4*box_s) + (box_s/2) - (tw_finish/2), start_y + (5*box_s) + 5, "FINISH")
 
 
-
-
     # ==========================================
-    # โซนแกนที่ 2 : OPERATIONS (Pre-K เน้นภาพและการลงมือทำ)
+    # โซนแกนที่ 2 : OPERATIONS
     # ==========================================
-
-    # 1. COLOR TO ADD (ระบายสี 2 กลุ่มเพื่อหาผลรวม)
     elif "color to add" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the first group, then color the second group. Add them together!", ln=True)
         pdf.ln(5)
@@ -412,29 +400,23 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (160 / 2)
             
-            # กลุ่มที่ 1
             draw_rounded_box(pdf, start_x, y+5, 50, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n1} outlines ~", font_size=11)
             pdf.set_font("ComicNeue", "", 24)
             pdf.set_text_color(*theme_colors["primary"])
             pdf.text(start_x + 56, y + 27, "+")
             
-            # กลุ่มที่ 2
             draw_rounded_box(pdf, start_x + 65, y+5, 50, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} outlines ~", font_size=11)
             pdf.text(start_x + 121, y + 27, "=")
             
-            # กล่องคำตอบ
             ans_val = str(target_num) if pdf.is_key else ""
             draw_rounded_box(pdf, start_x + 130, y+5, 30, 35, r=5, bg_color=(255,255,255), text=ans_val, font_size=28)
             
-            # คำสั่งย่อยให้เด็กลงมือระบายสี
             pdf.set_font("ComicNeue", "", 10)
             pdf.set_text_color(120, 120, 120)
             pdf.text(start_x + 5, y + 48, f"Color {n1} red.")
             pdf.text(start_x + 70, y + 48, f"Color {n2} blue.")
-            
             pdf.ln(55)
 
-    # 2. COUNT AND COLOR TOTAL (นับรวมกัน แล้วระบายสีวงกลมคำตอบ)
     elif "count and color total" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count all the pictures together. Color the circle with the correct total.", ln=True)
         pdf.ln(5)
@@ -456,7 +438,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, start_x + 50, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} items ~", font_size=11)
             pdf.text(start_x + 93, y + 27, "=")
             
-            # ตัวเลือกวงกลม
             choices = [target_num]
             while len(choices) < 3:
                 wrong = random.randint(1, 10)
@@ -468,7 +449,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_solid_circle(pdf, start_x + 148, y+11.5, 18, str(choices[2]), font_size=20, is_path=(choices[2]==target_num))
             pdf.ln(55)
 
-    # 3. TAKE AWAY AND COLOR (ฝึกเอาออก แล้วระบายสีส่วนที่เหลือ)
     elif "take away and color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Look at the pictures. Cross out the number given, then color the rest.", ln=True)
         pdf.ln(5)
@@ -494,7 +474,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, start_x + 140, y+5, 30, 35, r=5, bg_color=(255,255,255), text=ans_txt, font_size=24)
             pdf.ln(55)
 
-    # 4. COLOR THE ADDITION PATH (ระบายสีเขาวงกตสมการบวก)
     elif "addition path" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find the way out! Color the bubbles that add up to {target_num}.", ln=True)
         pdf.ln(5)
@@ -536,7 +515,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         tw_finish = pdf.get_string_width("FINISH")
         pdf.text(start_x + (4*box_s) + (box_s/2) - (tw_finish/2), start_y + (5*box_s) + 5, "FINISH")
 
-    # 5. COLOR TO MAKE TARGET (ระบายสีให้ครบจำนวนที่กำหนด สไตล์ Ten-Frame)
     elif "make target" in clean_sub:
         pdf.cell(0, 10, f" Directions: We need {target_num} in total. Color more items to make {target_num}.", ln=True)
         pdf.ln(5)
@@ -559,10 +537,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             ans_txt = str(need) if pdf.is_key else ""
             draw_rounded_box(pdf, start_x + 130, y+10, 20, 20, r=4, bg_color=(255,255,255), text=ans_txt, font_size=16)
             pdf.text(start_x + 152, y + 25, "more.")
-            
             pdf.ln(55)
 
-    # 6. DRAW AND COLOR MORE (วาดรูปและระบายสีเพิ่ม)
     elif "draw and color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw and color more pictures to make exactly {target_num}.", ln=True)
         pdf.ln(5)
@@ -581,16 +557,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.set_text_color(*theme_colors["primary"])
             pdf.text(start_x + 55, y + 27, "+")
             
-            # เว้นกล่องว่างให้เด็กวาดรูปเพิ่ม
             ans_text = f"~ (Key: Draw {need}) ~" if pdf.is_key else f"~ Draw more here ~"
             draw_rounded_box(pdf, start_x + 65, y+5, 50, 35, r=5, bg_color=(255,255,255), text=ans_text, font_size=11)
             
             pdf.text(start_x + 120, y + 27, "=")
             draw_rounded_box(pdf, start_x + 130, y+5, 30, 35, r=5, bg_color=(255,255,255), text=str(target_num), font_size=24)
-            
             pdf.ln(55)
 
-    # 7. CROSS OUT AND COLOR (กากบาททิ้งตามสมการ แล้วระบายสี)
     elif "cross out" in clean_sub:
         pdf.cell(0, 10, f" Directions: Read the problem. Cross out the pictures to match, then write the answer.", ln=True)
         pdf.ln(5)
@@ -608,7 +581,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
-            # แสดงสมการชัดเจน Total - Take = ?
             pdf.text(start_x + 65, y + 28, f"{target_num} - {take} =")
             
             ans_txt = str(left) if pdf.is_key else ""
@@ -618,10 +590,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                 pdf.set_font("ComicNeue", "", 12)
                 pdf.set_text_color(255, 100, 100)
                 pdf.text(start_x + 5, y + 35, f"(Cross out {take})")
-            
             pdf.ln(55)
 
-    # 8. COLOR THE CORRECT SUM (หาผลรวม แล้วระบายสีกล่องที่มีตัวเลขถูกต้อง)
     elif "correct sum" in clean_sub:
         pdf.cell(0, 10, f" Directions: Add the numbers. Color the box with the correct answer.", ln=True)
         pdf.ln(5)
@@ -655,8 +625,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, start_x + 108, y+10, 22, 25, r=4, bg_color=bg2, text=str(choices[1]), font_size=20)
             draw_rounded_box(pdf, start_x + 136, y+10, 22, 25, r=4, bg_color=bg3, text=str(choices[2]), font_size=20)
             pdf.ln(55)
-    
-
+            
     return bytes(pdf.output(dest='S'))
 
 # ==========================================
@@ -705,9 +674,7 @@ with st.sidebar:
     shop_name = st.text_input("🏪 ชื่อร้าน (Copyright):", value="Kindergarten Learning Press")
     st.markdown("---")
     
-    # ----------------------------------------------------
-    # [แก้ไขที่นี่] ปลดล็อกให้สามารถเลือก หมวดหมู่หลัก ได้แล้ว!
-    # ----------------------------------------------------
+    # เมนูที่ปลดล็อกให้เลือกทั้ง 2 หมวดหมู่แล้ว
     main_topic = st.selectbox("📚 1. เลือกหมวดหมู่หลัก (Category):", list(PRE_K_CURRICULUM.keys()))
     sub_topic = st.selectbox("🎯 2. เลือกกิจกรรม (Activity):", PRE_K_CURRICULUM[main_topic])
     
@@ -726,32 +693,39 @@ if generate_btn:
     current_session_seed = random.randint(1, 9999999)
     
     with st.spinner(f"กำลังสร้างใบงานแบบ Dynamic โฟกัสเลข {target_num}..."):
+        # สร้าง PDF ทั้งแบบโจทย์และแบบเฉลย
         ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, session_seed=current_session_seed, is_key=False)
         ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, session_seed=current_session_seed, is_key=True)
 
-        col1, col2 = st.columns([1.5, 1])
+        col1, col2 = st.columns(2)
+        
+        # แสดงผลพรีวิวและปุ่มดาวน์โหลดสำหรับ ใบงาน (Worksheet)
         with col1:
+            st.subheader(f"📄 ใบงาน (Worksheet - Number {target_num})")
             display_pdf_preview(ws_bytes)
             
-        with col2:
-            st.subheader(f"📥 ดาวน์โหลดไฟล์ (Number {target_num})")
-            st.success(f"✅ สร้างใบงานสำเร็จ! เลย์เอาต์โค้งมนปลอดภัย 100%")
-            
             file_title = sub_topic.split('. ')[1].replace(' ', '_')
-            
             st.download_button(
-                label=f"📄 โหลดโครงร่าง (Worksheet - Num {target_num})",
+                label=f"📥 โหลดใบงาน (PDF)",
                 data=ws_bytes,
                 file_name=f"PreK_{file_title}_Number_{target_num}.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
+            
+        # แสดงผลพรีวิวและปุ่มดาวน์โหลดสำหรับ เฉลย (Answer Key)
+        with col2:
+            st.subheader(f"🔑 เฉลย (Answer Key - Number {target_num})")
+            display_pdf_preview(ans_bytes)
+            
             st.download_button(
-                label=f"🔑 โหลดเฉลย (Answer Key - Num {target_num})",
+                label=f"📥 โหลดเฉลย (PDF)",
                 data=ans_bytes,
                 file_name=f"PreK_{file_title}_Number_{target_num}_KEY.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
+            
+        st.success("✅ สร้างใบงานและเฉลยสำเร็จแล้ว! เลย์เอาต์โค้งมนปลอดภัย และเนื้อหาแยกตามหมวดหมู่ถูกต้อง 100%")
 else:
     st.info("👈 กรุณาเลือก **หมวดหมู่ กิจกรรม และตัวเลขที่ต้องการ** จากนั้นกดปุ่มสร้างใบงานได้เลยครับ 🚀")
