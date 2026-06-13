@@ -437,34 +437,38 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             n2 = target_num - n1 if target_num > 1 else 0
             
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            
+            # คำนวณความกว้างรวมทั้งหมด:
+            # กล่อง 40 + ช่องไฟ 12 + กล่อง 40 + ช่องไฟ 12 + วงกลม (18+6+18+6+18 = 66) = 170
             start_x = center_x - (170 / 2)
             
-            # 1. กล่องรูปภาพกลุ่มแรก
+            # 1. กล่องรูปภาพกลุ่มแรก (กว้าง 40)
             draw_rounded_box(pdf, start_x, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n1} items ~", font_size=11)
             
-            # 2. เครื่องหมายบวก (+) บังคับขนาดฟอนต์ 28
+            # 2. เครื่องหมายบวก (+) จัดให้อยู่กึ่งกลางช่องไฟ 12 (ระหว่าง 40 ถึง 52 -> จุดกึ่งกลางคือ 46)
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(start_x + 42, y + 28, "+")
+            w_plus = pdf.get_string_width("+")
+            pdf.text(start_x + 46 - (w_plus/2), y + 28, "+")
             
-            # 3. กล่องรูปภาพกลุ่มที่สอง
-            draw_rounded_box(pdf, start_x + 50, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} items ~", font_size=11)
+            # 3. กล่องรูปภาพกลุ่มที่สอง (กว้าง 40 เริ่มที่ 52)
+            draw_rounded_box(pdf, start_x + 52, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} items ~", font_size=11)
             
-            # 4. เครื่องหมายเท่ากับ (=) บังคับขนาดฟอนต์ 28 เท่ากับเครื่องหมายบวก
-            pdf.set_font("ComicNeue", "", 28)
-            pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(start_x + 92, y + 28, "=")
+            # 4. เครื่องหมายเท่ากับ (=) จัดให้อยู่กึ่งกลางช่องไฟ 12 (ระหว่าง 92 ถึง 104 -> จุดกึ่งกลางคือ 98)
+            w_eq = pdf.get_string_width("=")
+            pdf.text(start_x + 98 - (w_eq/2), y + 28, "=")
             
-            # 5. ตัวเลือกวงกลม 3 ตัวเลือก
+            # 5. ตัวเลือกวงกลม 3 ตัวเลือก (เริ่มที่ 104 ระยะห่างวงละ 6)
             choices = [target_num]
             while len(choices) < 3:
                 wrong = random.randint(1, 10)
                 if wrong not in choices: choices.append(wrong)
             random.shuffle(choices)
             
-            draw_solid_circle(pdf, start_x + 102, y+11.5, 18, str(choices[0]), font_size=20, is_path=(choices[0]==target_num))
-            draw_solid_circle(pdf, start_x + 125, y+11.5, 18, str(choices[1]), font_size=20, is_path=(choices[1]==target_num))
-            draw_solid_circle(pdf, start_x + 148, y+11.5, 18, str(choices[2]), font_size=20, is_path=(choices[2]==target_num))
+            draw_solid_circle(pdf, start_x + 104, y+11.5, 18, str(choices[0]), font_size=20, is_path=(choices[0]==target_num))
+            draw_solid_circle(pdf, start_x + 128, y+11.5, 18, str(choices[1]), font_size=20, is_path=(choices[1]==target_num))
+            draw_solid_circle(pdf, start_x + 152, y+11.5, 18, str(choices[2]), font_size=20, is_path=(choices[2]==target_num))
+            
             pdf.ln(55)
 
     elif "take away and color" in clean_sub:
