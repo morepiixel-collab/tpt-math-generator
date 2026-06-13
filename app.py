@@ -31,13 +31,12 @@ THEME_COLORS = {
 # 2. คลาสหน้ากระดาษ (Premium Border & Footer)
 # ==========================================
 class PremiumTpTPDF(FPDF):
-    def __init__(self, topic_name, color_theme, shop_name, min_num, max_num, is_key=False):
+    def __init__(self, topic_name, color_theme, shop_name, target_num, is_key=False):
         super().__init__(orientation='P', unit='mm', format='Letter')
         self.topic_name = topic_name
         self.colors = color_theme
         self.shop_name = shop_name 
-        self.min_n = min_num
-        self.max_n = max_num
+        self.target_num = target_num # รับตัวเลขแบบเจาะจงมา
         self.is_key = is_key
         self.set_auto_page_break(auto=True, margin=15)
 
@@ -62,10 +61,10 @@ class PremiumTpTPDF(FPDF):
         self.set_text_color(255, 255, 255)
         self.cell(0, 8, " P R E - K   M A T H", ln=True, align="C")
         
+        # แสดงชื่อหัวข้อ พร้อม "ตัวเลขที่โฟกัส" อย่างชัดเจนบนหัวกระดาษ
         self.set_font("helvetica", "B", 22)
         clean_topic = self.topic_name.split(". ", 1)[-1].upper()
-        # เพิ่มช่วงตัวเลขเข้าไปในหัวกระดาษให้ดูโปร
-        title = f"{clean_topic} ({self.min_n}-{self.max_n})" + (" KEY" if self.is_key else "")
+        title = f"{clean_topic} : NUMBER {self.target_num}" + (" (KEY)" if self.is_key else "")
         self.cell(0, 10, title, ln=True, align="C")
         self.ln(6)
         
@@ -120,10 +119,10 @@ def draw_solid_box(pdf, x, y, w, h, text="", font_size=18):
         pdf.text(x + (w/2) - (text_w/2), y + (h/2) + (font_size/3), text)
 
 # ==========================================
-# 4. BESPOKE LAYOUT ENGINE (รองรับ Dynamic Numbers)
+# 4. BESPOKE LAYOUT ENGINE (Focus Number แบบ 100%)
 # ==========================================
-def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, min_num, max_num, is_key=False):
-    pdf = PremiumTpTPDF(sub_topic, theme_colors, shop_name, min_num, max_num, is_key)
+def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is_key=False):
+    pdf = PremiumTpTPDF(sub_topic, theme_colors, shop_name, target_num, is_key)
     pdf.add_page()
     
     clean_sub = sub_topic.lower()
@@ -132,118 +131,119 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, min_num, max_n
     pdf.set_font("helvetica", "B", 12)
     pdf.set_text_color(80, 80, 80)
 
-    # 1. FIND THE NUMBER 
+    # 1. FIND THE NUMBER (หาเลขที่โฟกัส)
     if "find" in clean_sub:
-        pdf.cell(0, 10, " Directions: Find and circle the target number in the picture below.", ln=True)
+        pdf.cell(0, 10, f" Directions: Find and circle the number {target_num} in the picture below.", ln=True)
         pdf.ln(5)
-        # สุ่มหาเลขเป้าหมายจากช่วงที่ตั้งไว้
-        target = random.randint(min_num, max_num)
-        pdf.set_font("helvetica", "B", 16)
+        pdf.set_font("helvetica", "B", 18)
         pdf.set_text_color(*theme_colors["primary"])
-        pdf.cell(0, 10, f"Find the number:  {target}", ln=True, align="C")
-        draw_placeholder(pdf, 15, 85, 185, 160, f"~ Canva: Add a large scene. Scatter number {target} inside ~")
+        pdf.cell(0, 10, f"Target: {target_num}", ln=True, align="C")
+        draw_placeholder(pdf, 15, 85, 185, 160, f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~")
 
-    # 2. TRACE THE NUMBERS
+    # 2. TRACE THE NUMBERS (ลากเส้นประเฉพาะเลขที่โฟกัส)
     elif "trace" in clean_sub:
-        pdf.cell(0, 10, " Directions: Trace the numbers.", ln=True)
+        pdf.cell(0, 10, f" Directions: Trace and write the number {target_num}.", ln=True)
         pdf.ln(5)
-        # สุ่มเลขที่ให้เด็กเขียนตามรอยประ
-        trace_nums = random.sample(range(min_num, max_num + 1), min(num_q, max_num - min_num + 1))
-        trace_nums.sort()
-        for i, val in enumerate(trace_nums):
+        for i in range(num_q + 1): # ทำบรรทัดตามที่กำหนด
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
-            draw_placeholder(pdf, 20, y, 30, 30, f"Pic x{val}")
-            draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Add dotted number {val} here ~")
+            # ซ้าย: รูปภาพนำสายตา
+            draw_placeholder(pdf, 20, y, 30, 30, f"~ {target_num} Items ~")
+            # ขวา: กล่องใส่เส้นประเลขนั้นๆ
+            draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Dotted number {target_num} {target_num} {target_num} ~")
             pdf.ln(40)
 
-    # 3. COUNTING
+    # 3. COUNTING (นับจำนวนที่มีค่าเท่ากับเลขโฟกัส)
     elif "counting" in clean_sub:
-        pdf.cell(0, 10, " Directions: Count the objects and circle the correct number.", ln=True)
+        pdf.cell(0, 10, f" Directions: Count the objects. Circle the number.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
-            ans = random.randint(min_num, max_num)
-            choices = [ans]
-            # สร้างตัวเลือกหลอกที่ไม่ซ้ำกับคำตอบ
-            while len(choices) < 3:
-                wrong = random.randint(min_num, max_num + 2)
-                if wrong not in choices and wrong > 0:
-                    choices.append(wrong)
-            random.shuffle(choices) # สลับตำแหน่ง ก ข ค
+            # มี 1 ข้อที่เป็นเลขเป้าหมายเสมอ ข้ออื่นอาจจะสุ่มเพื่อให้เด็กแยกแยะ
+            actual_count = target_num if i == 0 else random.choice([target_num, random.randint(1, 10)])
             
-            draw_placeholder(pdf, 25, y, 80, 40, f"~ Add {ans} items ~")
+            choices = [actual_count]
+            while len(choices) < 3:
+                wrong = random.randint(1, 10)
+                if wrong not in choices:
+                    choices.append(wrong)
+            random.shuffle(choices) 
+            
+            draw_placeholder(pdf, 25, y, 80, 40, f"~ Add {actual_count} items ~")
             draw_solid_box(pdf, 120, y+10, 20, 20, str(choices[0]))
             draw_solid_box(pdf, 145, y+10, 20, 20, str(choices[1]))
             draw_solid_box(pdf, 170, y+10, 20, 20, str(choices[2]))
             pdf.ln(50)
 
-    # 4. COUNT AND MATCH 
+    # 4. COUNT AND MATCH (โยงภาพที่เท่ากับเลขโฟกัส)
     elif "match" in clean_sub:
-        pdf.cell(0, 10, " Directions: Count the objects and draw a line to the correct number.", ln=True)
-        pdf.ln(10)
-        # เลือกเลขมาทำโจทย์
-        ans_list = random.sample(range(min_num, max_num + 1), min(num_q, max_num - min_num + 1))
-        shuffled_ans = ans_list.copy()
-        random.shuffle(shuffled_ans) # สลับตัวเลือกฝั่งขวา
+        pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
+        pdf.ln(5)
+        # นำเลขมาวางตรงกลาง 1 กล่องใหญ่
+        draw_solid_box(pdf, 90, 120, 35, 35, str(target_num), font_size=24)
         
-        for i in range(len(ans_list)):
-            if pdf.get_y() > 240: pdf.add_page()
-            y = pdf.get_y()
-            draw_placeholder(pdf, 30, y, 50, 35, f"~ Group of {ans_list[i]} items ~")
-            draw_solid_box(pdf, 140, y, 35, 35, str(shuffled_ans[i]))
-            pdf.ln(45)
+        # วางกล่องรอบๆ 4 มุม ให้โยงเข้าหาตรงกลาง
+        draw_placeholder(pdf, 20, 80, 45, 35, f"~ {target_num} dots ~")
+        draw_placeholder(pdf, 150, 80, 45, 35, f"~ {target_num} fingers ~")
+        draw_placeholder(pdf, 20, 160, 45, 35, f"~ {random.randint(1, 10)} items ~") # หลอก
+        draw_placeholder(pdf, 150, 160, 45, 35, f"~ {target_num} animals ~")
 
-    # 5. MORE OR LESS 
+    # 5. MORE OR LESS (เปรียบเทียบกับเลขโฟกัส)
     elif "more" in clean_sub:
-        pdf.cell(0, 10, " Directions: Look at the two boxes. Circle the box that has MORE.", ln=True)
+        pdf.cell(0, 10, f" Directions: Circle the group that has {target_num} items.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
-            a, b = random.sample(range(min_num, max_num + 1), 2)
-            draw_placeholder(pdf, 30, y, 60, 45, f"~ {a} items ~")
+            wrong = random.choice([x for x in range(1, 11) if x != target_num])
+            options = [target_num, wrong]
+            random.shuffle(options)
+            
+            draw_placeholder(pdf, 30, y, 60, 45, f"~ {options[0]} items ~")
             pdf.set_font("helvetica", "B", 18)
             pdf.set_text_color(*theme_colors["secondary"])
             pdf.text(100, y + 25, "VS")
-            draw_placeholder(pdf, 125, y, 60, 45, f"~ {b} items ~")
+            draw_placeholder(pdf, 125, y, 60, 45, f"~ {options[1]} items ~")
             pdf.ln(55)
 
     # 6. COLOR BY NUMBER
     elif "color" in clean_sub:
-        pdf.cell(0, 10, " Directions: Color the picture using the color code.", ln=True)
+        pdf.cell(0, 10, f" Directions: Color the picture using the code.", ln=True)
         pdf.ln(5)
         y = pdf.get_y()
         pdf.set_fill_color(*theme_colors["box"])
-        pdf.rect(15, y, 185, 30, style='F')
+        pdf.rect(15, y, 185, 20, style='F')
         
-        color_names = ["Red", "Blue", "Green", "Yellow", "Pink", "Orange"]
-        selected_colors = random.sample(color_names, min(4, max_num))
-        num_codes = random.sample(range(min_num, max_num + 1), len(selected_colors))
-        
-        pdf.set_font("helvetica", "B", 12)
+        pdf.set_font("helvetica", "B", 14)
         pdf.set_text_color(100, 100, 100)
-        for i in range(len(selected_colors)):
-            pdf.text(25 + (i*42), y + 18, f"{num_codes[i]} = {selected_colors[i]}")
+        # โฟกัสเลขเดียว หรือ 3 เลขใกล้เคียง
+        pdf.text(35, y + 13, f"{target_num} = Red")
+        pdf.text(90, y + 13, f"{target_num+1 if target_num<10 else target_num-1} = Blue")
+        pdf.text(145, y + 13, f"{target_num+2 if target_num<9 else target_num-2} = Yellow")
             
-        pdf.ln(40)
-        draw_placeholder(pdf, 15, pdf.get_y(), 185, 140, f"~ Canva: Add Coloring Image with numbers {min_num}-{max_num} ~")
+        pdf.ln(30)
+        draw_placeholder(pdf, 15, pdf.get_y(), 185, 150, f"~ Canva: Coloring Image focusing on {target_num} ~")
 
     # 7. MISSING NUMBERS
     elif "missing" in clean_sub:
-        pdf.cell(0, 10, " Directions: Fill in the missing numbers.", ln=True)
+        pdf.cell(0, 10, f" Directions: Fill in the missing numbers to reach {target_num}.", ln=True)
         pdf.ln(10)
         for i in range(num_q):
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
-            # เริ่มต้นขบวนตัวเลข (ใช้ 5 โบกี้)
-            start_val = random.randint(min_num, max(min_num, max_num - 4))
+            # จัดให้ target_num อยู่ในขบวนเสมอ
+            start_val = max(1, target_num - random.randint(0, 4))
             seq = [start_val + k for k in range(5)]
-            hidden = random.sample([0,1,2,3,4], 2)
+            
+            # บังคับให้ซ่อน target_num
+            hidden = [seq.index(target_num)] if target_num in seq else [2]
+            # ซ่อนเพิ่มอีก 1 ตัว
+            other_hidden = random.choice([x for x in range(5) if x not in hidden])
+            hidden.append(other_hidden)
             
             for j in range(5):
                 x = 20 + (j * 35)
@@ -255,10 +255,9 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, min_num, max_n
 
     # 8. NUMBER MAZES
     elif "maze" in clean_sub:
-        target_maze = random.randint(min_num, max_num)
-        wrong_maze = random.choice([x for x in range(min_num, max_num+2) if x != target_maze])
+        wrong_maze = random.choice([x for x in range(1, 11) if x != target_num])
         
-        pdf.cell(0, 10, f" Directions: Color the number {target_maze} to find the way out of the maze!", ln=True)
+        pdf.cell(0, 10, f" Directions: Color the number {target_num} to find the way out of the maze!", ln=True)
         pdf.ln(5)
         start_x = 45
         start_y = pdf.get_y() + 10
@@ -268,7 +267,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, min_num, max_n
         pdf.text(start_x, start_y - 5, "START")
         for row in range(5):
             for col in range(5):
-                val = str(target_maze) if random.random() > 0.5 else str(wrong_maze)
+                val = str(target_num) if random.random() > 0.5 else str(wrong_maze)
                 draw_solid_box(pdf, start_x + (col*box_s), start_y + (row*box_s), box_s, box_s, val)
         pdf.text(start_x + (4*box_s), start_y + (5*box_s) + 10, "FINISH")
 
@@ -301,7 +300,7 @@ def display_pdf_preview(pdf_bytes):
 # ==========================================
 # 6. Streamlit UI
 # ==========================================
-st.set_page_config(page_title="Pre-K Premium Generator", layout="wide", page_icon="✨")
+st.set_page_config(page_title="Pre-K Focus Number Gen", layout="wide", page_icon="🔢")
 
 st.markdown("""
 <style>
@@ -309,8 +308,8 @@ st.markdown("""
     div.stButton > button { background-color: #ff9a9e; color: white; border: none; border-radius: 8px; font-weight: bold; }
 </style>
 <div class="main-header">
-    <h1 style="margin:0; font-weight:800;">✨ Pre-K Bespoke Layout Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">ปรับเปลี่ยนตัวเลขได้อิสระ แยกโครงสร้างเฉพาะกิจกรรม (ไม่ซ้ำซาก)</p>
+    <h1 style="margin:0; font-weight:800;">🔢 Pre-K Focus Number Generator</h1>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">สร้างใบงานแบบเจาะจงตัวเลขทีละชุด (1-10) สำหรับจัดขายเป็น Product Bundle บน TpT!</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -326,15 +325,9 @@ with st.sidebar:
     theme_choice = st.selectbox("🖌️ 2. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
     selected_colors = THEME_COLORS[theme_choice]
     
-    # -------- เพิ่มช่องให้เลือกช่วงตัวเลขสำหรับ Pre-K --------
-    num_range_choice = st.radio("🔢 3. เลือกช่วงตัวเลข (Number Range):", [
-        "1 - 5  (พื้นฐาน Pre-K)", 
-        "1 - 10 (ระดับท้าทายขึ้น)"
-    ])
-    if "1 - 5" in num_range_choice:
-        min_num, max_num = 1, 5
-    else:
-        min_num, max_num = 1, 10
+    # -------- ระบบเลือกตัวเลขแบบเจาะจง 1-10 --------
+    st.markdown("---")
+    target_num = st.selectbox("🎯 3. เลือกตัวเลขเป้าหมาย (Focus Number):", list(range(1, 11)), help="ระบบจะสร้างใบงานที่โฟกัสเฉพาะตัวเลขนี้เท่านั้น")
     
     num_q = st.slider("📝 4. จำนวนข้อต่อหน้า:", min_value=2, max_value=5, value=3)
     
@@ -342,32 +335,33 @@ with st.sidebar:
     generate_btn = st.button("🚀 สร้างโครงร่าง (Generate PDF)", use_container_width=True)
 
 if generate_btn:
-    with st.spinner("กำลังคำนวณและสร้างเลย์เอาต์เฉพาะกิจ..."):
-        ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, min_num, max_num, is_key=False)
-        ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, min_num, max_num, is_key=True)
+    with st.spinner(f"กำลังสร้างใบงานที่โฟกัสเลข {target_num}..."):
+        ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, is_key=False)
+        ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, is_key=True)
 
         col1, col2 = st.columns([1.5, 1])
         with col1:
             display_pdf_preview(ws_bytes)
             
         with col2:
-            st.subheader("📥 ดาวน์โหลดไฟล์ (Ready for Canva)")
-            st.success("✅ สร้างใบงานสำเร็จ!")
-            # แก้ชื่อไฟล์ให้มี Range ตัวเลขกำกับด้วย
+            st.subheader(f"📥 ดาวน์โหลดไฟล์ (Number {target_num})")
+            st.success(f"✅ สร้างใบงานโฟกัสเลข {target_num} สำเร็จ!")
+            
             file_title = sub_topic.split('. ')[1].replace(' ', '_')
+            
             st.download_button(
-                label="📄 ดาวน์โหลดโครงร่าง (Worksheet PDF)",
+                label=f"📄 โหลดโครงร่าง (Worksheet - Num {target_num})",
                 data=ws_bytes,
-                file_name=f"PreK_{file_title}_{min_num}to{max_num}.pdf",
+                file_name=f"PreK_{file_title}_Number_{target_num}.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
             st.download_button(
-                label="🔑 ดาวน์โหลดเฉลย (Answer Key PDF)",
+                label=f"🔑 โหลดเฉลย (Answer Key - Num {target_num})",
                 data=ans_bytes,
-                file_name=f"PreK_{file_title}_{min_num}to{max_num}_KEY.pdf",
+                file_name=f"PreK_{file_title}_Number_{target_num}_KEY.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
 else:
-    st.info("👈 กรุณาตั้งค่าใบงานที่แถบด้านซ้าย เลือกระดับความยาก (1-5 หรือ 1-10) แล้วกดปุ่ม **'🚀 สร้างโครงร่าง (Generate PDF)'**")
+    st.info("👈 กรุณาเลือก **ตัวเลขที่ต้องการ (Focus Number)** แล้วกดปุ่มสร้างใบงานได้เลยครับ")
