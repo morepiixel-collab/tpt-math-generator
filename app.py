@@ -293,26 +293,43 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, start_x+90, y+5, 60, 45, r=5, bg_color=(255, 255, 255), text=txt_right)
             pdf.ln(60)
 
-    # [แก้ไขจุดบั๊กที่ 1] รัดกุมคำค้นหาเป็น "color by number" 
+    # 6. COLOR BY NUMBER (เลย์เอาต์ใหม่: รหัสสี Color Key)
     elif "color by number" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Find and color all the number {target_num}s.", ln=True)
+        pdf.cell(0, 10, f" Directions: Look at the color key. Color the picture using the right colors!", ln=True)
         pdf.ln(5)
         y = pdf.get_y()
         
-        all_colors = ["Red", "Blue", "Yellow", "Green", "Pink", "Purple", "Orange"]
-        chosen_color = random.choice(all_colors)
+        # เตรียมตัวเลข 4 ตัว (รวม target_num) และสี 4 สี
+        wrong_nums = random.sample([x for x in range(1, 11) if x != target_num], 3)
+        key_nums = [target_num] + wrong_nums
+        random.shuffle(key_nums) # สลับตำแหน่งตัวเลข
         
-        code_text = f"Color {target_num} = {chosen_color}"
-        pdf.set_font("ComicNeue", "", 18)
-        tw = pdf.get_string_width(code_text)
-        code_w = tw + 20 
+        color_names = ["RED", "BLUE", "YELLOW", "GREEN"]
         
-        draw_rounded_box(pdf, center_x - (code_w/2), y, code_w, 20, r=5, bg_color=theme_colors["box"])
-        pdf.set_text_color(100, 100, 100)
-        pdf.text(center_x - (tw/2), y + 14, code_text)
-            
-        pdf.ln(30)
-        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 150, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Add a picture with hidden {target_num}s to color ~", font_size=14)
+        # วาดกล่อง Color Key (โค้งมนสวยงาม)
+        draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+        
+        # หัวข้อ Color Key
+        pdf.set_font("ComicNeue", "", 16)
+        pdf.set_text_color(*theme_colors["primary"])
+        tw = pdf.get_string_width("C O L O R   K E Y")
+        pdf.text(center_x - (tw/2), y + 10, "C O L O R   K E Y")
+        
+        # วาดชุดรหัสสี 4 ชุด (วงกลมตัวเลข + กล่องชื่อสี)
+        start_x = 22 # ขยับตำแหน่งให้สมดุล
+        for idx, n in enumerate(key_nums):
+            cx = start_x + (idx * 42)
+            # 1. วงกลมตัวเลข
+            draw_solid_circle(pdf, cx, y + 16, 16, str(n), font_size=18)
+            # 2. ป้ายชื่อสี
+            draw_rounded_box(pdf, cx + 18, y + 18, 22, 12, r=3, bg_color=(255,255,255), text=color_names[idx], font_size=9)
+        
+        pdf.ln(60)
+        
+        # กล่องสำหรับใส่รูปภาพลายเส้นใน Canva
+        nums_str = ", ".join(map(str, key_nums))
+        placeholder_text = f"~ Canva: Add a 'Color by Number' graphic using numbers {nums_str} ~"
+        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 140, r=8, bg_color=theme_colors["box"], text=placeholder_text, font_size=12)
 
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers. Can you find where {target_num} goes?", ln=True)
