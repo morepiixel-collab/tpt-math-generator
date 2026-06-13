@@ -293,7 +293,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, start_x+90, y+5, 60, 45, r=5, bg_color=(255, 255, 255), text=txt_right)
             pdf.ln(60)
 
-    # 6. COLOR BY NUMBER (เลย์เอาต์ใหม่: รหัสสี Color Key)
+    # 6. COLOR BY NUMBER
     elif "color by number" in clean_sub:
         pdf.cell(0, 10, f" Directions: Look at the color key. Color the picture using the right colors!", ln=True)
         pdf.ln(5)
@@ -324,12 +324,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             # 2. ป้ายชื่อสี
             draw_rounded_box(pdf, cx + 18, y + 18, 22, 12, r=3, bg_color=(255,255,255), text=color_names[idx], font_size=9)
         
-        pdf.ln(60)
+        pdf.ln(55)
         
-        # กล่องสำหรับใส่รูปภาพลายเส้นใน Canva
+        # กล่องสำหรับใส่รูปภาพลายเส้นใน Canva 
+        # (แก้ไขความสูงจาก 140 เป็น 115 เพื่อไม่ให้กรอบทะลุขอบล่างของหน้ากระดาษ)
         nums_str = ", ".join(map(str, key_nums))
         placeholder_text = f"~ Canva: Add a 'Color by Number' graphic using numbers {nums_str} ~"
-        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 140, r=8, bg_color=theme_colors["box"], text=placeholder_text, font_size=12)
+        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 115, r=8, bg_color=theme_colors["box"], text=placeholder_text, font_size=12)
 
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers. Can you find where {target_num} goes?", ln=True)
