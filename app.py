@@ -34,7 +34,9 @@ PRE_K_CURRICULUM = {
     ]
 }
 
+# เพิ่มโทนสี Sweet Pink สำหรับเด็กผู้หญิงเรียบร้อยครับ 🎀
 THEME_COLORS = {
+    "Sweet Pink (ชมพูหวานแหวว) 🎀": {"primary": (244, 143, 177), "secondary": (129, 212, 250), "box": (255, 240, 245)},
     "Cotton Candy (ฟ้า-ชมพู)": {"primary": (118, 165, 234), "secondary": (244, 164, 185), "box": (248, 250, 255)},
     "Minty Fresh (เขียวมิ้นต์)": {"primary": (104, 195, 163), "secondary": (243, 156, 18), "box": (245, 255, 250)},
     "Lavender Dream (ม่วงอ่อน)": {"primary": (155, 89, 182), "secondary": (26, 188, 156), "box": (252, 248, 255)},
@@ -106,7 +108,7 @@ class PremiumTpTPDF(FPDF):
         self.cell(0, 10, f"© {self.shop_name} | All Rights Reserved.", align="C")
 
 # ==========================================
-# 3. Helpers สำหรับวาด (ขนาดวงกลมพอดีขอบ และตัวเลขใหญ่ขึ้นเด่นชัด)
+# 3. Helpers สำหรับวาด (เพิ่มขนาดตัวเลข + ขนาดวงกลมไม่ติดขอบ)
 # ==========================================
 def draw_placeholder(pdf, x, y, w, h, text="", font_size=12):
     pdf.set_fill_color(*pdf.colors["box"])
@@ -126,9 +128,9 @@ def draw_placeholder(pdf, x, y, w, h, text="", font_size=12):
         text_h_offset = (font_size * 0.352777) / 2.8 
         pdf.text(x + (w/2) - (text_w/2), y + (h/2) + text_h_offset, text)
 
-def draw_solid_circle(pdf, x, y, d, text="", font_size=28, force_highlight=False):
-    # ถ้าเป็นเวอร์ชันเฉลย หรือสั่งให้เน้นคำตอบ จะไฮไลท์สีพื้นหลังวงกลมที่ถูกต้อง
-    if pdf.is_key and text == str(pdf.target_num) or force_highlight:
+def draw_solid_circle(pdf, x, y, d, text="", font_size=28):
+    # ระบบเฉลย (Key) ไฮไลท์วงกลมที่เป็นตัวเลือกที่ถูก
+    if pdf.is_key and text == str(pdf.target_num):
         pdf.set_fill_color(*pdf.colors["secondary"])
         pdf.set_draw_color(*pdf.colors["primary"])
         text_color = (255, 255, 255)
@@ -166,7 +168,7 @@ def draw_circle_placeholder(pdf, x, y, d, text="?"):
         pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
 
 # ==========================================
-# 4. BESPOKE LAYOUT ENGINE (ตรวจทานความถูกต้อง 100% ทุกหัวข้อ)
+# 4. BESPOKE LAYOUT ENGINE (อัปเดตระบบสลับตำแหน่งอัตโนมัติ)
 # ==========================================
 def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is_key=False):
     pdf = PremiumTpTPDF(sub_topic, theme_colors, shop_name, target_num, is_key)
@@ -176,7 +178,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
     pdf.set_font("CuteFont", "", 14)
     pdf.set_text_color(80, 80, 80)
 
-    # 1. FIND THE NUMBER (ล็อกเป้าหมายแม่นยำ)
+    # 1. FIND THE NUMBER
     if "find" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find and color the number {target_num} in the picture below.", ln=True)
         pdf.ln(5)
@@ -185,19 +187,18 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         pdf.cell(0, 10, f"Target: {target_num}", ln=True, align="C")
         draw_placeholder(pdf, 15, 85, 185, 160, f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~", font_size=14)
 
-    # 2. TRACE THE NUMBERS (ล็อกเป้าหมายแม่นยำทุกข้อ)
+    # 2. TRACE THE NUMBERS
     elif "trace" in clean_sub:
         pdf.cell(0, 10, f" Directions: Trace and write the number {target_num}.", ln=True)
         pdf.ln(5)
         for i in range(num_q + 1): 
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
-            # ทุกข้อต้องแสดงจำนวนตามเลขเป้าหมายอย่างเคร่งครัด
             draw_placeholder(pdf, 20, y, 30, 30, f"~ {target_num} Items ~")
             draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Dotted number {target_num} ~")
             pdf.ln(40)
 
-    # 3. COUNTING OBJECTS (แก้ไขแล้ว! ล็อกให้ทุกข้อเป็นรูปตามตัวเลขเป้าหมาย และปรับให้วงกลมไม่ตกขอบ)
+    # 3. COUNTING OBJECTS (สลับตำแหน่งวงกลมคำตอบแบบสุ่มแท้ 100%)
     elif "counting" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the objects. Color the circle with the correct number.", ln=True)
         pdf.ln(5)
@@ -205,40 +206,50 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
-            # [FIXED] บังคับให้ทุกข้อต้องมีไอเท็มเท่ากับตัวเลขเป้าหมายเท่านั้น ห้ามหลุดสุ่มเป็นตัวเลขอื่น!
             actual_count = target_num 
-            
-            # สร้างตัวเลือกที่ผิด (ห้ามซ้ำกับตัวเลขเป้าหมาย และอยู่ในช่วง 1-10)
             choices = [actual_count]
             while len(choices) < 3:
                 wrong = random.randint(1, 10)
                 if wrong not in choices:
                     choices.append(wrong)
+            
+            # [SHUFFLE FIXED] ใช้สุ่ม seed ตามรอบเพื่อล็อกผลลัพธ์ระหว่างหน้าปกกับหน้าเฉลยให้ตรงกัน แต่สลับตำแหน่งกันแน่นอน!
+            random.seed(target_num + i * 100)
             random.shuffle(choices) 
             
-            # ลดขนาดวงกลม (d=22) และขยับพิกัด X ถอยเข้าด้านใน (115, 145, 175) ป้องกันการทับเส้นขอบขวาอย่างสมบูรณ์
             draw_placeholder(pdf, 20, y, 80, 35, f"~ Add {actual_count} items ~")
             draw_solid_circle(pdf, 115, y+6, 22, str(choices[0]), font_size=28)
             draw_solid_circle(pdf, 145, y+6, 22, str(choices[1]), font_size=28)
             draw_solid_circle(pdf, 175, y+6, 22, str(choices[2]), font_size=28)
             pdf.ln(50)
+        random.seed() # Reset seed
 
-    # 4. COUNT AND MATCH (ล็อกเป้าหมายแม่นยำ)
+    # 4. COUNT AND MATCH (สลับตำแหน่งกล่องคำถามหลอกและจริง)
     elif "match" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
         pdf.ln(5)
         draw_solid_circle(pdf, 85, 120, 45, str(target_num), font_size=50)
         
-        # กล่องตัวเลือกที่ถูกล็อกให้ตรงกับตัวเลขเป้าหมาย
-        draw_placeholder(pdf, 20, 80, 45, 35, f"~ {target_num} dots ~")
-        draw_placeholder(pdf, 150, 80, 45, 35, f"~ {target_num} fingers ~")
-        
-        # ตัวเลือกหลอกที่ไม่ใช่เป้าหมาย
         wrong_count = random.choice([x for x in range(1, 11) if x != target_num])
-        draw_placeholder(pdf, 20, 160, 45, 35, f"~ {wrong_count} items ~") 
-        draw_placeholder(pdf, 150, 160, 45, 35, f"~ {target_num} animals ~")
+        
+        # [SHUFFLE FIXED] สลับตำแหน่งกล่องไอเท็มรอบวงกลมตรงกลาง
+        boxes = [
+            f"~ {target_num} dots ~",
+            f"~ {target_num} fingers ~",
+            f"~ {target_num} animals ~",
+            f"~ {wrong_count} items ~" # กล่องหลอก
+        ]
+        random.seed(target_num)
+        random.shuffle(boxes)
+        
+        # วาดกล่องตามพิกัด 4 มุมที่ถูกสลับการแสดงผลแล้ว
+        draw_placeholder(pdf, 20, 80, 45, 35, boxes[0])
+        draw_placeholder(pdf, 150, 80, 45, 35, boxes[1])
+        draw_placeholder(pdf, 20, 160, 45, 35, boxes[2]) 
+        draw_placeholder(pdf, 150, 160, 45, 35, boxes[3])
+        random.seed()
 
-    # 5. MORE OR LESS? (ล็อกเป้าหมายแม่นยำ)
+    # 5. MORE OR LESS? (สลับตำแหน่งฝั่งซ้าย-ขวา ไม่ให้คำตอบอยู่ฝั่งเดิมตลอด)
     elif "more" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the box that has exactly {target_num} items.", ln=True)
         pdf.ln(5)
@@ -248,14 +259,23 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             
             wrong = random.choice([x for x in range(1, 11) if x != target_num])
             options = [target_num, wrong]
+            
+            # [SHUFFLE FIXED] สลับตำแหน่งฝั่งซ้ายและขวา
+            random.seed(target_num + i * 50)
             random.shuffle(options)
             
-            draw_placeholder(pdf, 30, y, 60, 45, f"~ {options[0]} items ~")
+            # วาดกรอบสี่เหลี่ยมสลับซ้าย-ขวา
+            # ในระบบเฉลย (Key) เราจะเปลี่ยนข้อความให้เห็นชัดเจนว่ากล่องไหนถูก
+            txt_left = f"~ {options[0]} items ~" + (" (CORRECT)" if (pdf.is_key and options[0] == target_num) else "")
+            txt_right = f"~ {options[1]} items ~" + (" (CORRECT)" if (pdf.is_key and options[1] == target_num) else "")
+            
+            draw_placeholder(pdf, 30, y, 60, 45, txt_left)
             pdf.set_font("CuteFont", "", 20)
             pdf.set_text_color(*theme_colors["secondary"])
             pdf.text(102, y + 28, "VS")
-            draw_placeholder(pdf, 125, y, 60, 45, f"~ {options[1]} items ~")
+            draw_placeholder(pdf, 125, y, 60, 45, txt_right)
             pdf.ln(55)
+        random.seed()
 
     # 6. COLOR BY NUMBER
     elif "color" in clean_sub:
@@ -274,7 +294,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         pdf.ln(30)
         draw_placeholder(pdf, 15, pdf.get_y(), 185, 150, f"~ Canva: Coloring Image focusing on {target_num} ~", font_size=14)
 
-    # 7. MISSING NUMBERS (ล็อกตัวเลขเป้าหมายให้อยู่ในขบวนรถไฟเสมอ)
+    # 7. MISSING NUMBERS
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers to reach {target_num}.", ln=True)
         pdf.ln(10)
@@ -282,11 +302,9 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
-            # บังคับสร้างลำดับตัวเลขที่ต้องมีตัวเลขเป้าหมายรวมอยู่ด้วยชัวร์ๆ
             start_val = max(1, target_num - random.randint(1, 3))
             seq = [start_val + k for k in range(5)]
             
-            # ซ่อนตัวเลขเป้าหมาย และสุ่มซ่อนอีกหนึ่งตัวเพื่อให้เด็กๆ เติม
             hidden = [seq.index(target_num)] if target_num in seq else [2]
             other_hidden = random.choice([x for x in range(5) if x not in hidden])
             hidden.append(other_hidden)
@@ -294,12 +312,14 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             for j in range(5):
                 x = 18 + (j * 34)
                 if j in hidden:
-                    draw_circle_placeholder(pdf, x, y, 28, "?")
+                    # ถ้าเป็นหน้าเฉลยให้แสดงตัวเลขแทนเครื่องหมายคำถาม
+                    val = str(seq[j]) if pdf.is_key else "?"
+                    draw_circle_placeholder(pdf, x, y, 28, val)
                 else:
                     draw_solid_circle(pdf, x, y, 28, str(seq[j]), font_size=28)
             pdf.ln(50)
 
-    # 8. NUMBER MAZES (ล็อกตัวเลขเป้าหมายเป็นเส้นทางหลัก)
+    # 8. NUMBER MAZES
     elif "maze" in clean_sub:
         wrong_maze = random.choice([x for x in range(1, 11) if x != target_num])
         
@@ -314,10 +334,12 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         
         for row in range(5):
             for col in range(5):
-                val = str(target_num) if random.random() > 0.5 else str(wrong_maze)
+                random.seed(target_num + row * 10 + col)
+                val = str(target_num) if random.random() > 0.4 else str(wrong_maze)
                 draw_solid_circle(pdf, start_x + (col*box_s) + 2, start_y + (row*box_s) + 2, 20, val, font_size=22)
                 
         pdf.text(start_x + (4*box_s), start_y + (5*box_s) + 5, "FINISH")
+        random.seed()
 
     return bytes(pdf.output(dest='S'))
 
@@ -352,12 +374,12 @@ st.set_page_config(page_title="Pre-K Focus Number Gen", layout="wide", page_icon
 
 st.markdown("""
 <style>
-    .main-header { background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); padding: 2rem; border-radius: 15px; color: #2c3e50; text-align: center; margin-bottom: 2rem; }
-    div.stButton > button { background-color: #ff9a9e; color: white; border: none; border-radius: 8px; font-weight: bold; }
+    .main-header { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); padding: 2rem; border-radius: 15px; color: #2c3e50; text-align: center; margin-bottom: 2rem; }
+    div.stButton > button { background-color: #ff7494; color: white; border: none; border-radius: 8px; font-weight: bold; }
 </style>
 <div class="main-header">
     <h1 style="margin:0; font-weight:800;">🎨 Pre-K Focus Number Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: แก้ไขบั๊กสุ่มตัวเลขหลุด + ล็อกเป้าหมายแม่นยำ 100%)</p>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: สลับสุ่มตำแหน่งคำตอบไม่ซ้ำซาก + เพิ่มโทนสี Sweet Pink 🎀)</p>
 </div>
 """, unsafe_allow_html=True)
 
