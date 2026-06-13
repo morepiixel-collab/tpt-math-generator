@@ -1,5 +1,6 @@
 import streamlit as st
 from fpdf import FPDF
+import base64
 
 # ==========================================
 # 1. ฐานข้อมูลหลักสูตร Pre-K (4 หลัก x 8 ย่อย)
@@ -51,10 +52,11 @@ PRE_K_CURRICULUM = {
 # 2. คลาสสร้างเอกสาร PDF (ขนาด US Letter)
 # ==========================================
 class MathWorksheetPDF(FPDF):
-    def __init__(self, theme_name, title, is_answer_key=False):
+    def __init__(self, theme_name, title, shop_name, is_answer_key=False):
         super().__init__(orientation='P', unit='in', format='letter')
         self.theme_name = theme_name
         self.title_text = title
+        self.shop_name = shop_name  # รับชื่อร้านจากระบบ
         self.is_answer_key = is_answer_key
         self.set_auto_page_break(auto=True, margin=0.5)
 
@@ -84,12 +86,20 @@ class MathWorksheetPDF(FPDF):
             
         self.cell(0, 0.4, display_title, ln=True, align="C")
         self.ln(0.2)
+        
+    def footer(self):
+        # แสดงชื่อร้าน (Copyright) ที่ท้ายกระดาษ
+        self.set_y(-0.5)
+        self.set_font("helvetica", "I", 8)
+        self.set_text_color(150, 150, 150)
+        # ใช้ข้อความลิขสิทธิ์สไตล์ TpT
+        self.cell(0, 0.2, f"© {self.shop_name} | All Rights Reserved.", align="C")
 
 # ==========================================
 # 3. ฟังก์ชันจัด Layout อัตโนมัติตามหัวข้อ
 # ==========================================
-def generate_pdf_layout(main_topic, sub_topic, theme, num_q, is_key=False):
-    pdf = MathWorksheetPDF(theme, sub_topic, is_key)
+def generate_pdf_layout(main_topic, sub_topic, theme, num_q, shop_name, is_key=False):
+    pdf = MathWorksheetPDF(theme, sub_topic, shop_name, is_key)
     pdf.add_page()
     pdf.set_font("helvetica", "", 12)
     
@@ -108,7 +118,7 @@ def generate_pdf_layout(main_topic, sub_topic, theme, num_q, is_key=False):
             # กล่องซ้าย
             pdf.rect(1.0, pdf.get_y(), 2.5, 1.5, style='FD')
             pdf.text(1.2, pdf.get_y() + 0.8, f"[ {theme} A ]")
-            # คำว่า OR
+            # คำว่า OR หรือ VS
             pdf.set_font("helvetica", "B", 12)
             pdf.text(4.0, pdf.get_y() + 0.8, "VS")
             pdf.set_font("helvetica", "", 12)
@@ -184,58 +194,73 @@ def generate_pdf_layout(main_topic, sub_topic, theme, num_q, is_key=False):
 
     return bytes(pdf.output(dest='S'))
 
+# ฟังก์ชันสำหรับ Preview PDF ในเว็บเบราว์เซอร์
+def show_pdf_preview(pdf_bytes):
+    base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="700" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
 # ==========================================
-# 4. Streamlit UI (มี Sidebar คัดกรองหัวข้อ)
+# 4. Streamlit UI
 # ==========================================
 st.set_page_config(page_title="TpT Pre-K Generator", page_icon="🧸", layout="wide")
 
 st.title("🧸 TpT Worksheet Generator (Pre-K Edition)")
-st.markdown("ระบบวางโครงสร้างใบงานเตรียมอนุบาล (3-4 ขวบ) 32 รูปแบบ ตามมาตรฐาน US Common Core พร้อม Placeholder สำหรับ Nano Banana")
+st.markdown("ปรับแต่งตั้งค่าที่แถบด้านข้าง (Sidebar) แผงพรีวิวใบงานด้านขวาจะอัปเดตแบบ **Live Preview** ทันที!")
 
+# --- Sidebar ---
 with st.sidebar:
     st.header("⚙️ การตั้งค่าใบงาน")
     
+    # เพิ่มช่องใส่ชื่อร้าน
+    shop_name = st.text_input("🏪 ชื่อร้านค้าของคุณ (TpT Store Name)", value="Kindergarten Learning Press")
+    st.markdown("---")
+    
     st.markdown("**ระดับชั้น:** Pre-K (เตรียมอนุบาล)")
     
-    # 1. เลือกหมวดหลัก
-    main_topic = st.selectbox("📌 1. เลือกหมวดหลักคณิตศาสตร์", list(PRE_K_CURRICULUM.keys()))
-    
-    # 2. เลือกหมวดย่อยแบบสัมพันธ์กับหมวดหลัก
+    main_topic = st.selectbox("📌 1. เลือกหมวดหลัก", list(PRE_K_CURRICULUM.keys()))
     sub_topic = st.selectbox("🎯 2. เลือกประเภทใบงาน", PRE_K_CURRICULUM[main_topic])
-    
-    # 3. ธีมและจำนวนข้อ
-    theme = st.selectbox("🎨 3. ธีมภาพประกอบ (Theme)", ["Animals", "Space", "Dinosaurs", "Underwater", "Monsters"])
-    num_questions = st.slider("🔢 4. จำนวนข้อต่อหน้า", min_value=2, max_value=6, value=4, help="Pre-K ควรมีข้อไม่เยอะ เพื่อให้รูปภาพมีขนาดใหญ่ สังเกตง่าย")
-    
-    generate_btn = st.button("🚀 สร้างโครงร่าง PDF", use_container_width=True)
+    theme = st.selectbox("🎨 3. ธีมภาพประกอบ", ["Animals", "Space", "Dinosaurs", "Underwater", "Monsters"])
+    num_questions = st.slider("🔢 4. จำนวนข้อต่อหน้า", min_value=2, max_value=6, value=4)
 
-# Processing
-if generate_btn:
-    with st.spinner("กำลังสร้างเอกสาร Layout ขั้นสูง..."):
-        
-        # เจน PDF โจทย์ และ เฉลย
-        worksheet_pdf = generate_pdf_layout(main_topic, sub_topic, theme, num_questions, is_key=False)
-        answer_pdf = generate_pdf_layout(main_topic, sub_topic, theme, num_questions, is_key=True)
-        
-        st.success("✅ สร้างโครงสร้างใบงานสำเร็จ! โปรแกรมได้วิเคราะห์เลย์เอาต์ให้เข้ากับหัวข้ออัตโนมัติ")
-        
-        # พรีวิวข้อมูล
-        st.info(f"**กำลังสร้าง:** {sub_topic} | **เลย์เอาต์จัดให้แบบ:** ไดนามิก (ปรับตามคีย์เวิร์ดกิจกรรม)")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.download_button(
-                label="📥 ดาวน์โหลดใบงาน (Worksheet PDF)",
-                data=worksheet_pdf,
-                file_name=f"PreK_{theme}_{sub_topic.split('. ')[-1].replace(' ', '_')}.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-        with col2:
-            st.download_button(
-                label="🔑 ดาวน์โหลดเฉลย (Answer Key PDF)",
-                data=answer_pdf,
-                file_name=f"PreK_{theme}_{sub_topic.split('. ')[-1].replace(' ', '_')}_KEY.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
+# --- ระบบ Generate แบบอัตโนมัติ (Live Preview) ---
+# เนื่องจากแอป Streamlit จะรีเฟรชเองทุกครั้งที่มีการเปลี่ยนค่า เราจึงเจน PDF สดๆ ได้เลย
+worksheet_pdf_bytes = generate_pdf_layout(main_topic, sub_topic, theme, num_questions, shop_name, is_key=False)
+answer_pdf_bytes = generate_pdf_layout(main_topic, sub_topic, theme, num_questions, shop_name, is_key=True)
+
+# --- แสดงผลใน Main Area ---
+col_preview, col_download = st.columns([2, 1])
+
+with col_preview:
+    st.subheader(f"🔍 Live Preview: {sub_topic.split('. ')[-1]}")
+    # แสดงพรีวิวของ Worksheet
+    show_pdf_preview(worksheet_pdf_bytes)
+
+with col_download:
+    st.subheader("📥 ดาวน์โหลดไฟล์ (Ready to Export)")
+    st.info(f"**ธีม:** {theme}\n\n**จำนวนข้อ:** {num_questions} ข้อ\n\n**ลิขสิทธิ์ร้าน:** © {shop_name}")
+    
+    st.download_button(
+        label="📄 ดาวน์โหลดใบงาน (Worksheet)",
+        data=worksheet_pdf_bytes,
+        file_name=f"PreK_{theme}_{sub_topic.split('. ')[-1].replace(' ', '_')}.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
+    
+    st.download_button(
+        label="🔑 ดาวน์โหลดเฉลย (Answer Key)",
+        data=answer_pdf_bytes,
+        file_name=f"PreK_{theme}_{sub_topic.split('. ')[-1].replace(' ', '_')}_KEY.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
+    
+    st.markdown("---")
+    st.markdown("""
+    **💡 คำแนะนำการทำปก (Thumbnails)**
+    ในการนำขึ้นขายบน TpT:
+    1. นำไฟล์ PDF ไปเพิ่มรูปภาพใน Canva
+    2. เซฟภาพของใบงานออกมาเป็นไฟล์ `.png`
+    3. นำมาจัดวางในรูปแบบสี่เหลี่ยมจัตุรัส (Square Layout) เป็นหน้าปก เพื่อให้สะดุดตาลูกค้า
+    """)
