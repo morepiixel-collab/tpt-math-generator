@@ -107,7 +107,7 @@ class PremiumTpTPDF(FPDF):
         self.cell(0, 10, f"© {self.shop_name} | All Rights Reserved.", align="C")
 
 # ==========================================
-# 3. Helpers สำหรับวาด
+# 3. Helpers สำหรับวาด 
 # ==========================================
 def draw_rounded_box(pdf, x, y, w, h, r, bg_color, text="", font_size=12, text_color=(150, 150, 150)):
     pdf.set_fill_color(*bg_color)
@@ -127,7 +127,6 @@ def draw_rounded_box(pdf, x, y, w, h, r, bg_color, text="", font_size=12, text_c
         pdf.text(x + (w/2) - (text_w/2), y + (h/2) + text_h_offset, text)
 
 def draw_solid_circle(pdf, x, y, d, text="", font_size=28, is_path=False):
-    # ไฮไลท์สำหรับหน้าเฉลย
     if pdf.is_key and is_path:
         pdf.set_fill_color(*pdf.colors["secondary"])
         pdf.set_draw_color(*pdf.colors["primary"])
@@ -332,10 +331,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                     draw_solid_circle(pdf, x, y+8.5, 28, str(seq[j]), font_size=28)
             pdf.ln(50)
 
-    # 8. NUMBER MAZES (การันตีเส้นทาง)
+    # 8. NUMBER MAZES (แก้ไข: สุ่มตัวเลขหลอกหลากหลาย 100%)
     elif "maze" in clean_sub:
-        wrong_maze = random.choice([x for x in range(1, 11) if x != target_num])
-        
         pdf.cell(0, 10, f" Directions: Color the number {target_num} to find the way out of the maze!", ln=True)
         pdf.ln(5)
         
@@ -362,6 +359,9 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                 else: c += 1
             path.add((r, c))
             
+        # สร้าง List ตัวเลือกหลอกที่ไม่ใช่คำตอบ (1-10)
+        wrong_options = [x for x in range(1, 11) if x != target_num]
+            
         for row in range(5):
             for col in range(5):
                 # ตรวจสอบว่าช่องนี้อยู่ในเส้นทางที่ถูกต้องหรือไม่
@@ -370,13 +370,15 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                 if is_correct_path:
                     val = str(target_num)
                 else:
-                    # สุ่มหลอกด้วยเลขเป้าหมายนิดหน่อย แต่ส่วนใหญ่เป็นเลขผิด
-                    val = str(target_num) if random.random() > 0.85 else str(wrong_maze)
+                    # สุ่มหลอกด้วยเลขเป้าหมายนิดหน่อย แต่ส่วนใหญ่เป็นเลขหลอก "ที่สุ่มมาหลากหลาย" 
+                    if random.random() > 0.85:
+                        val = str(target_num)
+                    else:
+                        val = str(random.choice(wrong_options))
                     
                 draw_solid_circle(pdf, start_x + (col*box_s) + 2, start_y + (row*box_s) + 2, 20, val, font_size=22, is_path=is_correct_path)
                 
         tw_finish = pdf.get_string_width("FINISH")
-        # FINISH จะอยู่ตำแหน่งสุดท้ายของเส้นทาง (มุมขวาล่าง) พอดี
         pdf.text(start_x + (4*box_s) + (box_s/2) - (tw_finish/2), start_y + (5*box_s) + 5, "FINISH")
 
     return bytes(pdf.output(dest='S'))
@@ -417,7 +419,7 @@ st.markdown("""
 </style>
 <div class="main-header">
     <h1 style="margin:0; font-weight:800;">🎨 Pre-K Focus Number Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: แก้เขาวงกตให้มีทางออกสมบูรณ์แบบ! + เลย์เอาต์โค้งมน)</p>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: เขาวงกตตัวลวงหลากหลาย + เลย์เอาต์โค้งมนปลอดภัย 100%)</p>
 </div>
 """, unsafe_allow_html=True)
 
