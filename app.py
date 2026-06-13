@@ -98,7 +98,7 @@ class MathWorksheetPDF(FPDF):
         self.cell(0, 0.2, f"© {self.shop_name} | All Rights Reserved.", align="C")
 
 # ==========================================
-# 3. ฟังก์ชันจัด Layout อัตโนมัติตามหัวข้อ
+# 3. ฟังก์ชันจัด Layout อัตโนมัติตามหัวข้อ (อัปเดตให้แสดงคำสั่งเฉพาะข้อชัดเจน)
 # ==========================================
 def generate_pdf_layout(main_topic, sub_topic, theme, num_q, shop_name, is_key=False):
     pdf = MathWorksheetPDF(theme, sub_topic, shop_name, is_key)
@@ -106,15 +106,22 @@ def generate_pdf_layout(main_topic, sub_topic, theme, num_q, shop_name, is_key=F
     pdf.set_font("helvetica", "", 12)
     
     clean_sub = sub_topic.lower()
+    # ดึงชื่อหัวข้อย่อยแบบตัดตัวเลขข้างหน้าออก เพื่อเอามาเป็นคำสั่งในแต่ละข้อ
+    q_instruction = sub_topic.split(". ", 1)[-1] if ". " in sub_topic else sub_topic
     
     # ---------------------------------------------------------
     # Layout 1: เปรียบเทียบ (Measurement / Comparisons)
     # ---------------------------------------------------------
     if any(k in clean_sub for k in ["big", "tall", "long", "heavy", "more", "different", "odd"]):
         pdf.cell(0, 0.3, "Directions: Compare the pictures and circle the correct answer.", ln=True)
-        pdf.ln(0.3)
+        pdf.ln(0.2)
         for i in range(num_q):
             if pdf.get_y() > 8.5: pdf.add_page()
+            
+            # ✨ เพิ่มคำสั่งกำกับแต่ละข้อให้เห็นความต่างชัดเจน
+            pdf.set_font("helvetica", "B", 12)
+            pdf.cell(0, 0.3, f"{i+1}. Activity: {q_instruction}", ln=True)
+            pdf.set_font("helvetica", "", 12)
             
             pdf.set_fill_color(245, 245, 245)
             # กล่องซ้าย
@@ -135,15 +142,20 @@ def generate_pdf_layout(main_topic, sub_topic, theme, num_q, shop_name, is_key=F
     # ---------------------------------------------------------
     elif "pattern" in clean_sub:
         pdf.cell(0, 0.3, "Directions: Look at the pattern. Draw what comes next.", ln=True)
-        pdf.ln(0.3)
+        pdf.ln(0.2)
         for i in range(num_q):
             if pdf.get_y() > 8.5: pdf.add_page()
+            
+            # ✨ เพิ่มคำสั่งกำกับแต่ละข้อ
+            pdf.set_font("helvetica", "B", 12)
+            pdf.cell(0, 0.3, f"{i+1}. Pattern Type: {q_instruction}", ln=True)
+            pdf.set_font("helvetica", "", 12)
             
             for col in range(4):
                 pdf.rect(1.0 + (col * 1.3), pdf.get_y(), 1.0, 1.0, style='D')
                 pdf.text(1.1 + (col * 1.3), pdf.get_y() + 0.6, "Item")
                 
-            # กล่องคำตอบ (เส้นประ/เส้นหนา)
+            # กล่องคำตอบ
             pdf.set_line_width(0.03)
             pdf.rect(1.0 + (4 * 1.3), pdf.get_y(), 1.0, 1.0, style='D')
             pdf.text(1.1 + (4 * 1.3), pdf.get_y() + 0.6, "Next?")
@@ -155,15 +167,20 @@ def generate_pdf_layout(main_topic, sub_topic, theme, num_q, shop_name, is_key=F
     # Layout 3: นับจำนวนและวาด/เขียน (Counting / Matching)
     # ---------------------------------------------------------
     elif any(k in clean_sub for k in ["count", "match", "how many", "number"]):
-        pdf.cell(0, 0.3, f"Directions: Count the {theme.lower()} and write or match.", ln=True)
-        pdf.ln(0.3)
+        pdf.cell(0, 0.3, f"Directions: Look at the {theme.lower()} and complete the task.", ln=True)
+        pdf.ln(0.2)
         for i in range(num_q):
             if pdf.get_y() > 8.5: pdf.add_page()
+            
+            # ✨ เพิ่มคำสั่งกำกับแต่ละข้อ
+            pdf.set_font("helvetica", "B", 12)
+            pdf.cell(0, 0.3, f"{i+1}. Task: {q_instruction}", ln=True)
+            pdf.set_font("helvetica", "", 12)
             
             # กล่องโจทย์กว้างๆ
             pdf.set_fill_color(240, 248, 255)
             pdf.rect(1.0, pdf.get_y(), 4.5, 1.5, style='FD')
-            pdf.text(2.0, pdf.get_y() + 0.8, f"[ Place 1-5 {theme} Here ]")
+            pdf.text(2.0, pdf.get_y() + 0.8, f"[ Insert {theme} Here ]")
             
             # กล่องคำตอบ
             pdf.rect(6.0, pdf.get_y() + 0.2, 1.0, 1.0, style='D')
@@ -176,13 +193,18 @@ def generate_pdf_layout(main_topic, sub_topic, theme, num_q, shop_name, is_key=F
     # ---------------------------------------------------------
     else:
         pdf.cell(0, 0.3, "Directions: Follow the instructions to complete the activity.", ln=True)
-        pdf.ln(0.3)
+        pdf.ln(0.2)
         for i in range(num_q):
             if pdf.get_y() > 8.5: pdf.add_page()
             
+            # ✨ เพิ่มคำสั่งกำกับแต่ละข้อ
+            pdf.set_font("helvetica", "B", 12)
+            pdf.cell(0, 0.3, f"{i+1}. Action: {q_instruction}", ln=True)
+            pdf.set_font("helvetica", "", 12)
+            
             pdf.rect(1.0, pdf.get_y(), 6.5, 1.8, style='D')
             pdf.set_font("helvetica", "I", 10)
-            pdf.text(1.2, pdf.get_y() + 0.9, f"[ Place {theme} Activity / Traceable Items Here ]")
+            pdf.text(1.2, pdf.get_y() + 0.9, f"[ Add {theme} Cliparts for {q_instruction} ]")
             pdf.set_font("helvetica", "", 12)
             
             pdf.ln(2.1)
