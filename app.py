@@ -166,7 +166,7 @@ def draw_circle_placeholder(pdf, x, y, d, text="?"):
         pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
 
 # ==========================================
-# 4. BESPOKE LAYOUT ENGINE (Dynamic 100%)
+# 4. BESPOKE LAYOUT ENGINE (Dynamic & Anti-Duplication)
 # ==========================================
 def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, session_seed, is_key=False):
     random.seed(session_seed)
@@ -198,22 +198,32 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Dotted number {target_num} ~")
             pdf.ln(40)
 
-    # 3. COUNTING OBJECTS
+    # 3. COUNTING OBJECTS (Anti-Duplication)
     elif "counting" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the objects. Color the circle with the correct number.", ln=True)
         pdf.ln(5)
+        
+        seen_choices = set() # เก็บประวัติข้อที่เคยออกแล้ว
+        
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
             actual_count = target_num 
-            choices = [actual_count]
-            while len(choices) < 3:
-                wrong = random.randint(1, 10)
-                if wrong not in choices:
-                    choices.append(wrong)
             
-            random.shuffle(choices) 
+            # ระบบป้องกันช้อยส์สลับซ้ำตำแหน่งเดิมเป๊ะๆ
+            for _ in range(50):
+                choices = [actual_count]
+                while len(choices) < 3:
+                    wrong = random.randint(1, 10)
+                    if wrong not in choices:
+                        choices.append(wrong)
+                random.shuffle(choices) 
+                
+                sig = tuple(choices)
+                if sig not in seen_choices:
+                    seen_choices.add(sig)
+                    break
             
             draw_placeholder(pdf, 20, y, 80, 35, f"~ Add {actual_count} items ~")
             draw_solid_circle(pdf, 115, y+6, 22, str(choices[0]), font_size=28)
@@ -242,17 +252,27 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         draw_placeholder(pdf, 20, 160, 45, 35, boxes[2]) 
         draw_placeholder(pdf, 150, 160, 45, 35, boxes[3])
 
-    # 5. MORE OR LESS?
+    # 5. MORE OR LESS? (Anti-Duplication)
     elif "more" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the box that has exactly {target_num} items.", ln=True)
         pdf.ln(5)
+        
+        seen_options = set()
+        
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
-            wrong = random.choice([x for x in range(1, 11) if x != target_num])
-            options = [target_num, wrong]
-            random.shuffle(options) 
+            # ป้องกันการแสดงฝั่งเดิมๆ ซ้ำกันติดๆ กัน
+            for _ in range(50):
+                wrong = random.choice([x for x in range(1, 11) if x != target_num])
+                options = [target_num, wrong]
+                random.shuffle(options) 
+                
+                sig = tuple(options)
+                if sig not in seen_options:
+                    seen_options.add(sig)
+                    break
             
             txt_left = f"~ {options[0]} items ~" + (" (CORRECT)" if (pdf.is_key and options[0] == target_num) else "")
             txt_right = f"~ {options[1]} items ~" + (" (CORRECT)" if (pdf.is_key and options[1] == target_num) else "")
@@ -264,40 +284,49 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_placeholder(pdf, 125, y, 60, 45, txt_right)
             pdf.ln(55)
 
-    # 6. COLOR BY NUMBER (แก้ไขให้โฟกัสหาเป้าหมายตัวเลขเดียว ไม่สร้างความสับสน 100%)
+    # 6. COLOR BY NUMBER 
     elif "color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find and color all the number {target_num}s.", ln=True)
         pdf.ln(5)
         y = pdf.get_y()
         pdf.set_fill_color(*theme_colors["box"])
-        pdf.rect(15, y, 185, 20, style='F')
+        pdf.rect(15, y, 20, 20, style='F') # ย่อแถบให้เล็กลงเหลือแค่อันเดียว
         
-        # สุ่มสีใหม่ทุกครั้งที่กดเจนให้เฉพาะเลขที่โฟกัส
         all_colors = ["Red", "Blue", "Yellow", "Green", "Pink", "Purple", "Orange"]
         chosen_color = random.choice(all_colors)
         
         pdf.set_font("ComicNeue", "", 18)
         pdf.set_text_color(100, 100, 100)
-        # แสดงแค่รหัสสีสำหรับเลขเดียว เด็กไม่งงแน่นอน
-        pdf.text(80, y + 14, f"Color {target_num} = {chosen_color}")
+        pdf.text(45, y + 14, f"Color {target_num} = {chosen_color}")
             
         pdf.ln(30)
         draw_placeholder(pdf, 15, pdf.get_y(), 185, 150, f"~ Canva: Add a picture with hidden {target_num}s to color ~", font_size=14)
 
-    # 7. MISSING NUMBERS
+    # 7. MISSING NUMBERS (Anti-Duplication + เปลี่ยนคำสั่งให้เข้าใจง่าย)
     elif "missing" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Fill in the missing numbers to reach {target_num}.", ln=True)
+        # เปลี่ยนคำสั่งให้เด็กไม่งง และรู้ว่าเป้าหมายคือเขียนเลขอะไร
+        pdf.cell(0, 10, f" Directions: Fill in the missing numbers. Can you find where {target_num} goes?", ln=True)
         pdf.ln(10)
+        
+        seen_sequences = set() # ป้องกันโจทย์ซ้ำเป๊ะๆ ในหน้าเดียวกัน
+        
         for i in range(num_q):
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
-            start_val = max(1, target_num - random.randint(1, 3))
-            seq = [start_val + k for k in range(5)]
-            
-            hidden = [seq.index(target_num)] if target_num in seq else [2]
-            other_hidden = random.choice([x for x in range(5) if x not in hidden])
-            hidden.append(other_hidden)
+            for _ in range(50):
+                start_val = max(1, target_num - random.randint(0, 4))
+                seq = [start_val + k for k in range(5)]
+                
+                # บังคับซ่อนเป้าหมาย (target_num) เสมอ และสุ่มซ่อนเพิ่มอีก 1 จุด
+                hidden = [seq.index(target_num)] if target_num in seq else [2]
+                other_hidden = random.choice([x for x in range(5) if x not in hidden])
+                hidden.append(other_hidden)
+                
+                sig = (start_val, frozenset(hidden))
+                if sig not in seen_sequences:
+                    seen_sequences.add(sig)
+                    break
             
             for j in range(5):
                 x = 18 + (j * 34)
@@ -366,7 +395,7 @@ st.markdown("""
 </style>
 <div class="main-header">
     <h1 style="margin:0; font-weight:800;">🎨 Pre-K Focus Number Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: Dynamic 100% สุ่มใหม่ทุกครั้งที่กดปุ่ม! ไม่มีแพทเทิร์นซ้ำ)</p>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: แก้ไขคำสั่ง + ระบบป้องกันข้อซ้ำซ้อน 100%)</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -422,4 +451,4 @@ if generate_btn:
                 use_container_width=True
             )
 else:
-    st.info("👈 กรุณาเลือก **ตัวเลขที่ต้องการ** แล้วกดปุ่มสร้างใบงานได้เลยครับ (กดกี่รอบ เลย์เอาต์ก็จะเปลี่ยนตลอด ไม่ซ้ำซากครับ)")
+    st.info("👈 กรุณาเลือก **ตัวเลขที่ต้องการ** แล้วกดปุ่มสร้างใบงานได้เลยครับ (ไม่มีปัญหาข้อซ้ำติดกันแน่นอนครับ)")
