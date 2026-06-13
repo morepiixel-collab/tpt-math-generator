@@ -7,7 +7,7 @@ import os
 import urllib.request
 
 # ==========================================
-# 0. ระบบดาวน์โหลดฟอนต์อัตโนมัติ (Comic Neue)
+# 0. ระบบดาวน์โหลดฟอนต์ (Comic Neue)
 # ==========================================
 FONT_FILE = "ComicNeue.ttf"
 FONT_URL = "https://github.com/google/fonts/raw/main/ofl/comicneue/ComicNeue-Bold.ttf"
@@ -34,7 +34,6 @@ PRE_K_CURRICULUM = {
     ]
 }
 
-# เพิ่มโทนสี Sweet Pink สำหรับเด็กผู้หญิงเรียบร้อยครับ 🎀
 THEME_COLORS = {
     "Sweet Pink (ชมพูหวานแหวว) 🎀": {"primary": (244, 143, 177), "secondary": (129, 212, 250), "box": (255, 240, 245)},
     "Cotton Candy (ฟ้า-ชมพู)": {"primary": (118, 165, 234), "secondary": (244, 164, 185), "box": (248, 250, 255)},
@@ -44,7 +43,7 @@ THEME_COLORS = {
 }
 
 # ==========================================
-# 2. คลาสหน้ากระดาษ Premium Border & Header
+# 2. คลาสหน้ากระดาษ Premium Border
 # ==========================================
 class PremiumTpTPDF(FPDF):
     def __init__(self, topic_name, color_theme, shop_name, target_num, is_key=False):
@@ -108,7 +107,7 @@ class PremiumTpTPDF(FPDF):
         self.cell(0, 10, f"© {self.shop_name} | All Rights Reserved.", align="C")
 
 # ==========================================
-# 3. Helpers สำหรับวาด (เพิ่มขนาดตัวเลข + ขนาดวงกลมไม่ติดขอบ)
+# 3. Helpers สำหรับวาด 
 # ==========================================
 def draw_placeholder(pdf, x, y, w, h, text="", font_size=12):
     pdf.set_fill_color(*pdf.colors["box"])
@@ -129,7 +128,6 @@ def draw_placeholder(pdf, x, y, w, h, text="", font_size=12):
         pdf.text(x + (w/2) - (text_w/2), y + (h/2) + text_h_offset, text)
 
 def draw_solid_circle(pdf, x, y, d, text="", font_size=28):
-    # ระบบเฉลย (Key) ไฮไลท์วงกลมที่เป็นตัวเลือกที่ถูก
     if pdf.is_key and text == str(pdf.target_num):
         pdf.set_fill_color(*pdf.colors["secondary"])
         pdf.set_draw_color(*pdf.colors["primary"])
@@ -168,9 +166,13 @@ def draw_circle_placeholder(pdf, x, y, d, text="?"):
         pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
 
 # ==========================================
-# 4. BESPOKE LAYOUT ENGINE (อัปเดตระบบสลับตำแหน่งอัตโนมัติ)
+# 4. BESPOKE LAYOUT ENGINE (Dynamic 100%)
 # ==========================================
-def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is_key=False):
+def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, session_seed, is_key=False):
+    # ล็อกค่าสุ่ม "เฉพาะจังหวะที่กดปุ่มเจน" เพื่อให้หน้า Worksheet กับหน้า Answer Key สุ่มออกมาตรงกัน
+    # แต่พอกดปุ่ม Generate ใหม่ครั้งหน้า session_seed จะเปลี่ยน ทำให้เลย์เอาต์สุ่มใหม่ 100%
+    random.seed(session_seed)
+    
     pdf = PremiumTpTPDF(sub_topic, theme_colors, shop_name, target_num, is_key)
     pdf.add_page()
     
@@ -198,7 +200,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Dotted number {target_num} ~")
             pdf.ln(40)
 
-    # 3. COUNTING OBJECTS (สลับตำแหน่งวงกลมคำตอบแบบสุ่มแท้ 100%)
+    # 3. COUNTING OBJECTS (สุ่มตำแหน่งตัวเลือก 100%)
     elif "counting" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the objects. Color the circle with the correct number.", ln=True)
         pdf.ln(5)
@@ -213,18 +215,15 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
                 if wrong not in choices:
                     choices.append(wrong)
             
-            # [SHUFFLE FIXED] ใช้สุ่ม seed ตามรอบเพื่อล็อกผลลัพธ์ระหว่างหน้าปกกับหน้าเฉลยให้ตรงกัน แต่สลับตำแหน่งกันแน่นอน!
-            random.seed(target_num + i * 100)
-            random.shuffle(choices) 
+            random.shuffle(choices) # สลับตัวเลือกอย่างสมบูรณ์ ไม่มีการล็อกตำแหน่ง
             
             draw_placeholder(pdf, 20, y, 80, 35, f"~ Add {actual_count} items ~")
             draw_solid_circle(pdf, 115, y+6, 22, str(choices[0]), font_size=28)
             draw_solid_circle(pdf, 145, y+6, 22, str(choices[1]), font_size=28)
             draw_solid_circle(pdf, 175, y+6, 22, str(choices[2]), font_size=28)
             pdf.ln(50)
-        random.seed() # Reset seed
 
-    # 4. COUNT AND MATCH (สลับตำแหน่งกล่องคำถามหลอกและจริง)
+    # 4. COUNT AND MATCH (สุ่มตำแหน่งกล่องคำถามหลอก 100%)
     elif "match" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
         pdf.ln(5)
@@ -232,24 +231,20 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         
         wrong_count = random.choice([x for x in range(1, 11) if x != target_num])
         
-        # [SHUFFLE FIXED] สลับตำแหน่งกล่องไอเท็มรอบวงกลมตรงกลาง
         boxes = [
             f"~ {target_num} dots ~",
             f"~ {target_num} fingers ~",
             f"~ {target_num} animals ~",
-            f"~ {wrong_count} items ~" # กล่องหลอก
+            f"~ {wrong_count} items ~" 
         ]
-        random.seed(target_num)
-        random.shuffle(boxes)
+        random.shuffle(boxes) # สลับตำแหน่งกล่องทั้ง 4 มุม
         
-        # วาดกล่องตามพิกัด 4 มุมที่ถูกสลับการแสดงผลแล้ว
         draw_placeholder(pdf, 20, 80, 45, 35, boxes[0])
         draw_placeholder(pdf, 150, 80, 45, 35, boxes[1])
         draw_placeholder(pdf, 20, 160, 45, 35, boxes[2]) 
         draw_placeholder(pdf, 150, 160, 45, 35, boxes[3])
-        random.seed()
 
-    # 5. MORE OR LESS? (สลับตำแหน่งฝั่งซ้าย-ขวา ไม่ให้คำตอบอยู่ฝั่งเดิมตลอด)
+    # 5. MORE OR LESS? (สุ่มสลับซ้าย-ขวา 100%)
     elif "more" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the box that has exactly {target_num} items.", ln=True)
         pdf.ln(5)
@@ -259,13 +254,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             
             wrong = random.choice([x for x in range(1, 11) if x != target_num])
             options = [target_num, wrong]
+            random.shuffle(options) # สลับตัวเลือกว่าจะอยู่ฝั่งซ้ายหรือขวา
             
-            # [SHUFFLE FIXED] สลับตำแหน่งฝั่งซ้ายและขวา
-            random.seed(target_num + i * 50)
-            random.shuffle(options)
-            
-            # วาดกรอบสี่เหลี่ยมสลับซ้าย-ขวา
-            # ในระบบเฉลย (Key) เราจะเปลี่ยนข้อความให้เห็นชัดเจนว่ากล่องไหนถูก
             txt_left = f"~ {options[0]} items ~" + (" (CORRECT)" if (pdf.is_key and options[0] == target_num) else "")
             txt_right = f"~ {options[1]} items ~" + (" (CORRECT)" if (pdf.is_key and options[1] == target_num) else "")
             
@@ -275,9 +265,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             pdf.text(102, y + 28, "VS")
             draw_placeholder(pdf, 125, y, 60, 45, txt_right)
             pdf.ln(55)
-        random.seed()
 
-    # 6. COLOR BY NUMBER
+    # 6. COLOR BY NUMBER (สุ่มสี ไม่ทำแบบ Hard Code อีกต่อไป 100%)
     elif "color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the picture using the code.", ln=True)
         pdf.ln(5)
@@ -285,16 +274,20 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         pdf.set_fill_color(*theme_colors["box"])
         pdf.rect(15, y, 185, 20, style='F')
         
+        # สุ่มสีใหม่ทุกครั้งที่กดเจน
+        all_colors = ["Red", "Blue", "Yellow", "Green", "Pink", "Purple", "Orange"]
+        chosen_colors = random.sample(all_colors, 3)
+        
         pdf.set_font("ComicNeue", "", 16)
         pdf.set_text_color(100, 100, 100)
-        pdf.text(35, y + 14, f"{target_num} = Red")
-        pdf.text(90, y + 14, f"{target_num+1 if target_num<10 else target_num-1} = Blue")
-        pdf.text(145, y + 14, f"{target_num+2 if target_num<9 else target_num-2} = Yellow")
+        pdf.text(35, y + 14, f"{target_num} = {chosen_colors[0]}")
+        pdf.text(90, y + 14, f"{target_num+1 if target_num<10 else target_num-1} = {chosen_colors[1]}")
+        pdf.text(145, y + 14, f"{target_num+2 if target_num<9 else target_num-2} = {chosen_colors[2]}")
             
         pdf.ln(30)
         draw_placeholder(pdf, 15, pdf.get_y(), 185, 150, f"~ Canva: Coloring Image focusing on {target_num} ~", font_size=14)
 
-    # 7. MISSING NUMBERS
+    # 7. MISSING NUMBERS (สุ่มการซ่อนตัวเลข 100%)
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers to reach {target_num}.", ln=True)
         pdf.ln(10)
@@ -312,14 +305,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
             for j in range(5):
                 x = 18 + (j * 34)
                 if j in hidden:
-                    # ถ้าเป็นหน้าเฉลยให้แสดงตัวเลขแทนเครื่องหมายคำถาม
                     val = str(seq[j]) if pdf.is_key else "?"
                     draw_circle_placeholder(pdf, x, y, 28, val)
                 else:
                     draw_solid_circle(pdf, x, y, 28, str(seq[j]), font_size=28)
             pdf.ln(50)
 
-    # 8. NUMBER MAZES
+    # 8. NUMBER MAZES (สุ่มตัวเลขหลอก 100%)
     elif "maze" in clean_sub:
         wrong_maze = random.choice([x for x in range(1, 11) if x != target_num])
         
@@ -334,12 +326,10 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, is
         
         for row in range(5):
             for col in range(5):
-                random.seed(target_num + row * 10 + col)
                 val = str(target_num) if random.random() > 0.4 else str(wrong_maze)
                 draw_solid_circle(pdf, start_x + (col*box_s) + 2, start_y + (row*box_s) + 2, 20, val, font_size=22)
                 
         pdf.text(start_x + (4*box_s), start_y + (5*box_s) + 5, "FINISH")
-        random.seed()
 
     return bytes(pdf.output(dest='S'))
 
@@ -379,7 +369,7 @@ st.markdown("""
 </style>
 <div class="main-header">
     <h1 style="margin:0; font-weight:800;">🎨 Pre-K Focus Number Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: สลับสุ่มตำแหน่งคำตอบไม่ซ้ำซาก + เพิ่มโทนสี Sweet Pink 🎀)</p>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: Dynamic 100% สุ่มใหม่ทุกครั้งที่กดปุ่ม! ไม่มีแพทเทิร์นซ้ำ)</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -404,9 +394,13 @@ with st.sidebar:
     generate_btn = st.button("🚀 สร้างโครงร่าง (Generate PDF)", use_container_width=True)
 
 if generate_btn:
-    with st.spinner(f"กำลังสร้างใบงานด้วยฟอนต์ ComicNeue โฟกัสเลข {target_num}..."):
-        ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, is_key=False)
-        ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, is_key=True)
+    # [FIXED] สร้าง Session Seed รหัสผ่านใหม่แบบสุ่มทุกครั้งที่คุณกดปุ่ม!
+    # ทำให้มั่นใจ 100% ว่าการสุ่มครั้งนี้จะไม่ซ้ำกับครั้งไหนๆ เลย แต่หน้าโจทย์และเฉลยจะตรงกัน
+    current_session_seed = random.randint(1, 9999999)
+    
+    with st.spinner(f"กำลังสร้างใบงานแบบ Dynamic โฟกัสเลข {target_num}..."):
+        ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, session_seed=current_session_seed, is_key=False)
+        ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, session_seed=current_session_seed, is_key=True)
 
         col1, col2 = st.columns([1.5, 1])
         with col1:
@@ -414,7 +408,7 @@ if generate_btn:
             
         with col2:
             st.subheader(f"📥 ดาวน์โหลดไฟล์ (Number {target_num})")
-            st.success(f"✅ สร้างใบงานโฟกัสเลข {target_num} สำเร็จ!")
+            st.success(f"✅ สร้างใบงานสำเร็จ! เลย์เอาต์ถูกสุ่มใหม่ 100%")
             
             file_title = sub_topic.split('. ')[1].replace(' ', '_')
             
@@ -433,4 +427,4 @@ if generate_btn:
                 use_container_width=True
             )
 else:
-    st.info("👈 กรุณาเลือก **ตัวเลขที่ต้องการ (Focus Number)** แล้วกดปุ่มสร้างใบงานได้เลยครับ")
+    st.info("👈 กรุณาเลือก **ตัวเลขที่ต้องการ** แล้วกดปุ่มสร้างใบงานได้เลยครับ (กดกี่รอบ เลย์เอาต์ก็จะเปลี่ยนตลอด ไม่ซ้ำซากครับ)")
