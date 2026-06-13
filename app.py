@@ -107,22 +107,25 @@ class PremiumTpTPDF(FPDF):
         self.cell(0, 10, f"© {self.shop_name} | All Rights Reserved.", align="C")
 
 # ==========================================
-# 3. Helpers สำหรับวาด 
+# 3. Helpers สำหรับวาด (อัปเกรดกรอบมนและจัดกึ่งกลาง)
 # ==========================================
-def draw_placeholder(pdf, x, y, w, h, text="", font_size=12):
-    pdf.set_fill_color(*pdf.colors["box"])
-    pdf.set_draw_color(180, 180, 180)
-    pdf.set_line_width(0.5)
-    if hasattr(pdf, 'set_dash_pattern'):
-        pdf.set_dash_pattern(dash=3, gap=3)
-        pdf.rect(x, y, w, h, style='DF')
-        pdf.set_dash_pattern()
-    else:
-        pdf.rect(x, y, w, h, style='DF')
+
+# ฟังก์ชันสร้างกรอบมุมมน (Rounded Box) ปลอดภัยสำหรับเด็ก ไม่เหลี่ยมแข็ง
+def draw_rounded_box(pdf, x, y, w, h, r, bg_color, text="", font_size=12, text_color=(150, 150, 150)):
+    pdf.set_fill_color(*bg_color)
+    pdf.set_draw_color(*bg_color) # วาดเนียนๆ ไม่มีขอบตัด
+    # วาดรูปทรงมนด้วยสี่เหลี่ยม 2 รูปและวงกลม 4 มุม
+    pdf.rect(x + r, y, w - 2*r, h, 'F')
+    pdf.rect(x, y + r, w, h - 2*r, 'F')
+    pdf.ellipse(x, y, 2*r, 2*r, 'F')
+    pdf.ellipse(x + w - 2*r, y, 2*r, 2*r, 'F')
+    pdf.ellipse(x, y + h - 2*r, 2*r, 2*r, 'F')
+    pdf.ellipse(x + w - 2*r, y + h - 2*r, 2*r, 2*r, 'F')
     
+    # จัดข้อความให้อยู่กึ่งกลางกล่องมนเป๊ะๆ
     if text:
         pdf.set_font("ComicNeue", "", font_size)
-        pdf.set_text_color(150, 150, 150)
+        pdf.set_text_color(*text_color)
         text_w = pdf.get_string_width(text)
         text_h_offset = (font_size * 0.352777) / 2.8 
         pdf.text(x + (w/2) - (text_w/2), y + (h/2) + text_h_offset, text)
@@ -147,26 +150,22 @@ def draw_solid_circle(pdf, x, y, d, text="", font_size=28):
         text_h_offset = (font_size * 0.352777) / 3.0 
         pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
 
+# เปลี่ยน Placeholder วงกลมให้เป็นสีพื้นน่ารักๆ แทบการขีดเส้นประแข็งๆ
 def draw_circle_placeholder(pdf, x, y, d, text="?"):
-    pdf.set_fill_color(*pdf.colors["box"])
-    pdf.set_draw_color(180, 180, 180)
+    pdf.set_fill_color(255, 255, 255) 
+    pdf.set_draw_color(230, 230, 230)
     pdf.set_line_width(0.5)
-    if hasattr(pdf, 'set_dash_pattern'):
-        pdf.set_dash_pattern(dash=3, gap=3)
-        pdf.ellipse(x, y, d, d, style='DF')
-        pdf.set_dash_pattern()
-    else:
-        pdf.ellipse(x, y, d, d, style='DF')
+    pdf.ellipse(x, y, d, d, style='DF')
         
     if text:
         pdf.set_font("ComicNeue", "", 28)
-        pdf.set_text_color(150, 150, 150)
+        pdf.set_text_color(180, 180, 180)
         text_w = pdf.get_string_width(text)
         text_h_offset = (28 * 0.352777) / 3.0
         pdf.text(x + (d/2) - (text_w/2), y + (d/2) + text_h_offset, text)
 
 # ==========================================
-# 4. BESPOKE LAYOUT ENGINE (Dynamic & Anti-Duplication)
+# 4. BESPOKE LAYOUT ENGINE (Dynamic, Centered, Grouped)
 # ==========================================
 def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, session_seed, is_key=False):
     random.seed(session_seed)
@@ -174,6 +173,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     pdf = PremiumTpTPDF(sub_topic, theme_colors, shop_name, target_num, is_key)
     pdf.add_page()
     
+    center_x = 107.95 # กึ่งกลางหน้ากระดาษ Letter Size (มิลลิเมตร)
     clean_sub = sub_topic.lower()
     pdf.set_font("ComicNeue", "", 14)
     pdf.set_text_color(80, 80, 80)
@@ -185,7 +185,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.set_font("ComicNeue", "", 20)
         pdf.set_text_color(*theme_colors["primary"])
         pdf.cell(0, 10, f"Target: {target_num}", ln=True, align="C")
-        draw_placeholder(pdf, 15, 85, 185, 160, f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~", font_size=14)
+        # ใช้กล่องมนขนาดใหญ่วางกึ่งกลาง
+        draw_rounded_box(pdf, 15, 85, 185, 160, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~", font_size=14)
 
     # 2. TRACE THE NUMBERS
     elif "trace" in clean_sub:
@@ -194,24 +195,29 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         for i in range(num_q + 1): 
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
-            draw_placeholder(pdf, 20, y, 30, 30, f"~ {target_num} Items ~")
-            draw_placeholder(pdf, 60, y, 130, 30, f"~ Canva: Dotted number {target_num} ~")
-            pdf.ln(40)
+            
+            # กรอบสีอ่อนแบ่งโจทย์แต่ละข้อ
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
+            
+            # จัดกึ่งกลางคอนเทนต์ภายใน
+            # รูป(30) + ว่าง(10) + รอยประ(120) = 160
+            start_x = center_x - (160 / 2)
+            draw_rounded_box(pdf, start_x, y+5, 30, 30, r=5, bg_color=(255, 255, 255), text=f"~ {target_num} Items ~")
+            draw_rounded_box(pdf, start_x+40, y+5, 120, 30, r=5, bg_color=(255, 255, 255), text=f"~ Canva: Dotted number {target_num} ~")
+            pdf.ln(45)
 
-    # 3. COUNTING OBJECTS (Anti-Duplication)
+    # 3. COUNTING OBJECTS (ใส่กรอบแยกข้อ และกึ่งกลาง 100%)
     elif "counting" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the objects. Color the circle with the correct number.", ln=True)
         pdf.ln(5)
         
-        seen_choices = set() # เก็บประวัติข้อที่เคยออกแล้ว
+        seen_choices = set() 
         
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
             actual_count = target_num 
-            
-            # ระบบป้องกันช้อยส์สลับซ้ำตำแหน่งเดิมเป๊ะๆ
             for _ in range(50):
                 choices = [actual_count]
                 while len(choices) < 3:
@@ -219,26 +225,32 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                     if wrong not in choices:
                         choices.append(wrong)
                 random.shuffle(choices) 
-                
                 sig = tuple(choices)
                 if sig not in seen_choices:
                     seen_choices.add(sig)
                     break
             
-            draw_placeholder(pdf, 20, y, 80, 35, f"~ Add {actual_count} items ~")
-            draw_solid_circle(pdf, 115, y+6, 22, str(choices[0]), font_size=28)
-            draw_solid_circle(pdf, 145, y+6, 22, str(choices[1]), font_size=28)
-            draw_solid_circle(pdf, 175, y+6, 22, str(choices[2]), font_size=28)
+            # กรอบสีอ่อนแบ่งโจทย์แต่ละข้อให้ชัดเจน
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            
+            # จัดกึ่งกลาง: รูป(80) + ว่าง(10) + วงกลม(22*3 + 8*2 = 82) = 172
+            start_x = center_x - (172 / 2)
+            draw_rounded_box(pdf, start_x, y+5, 80, 35, r=5, bg_color=(255, 255, 255), text=f"~ Add {actual_count} items ~")
+            
+            draw_solid_circle(pdf, start_x+90, y+11.5, 22, str(choices[0]), font_size=28)
+            draw_solid_circle(pdf, start_x+118, y+11.5, 22, str(choices[1]), font_size=28)
+            draw_solid_circle(pdf, start_x+146, y+11.5, 22, str(choices[2]), font_size=28)
             pdf.ln(50)
 
-    # 4. COUNT AND MATCH
+    # 4. COUNT AND MATCH (กึ่งกลาง 100%)
     elif "match" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
         pdf.ln(5)
-        draw_solid_circle(pdf, 85, 120, 45, str(target_num), font_size=50)
+        
+        # วงกลมกลางเป๊ะๆ
+        draw_solid_circle(pdf, center_x - 22.5, 120, 45, str(target_num), font_size=50)
         
         wrong_count = random.choice([x for x in range(1, 11) if x != target_num])
-        
         boxes = [
             f"~ {target_num} dots ~",
             f"~ {target_num} fingers ~",
@@ -247,12 +259,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         ]
         random.shuffle(boxes) 
         
-        draw_placeholder(pdf, 20, 80, 45, 35, boxes[0])
-        draw_placeholder(pdf, 150, 80, 45, 35, boxes[1])
-        draw_placeholder(pdf, 20, 160, 45, 35, boxes[2]) 
-        draw_placeholder(pdf, 150, 160, 45, 35, boxes[3])
+        # กล่องมุมมนที่กะระยะซ้าย-ขวาสมดุลกัน
+        draw_rounded_box(pdf, 25, 80, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[0])
+        draw_rounded_box(pdf, 140, 80, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[1])
+        draw_rounded_box(pdf, 25, 160, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[2]) 
+        draw_rounded_box(pdf, 140, 160, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[3])
 
-    # 5. MORE OR LESS? (Anti-Duplication)
+    # 5. MORE OR LESS? (ใส่กรอบแยกข้อ และกึ่งกลาง 100%)
     elif "more" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the box that has exactly {target_num} items.", ln=True)
         pdf.ln(5)
@@ -263,12 +276,10 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             
-            # ป้องกันการแสดงฝั่งเดิมๆ ซ้ำกันติดๆ กัน
             for _ in range(50):
                 wrong = random.choice([x for x in range(1, 11) if x != target_num])
                 options = [target_num, wrong]
                 random.shuffle(options) 
-                
                 sig = tuple(options)
                 if sig not in seen_options:
                     seen_options.add(sig)
@@ -277,38 +288,49 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             txt_left = f"~ {options[0]} items ~" + (" (CORRECT)" if (pdf.is_key and options[0] == target_num) else "")
             txt_right = f"~ {options[1]} items ~" + (" (CORRECT)" if (pdf.is_key and options[1] == target_num) else "")
             
-            draw_placeholder(pdf, 30, y, 60, 45, txt_left)
+            # กรอบสีอ่อนแบ่งโจทย์
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            
+            # จัดกึ่งกลาง: ซ้าย(60) + ว่าง(10) + VS(10) + ว่าง(10) + ขวา(60) = 150
+            start_x = center_x - (150 / 2)
+            draw_rounded_box(pdf, start_x, y+5, 60, 45, r=5, bg_color=(255, 255, 255), text=txt_left)
+            
             pdf.set_font("ComicNeue", "", 20)
             pdf.set_text_color(*theme_colors["secondary"])
-            pdf.text(102, y + 28, "VS")
-            draw_placeholder(pdf, 125, y, 60, 45, txt_right)
-            pdf.ln(55)
+            tw = pdf.get_string_width("VS")
+            pdf.text(center_x - (tw/2), y + 33, "VS") # จัดกึ่งกลาง VS อัตโนมัติ
+            
+            draw_rounded_box(pdf, start_x+90, y+5, 60, 45, r=5, bg_color=(255, 255, 255), text=txt_right)
+            pdf.ln(60)
 
-    # 6. COLOR BY NUMBER 
+    # 6. COLOR BY NUMBER (กึ่งกลาง 100%)
     elif "color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find and color all the number {target_num}s.", ln=True)
         pdf.ln(5)
         y = pdf.get_y()
-        pdf.set_fill_color(*theme_colors["box"])
-        pdf.rect(15, y, 20, 20, style='F') # ย่อแถบให้เล็กลงเหลือแค่อันเดียว
         
         all_colors = ["Red", "Blue", "Yellow", "Green", "Pink", "Purple", "Orange"]
         chosen_color = random.choice(all_colors)
         
+        # จัดกึ่งกลางกล่อง Code สี
+        code_text = f"Color {target_num} = {chosen_color}"
         pdf.set_font("ComicNeue", "", 18)
+        tw = pdf.get_string_width(code_text)
+        code_w = tw + 20 # เพิ่มระยะขอบกล่อง
+        
+        draw_rounded_box(pdf, center_x - (code_w/2), y, code_w, 20, r=5, bg_color=theme_colors["box"])
         pdf.set_text_color(100, 100, 100)
-        pdf.text(45, y + 14, f"Color {target_num} = {chosen_color}")
+        pdf.text(center_x - (tw/2), y + 14, code_text)
             
         pdf.ln(30)
-        draw_placeholder(pdf, 15, pdf.get_y(), 185, 150, f"~ Canva: Add a picture with hidden {target_num}s to color ~", font_size=14)
+        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 150, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Add a picture with hidden {target_num}s to color ~", font_size=14)
 
-    # 7. MISSING NUMBERS (Anti-Duplication + เปลี่ยนคำสั่งให้เข้าใจง่าย)
+    # 7. MISSING NUMBERS (ใส่กรอบแยกข้อ และกึ่งกลางขบวนรถไฟ)
     elif "missing" in clean_sub:
-        # เปลี่ยนคำสั่งให้เด็กไม่งง และรู้ว่าเป้าหมายคือเขียนเลขอะไร
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers. Can you find where {target_num} goes?", ln=True)
         pdf.ln(10)
         
-        seen_sequences = set() # ป้องกันโจทย์ซ้ำเป๊ะๆ ในหน้าเดียวกัน
+        seen_sequences = set() 
         
         for i in range(num_q):
             if pdf.get_y() > 240: pdf.add_page()
@@ -317,8 +339,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             for _ in range(50):
                 start_val = max(1, target_num - random.randint(0, 4))
                 seq = [start_val + k for k in range(5)]
-                
-                # บังคับซ่อนเป้าหมาย (target_num) เสมอ และสุ่มซ่อนเพิ่มอีก 1 จุด
                 hidden = [seq.index(target_num)] if target_num in seq else [2]
                 other_hidden = random.choice([x for x in range(5) if x not in hidden])
                 hidden.append(other_hidden)
@@ -328,34 +348,45 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                     seen_sequences.add(sig)
                     break
             
+            # กรอบสีอ่อนแบ่งโจทย์
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            
+            # จัดกึ่งกลาง: วงกลม(28*5) + ช่องว่าง(8*4) = 140 + 32 = 172
+            start_x = center_x - (172 / 2)
+            
             for j in range(5):
-                x = 18 + (j * 34)
+                x = start_x + (j * 36)
                 if j in hidden:
                     val = str(seq[j]) if pdf.is_key else "?"
-                    draw_circle_placeholder(pdf, x, y, 28, val)
+                    draw_circle_placeholder(pdf, x, y+8.5, 28, val)
                 else:
-                    draw_solid_circle(pdf, x, y, 28, str(seq[j]), font_size=28)
+                    draw_solid_circle(pdf, x, y+8.5, 28, str(seq[j]), font_size=28)
             pdf.ln(50)
 
-    # 8. NUMBER MAZES
+    # 8. NUMBER MAZES (กึ่งกลาง 100%)
     elif "maze" in clean_sub:
         wrong_maze = random.choice([x for x in range(1, 11) if x != target_num])
         
         pdf.cell(0, 10, f" Directions: Color the number {target_num} to find the way out of the maze!", ln=True)
         pdf.ln(5)
-        start_x = 45
+        
+        # จัดกึ่งกลางตาราง 5x5: กล่องละ 25mm รวม = 125
+        start_x = center_x - (125 / 2)
         start_y = pdf.get_y() + 10
         box_s = 25
+        
         pdf.set_font("ComicNeue", "", 16)
         pdf.set_text_color(*theme_colors["primary"])
-        pdf.text(start_x, start_y - 5, "START")
+        tw_start = pdf.get_string_width("START")
+        pdf.text(start_x + (box_s/2) - (tw_start/2), start_y - 5, "START")
         
         for row in range(5):
             for col in range(5):
                 val = str(target_num) if random.random() > 0.4 else str(wrong_maze)
                 draw_solid_circle(pdf, start_x + (col*box_s) + 2, start_y + (row*box_s) + 2, 20, val, font_size=22)
                 
-        pdf.text(start_x + (4*box_s), start_y + (5*box_s) + 5, "FINISH")
+        tw_finish = pdf.get_string_width("FINISH")
+        pdf.text(start_x + (4*box_s) + (box_s/2) - (tw_finish/2), start_y + (5*box_s) + 5, "FINISH")
 
     return bytes(pdf.output(dest='S'))
 
@@ -395,7 +426,7 @@ st.markdown("""
 </style>
 <div class="main-header">
     <h1 style="margin:0; font-weight:800;">🎨 Pre-K Focus Number Generator</h1>
-    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: แก้ไขคำสั่ง + ระบบป้องกันข้อซ้ำซ้อน 100%)</p>
+    <p style="margin:5px 0 0 0; font-size:1.1rem;">(เวอร์ชันอัปเกรด: กรอบโค้งมน + จัดกึ่งกลางอัตโนมัติ + ป้องกันข้อซ้ำ)</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -432,7 +463,7 @@ if generate_btn:
             
         with col2:
             st.subheader(f"📥 ดาวน์โหลดไฟล์ (Number {target_num})")
-            st.success(f"✅ สร้างใบงานสำเร็จ! เลย์เอาต์ถูกสุ่มใหม่ 100%")
+            st.success(f"✅ สร้างใบงานสำเร็จ! เลย์เอาต์โค้งมนปลอดภัย 100%")
             
             file_title = sub_topic.split('. ')[1].replace(' ', '_')
             
@@ -451,4 +482,4 @@ if generate_btn:
                 use_container_width=True
             )
 else:
-    st.info("👈 กรุณาเลือก **ตัวเลขที่ต้องการ** แล้วกดปุ่มสร้างใบงานได้เลยครับ (ไม่มีปัญหาข้อซ้ำติดกันแน่นอนครับ)")
+    st.info("👈 กรุณาเลือก **ตัวเลขที่ต้องการ** แล้วกดปุ่มสร้างใบงานได้เลยครับ (ไม่มีปัญหากรอบเหลี่ยม หรือการจัดหน้าเบี้ยวแน่นอนครับ!)")
