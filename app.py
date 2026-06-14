@@ -797,11 +797,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.ln(60)
 
     elif "odd one out" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Cross out (X) the picture that is different.", ln=True)
+        # ปรับโจทย์ใหม่ให้เพิ่มคำสั่งระบายสี
+        pdf.cell(0, 10, f" Directions: Cross out (X) the picture that is different. Then color the pictures!", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
+            
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
             for j in range(4):
                 draw_rounded_box(pdf, 25 + (j*42), y+5, 35, 35, r=5, bg_color=(255,255,255), text=f"~ Item ~", font_size=10)
