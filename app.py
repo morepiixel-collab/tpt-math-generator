@@ -810,7 +810,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.ln(55)
 
     elif "finish the pattern" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Look at the pattern. Draw or color what comes next.", ln=True)
+        # แก้ไขคำสั่งจาก or เป็น and
+        pdf.cell(0, 10, f" Directions: Look at the pattern. Draw and color what comes next.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
