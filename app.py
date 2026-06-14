@@ -257,7 +257,9 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
         pdf.ln(5)
         
+        # วงกลมตัวเลขเป้าหมายตรงกลาง
         draw_solid_circle(pdf, center_x - 22.5, 120, 45, str(target_num), font_size=50)
+        
         wrong_count = random.choice([x for x in range(1, 11) if x != target_num])
         boxes = [
             f"~ {target_num} dots ~",
@@ -267,10 +269,11 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         ]
         random.shuffle(boxes) 
         
-        draw_rounded_box(pdf, 25, 80, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[0])
-        draw_rounded_box(pdf, 140, 80, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[1])
-        draw_rounded_box(pdf, 25, 160, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[2]) 
-        draw_rounded_box(pdf, 140, 160, 50, 35, r=6, bg_color=theme_colors["box"], text=boxes[3])
+        # ขยายกล่องให้ใหญ่ขึ้นเป็น w=65, h=50 และจัดตำแหน่ง (x, y) ใหม่ให้สมดุลรอบวงกลม
+        draw_rounded_box(pdf, 18, 60, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[0])
+        draw_rounded_box(pdf, 133, 60, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[1])
+        draw_rounded_box(pdf, 18, 175, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[2]) 
+        draw_rounded_box(pdf, 133, 175, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[3])
 
     elif "more" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the box that has exactly {target_num} items.", ln=True)
