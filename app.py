@@ -936,34 +936,33 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.ln(60)
 
     elif "day or night" in clean_sub:
-        # เพิ่มคำสั่งระบายสีให้เด็กๆ
-        pdf.cell(0, 10, f" Directions: Draw a line to match the activities to DAY or NIGHT. Then color them!", ln=True)
+        # เปลี่ยนโจทย์เป็นการดูรูปแล้วระบายสีวงกลมคำตอบที่ถูกต้อง
+        pdf.cell(0, 10, f" Directions: Does it happen in the DAY or at NIGHT? Color the correct circle.", ln=True)
         pdf.ln(5)
-        if pdf.get_y() > 100: pdf.add_page()
-        y = pdf.get_y()
         
-        # ขยายกรอบพื้นหลังให้สูงขึ้นนิดหน่อย
-        draw_rounded_box(pdf, 15, y, 185, 185, r=8, bg_color=theme_colors["box"])
-        
-        # พระอาทิตย์ และ พระจันทร์ ตรงกลาง (ขยายวงกลมเป็น 60x60 ใหญ่สะใจ)
-        draw_rounded_box(pdf, center_x - 30, y + 20, 60, 60, r=30, bg_color=(255,255,255), text="~ SUN ~", font_size=14)
-        draw_rounded_box(pdf, center_x - 30, y + 105, 60, 60, r=30, bg_color=(255,255,255), text="~ MOON ~", font_size=14)
-        
-        # กิจกรรมด้านซ้ายและขวา (ขยายกล่องเป็น 50x45 ให้ใส่รูปและระบายสีง่ายขึ้น)
-        for i in range(3):
-            # ด้านซ้าย
-            draw_rounded_box(pdf, 22, y + 18 + (i*55), 50, 45, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=11)
-            pdf.set_fill_color(*theme_colors["primary"])
-            pdf.set_draw_color(*theme_colors["primary"])
-            pdf.ellipse(75, y + 36 + (i*55), 8, 8, style='DF')
+        for i in range(num_q):
+            if pdf.get_y() > 215: pdf.add_page()
+            y = pdf.get_y()
             
-            # ด้านขวา
-            draw_rounded_box(pdf, 143, y + 18 + (i*55), 50, 45, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=11)
-            pdf.set_fill_color(*theme_colors["primary"])
-            pdf.set_draw_color(*theme_colors["primary"])
-            pdf.ellipse(132, y + 36 + (i*55), 8, 8, style='DF')
-        
-        pdf.ln(195)
+            # วาดกรอบพื้นหลังสำหรับแต่ละข้อ
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            
+            # ฝั่งซ้าย: กล่องสำหรับใส่รูปภาพกิจกรรม (ขยายใหญ่กำลังดี)
+            draw_rounded_box(pdf, 25, y+5, 60, 45, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=12)
+            
+            # วาดลูกศรหรือเส้นคั่นสายตา (ใช้ข้อความง่ายๆ)
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["secondary"])
+            pdf.text(95, y + 35, ">")
+            
+            # ฝั่งขวา: ตัวเลือก DAY และ NIGHT (ทำเป็นวงกลมโดยใช้ r เท่ากับครึ่งนึงของความกว้าง)
+            # ตัวเลือก DAY
+            draw_rounded_box(pdf, 115, y+10, 35, 35, r=17.5, bg_color=(255,255,255), text="DAY", font_size=12)
+            
+            # ตัวเลือก NIGHT
+            draw_rounded_box(pdf, 155, y+10, 35, 35, r=17.5, bg_color=(255,255,255), text="NIGHT", font_size=12)
+            
+            pdf.ln(65)
 
     elif "picture graph" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the animals in the box. Then color the graph!", ln=True)
