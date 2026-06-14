@@ -114,8 +114,11 @@ class PremiumTpTPDF(FPDF):
         self.set_font("ComicNeue", "", 24)
         clean_topic = self.topic_name.split(". ", 1)[-1].upper()
         
-        # แก้ไขจุดที่ 1: ดักจับคำของแกนที่ 3 เพื่อซ่อน : NUMBER
-        hide_keywords = ["color by number", "shape", "match to real", "big", "tall", "odd", "pattern", "where"]
+        # แก้ไขจุดที่ 1: อัปเดตคีย์เวิร์ดของแกนที่ 3 และ 4 ทั้งหมดเพื่อซ่อนคำว่า : NUMBER
+        hide_keywords = [
+            "color by number", "shape", "match to real", "big", "tall", "odd", "pattern", "where",
+            "long", "heavy", "full", "sort", "same", "day", "graph"
+        ]
         if any(kw in clean_topic.lower() for kw in hide_keywords):
             title = f"{clean_topic}" + (" (KEY)" if self.is_key else "")
         else:
@@ -933,31 +936,34 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.ln(60)
 
     elif "day or night" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Draw a line to match the activities to DAY or NIGHT.", ln=True)
+        # เพิ่มคำสั่งระบายสีให้เด็กๆ
+        pdf.cell(0, 10, f" Directions: Draw a line to match the activities to DAY or NIGHT. Then color them!", ln=True)
         pdf.ln(5)
         if pdf.get_y() > 100: pdf.add_page()
         y = pdf.get_y()
-        draw_rounded_box(pdf, 15, y, 185, 170, r=8, bg_color=theme_colors["box"])
         
-        # พระอาทิตย์ และ พระจันทร์ ตรงกลาง
-        draw_rounded_box(pdf, center_x - 25, y + 20, 50, 50, r=25, bg_color=(255,255,255), text="~ SUN ~", font_size=12)
-        draw_rounded_box(pdf, center_x - 25, y + 100, 50, 50, r=25, bg_color=(255,255,255), text="~ MOON ~", font_size=12)
+        # ขยายกรอบพื้นหลังให้สูงขึ้นนิดหน่อย
+        draw_rounded_box(pdf, 15, y, 185, 185, r=8, bg_color=theme_colors["box"])
         
-        # กิจกรรมด้านซ้ายและขวา (มีจุดโยง)
+        # พระอาทิตย์ และ พระจันทร์ ตรงกลาง (ขยายวงกลมเป็น 60x60 ใหญ่สะใจ)
+        draw_rounded_box(pdf, center_x - 30, y + 20, 60, 60, r=30, bg_color=(255,255,255), text="~ SUN ~", font_size=14)
+        draw_rounded_box(pdf, center_x - 30, y + 105, 60, 60, r=30, bg_color=(255,255,255), text="~ MOON ~", font_size=14)
+        
+        # กิจกรรมด้านซ้ายและขวา (ขยายกล่องเป็น 50x45 ให้ใส่รูปและระบายสีง่ายขึ้น)
         for i in range(3):
             # ด้านซ้าย
-            draw_rounded_box(pdf, 25, y + 15 + (i*50), 45, 40, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=10)
+            draw_rounded_box(pdf, 22, y + 18 + (i*55), 50, 45, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=11)
             pdf.set_fill_color(*theme_colors["primary"])
             pdf.set_draw_color(*theme_colors["primary"])
-            pdf.ellipse(75, y + 31 + (i*50), 8, 8, style='DF')
+            pdf.ellipse(75, y + 36 + (i*55), 8, 8, style='DF')
             
             # ด้านขวา
-            draw_rounded_box(pdf, 145, y + 15 + (i*50), 45, 40, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=10)
+            draw_rounded_box(pdf, 143, y + 18 + (i*55), 50, 45, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=11)
             pdf.set_fill_color(*theme_colors["primary"])
             pdf.set_draw_color(*theme_colors["primary"])
-            pdf.ellipse(132, y + 31 + (i*50), 8, 8, style='DF')
+            pdf.ellipse(132, y + 36 + (i*55), 8, 8, style='DF')
         
-        pdf.ln(180)
+        pdf.ln(195)
 
     elif "picture graph" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the animals in the box. Then color the graph!", ln=True)
