@@ -371,9 +371,11 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             for _ in range(50):
                 start_val = max(1, target_num - random.randint(0, 4))
                 seq = [start_val + k for k in range(5)]
+                
+                # กำหนดให้ซ่อนแค่เลขเป้าหมาย (target_num) ตัวเดียวเท่านั้น
                 hidden = [seq.index(target_num)] if target_num in seq else [2]
-                other_hidden = random.choice([x for x in range(5) if x not in hidden])
-                hidden.append(other_hidden)
+                
+                # ลบบรรทัด other_hidden ออก เพื่อไม่ให้มันสุ่มซ่อนเลขตัวอื่นเพิ่ม
                 
                 sig = (start_val, frozenset(hidden))
                 if sig not in seen_sequences:
@@ -386,12 +388,12 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             for j in range(5):
                 x = start_x + (j * 36)
                 if j in hidden:
+                    # ถ้าเป็นหน้าเฉลยจะแสดงตัวเลข แต่ถ้าไม่ใช่จะแสดง "?"
                     val = str(seq[j]) if pdf.is_key else "?"
                     draw_circle_placeholder(pdf, x, y+8.5, 28, val)
                 else:
                     draw_solid_circle(pdf, x, y+8.5, 28, str(seq[j]), font_size=28)
             pdf.ln(50)
-
     elif "maze" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the number {target_num} to find the way out of the maze!", ln=True)
         pdf.ln(5)
