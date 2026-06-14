@@ -728,24 +728,24 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
-            draw_rounded_box(pdf, 15, y, 185, 50, r=8, bg_color=theme_colors["box"])
-            draw_rounded_box(pdf, 20, y+5, 175, 40, r=5, bg_color=(255,255,255), text=f"~ Canva: Dashed Shapes for Tracing ~", font_size=12)
-            pdf.ln(60)
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            draw_rounded_box(pdf, 20, y+5, 175, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Dashed Shapes for Tracing ~", font_size=12)
+            pdf.ln(55)
 
     elif "hidden shapes" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find and color the hidden shapes in the picture.", ln=True)
         pdf.ln(5)
-        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 180, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Big scene with hidden shapes ~", font_size=14)
+        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 160, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Big scene with hidden shapes ~", font_size=14)
 
-    elif "match to real" in clean_sub:
+    elif "match to real objects" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the shape to the real object.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
-            draw_rounded_box(pdf, 30, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Basic Shape ~", font_size=10)
-            draw_rounded_box(pdf, 145, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Real Object ~", font_size=10)
+            draw_rounded_box(pdf, 25, y+5, 45, 35, r=5, bg_color=(255,255,255), text=f"~ Basic Shape ~", font_size=10)
+            draw_rounded_box(pdf, 145, y+5, 45, 35, r=5, bg_color=(255,255,255), text=f"~ Real Object ~", font_size=10)
             pdf.ln(55)
 
     elif "big vs small" in clean_sub:
@@ -756,8 +756,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             y = pdf.get_y()
             draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
             start_x = center_x - 70
-            draw_rounded_box(pdf, start_x, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Canva: Big Item ~", font_size=11)
-            draw_rounded_box(pdf, start_x+80, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Canva: Small Item ~", font_size=11)
+            draw_rounded_box(pdf, start_x, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Big Item ~", font_size=11)
+            draw_rounded_box(pdf, start_x+80, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Small Item ~", font_size=11)
             pdf.ln(65)
 
     elif "tall vs short" in clean_sub:
@@ -768,8 +768,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             y = pdf.get_y()
             draw_rounded_box(pdf, 15, y, 185, 60, r=8, bg_color=theme_colors["box"])
             start_x = center_x - 70
-            draw_rounded_box(pdf, start_x, y+5, 60, 50, r=5, bg_color=(255,255,255), text=f"~ Canva: Tall Item ~", font_size=11)
-            draw_rounded_box(pdf, start_x+80, y+5, 60, 50, r=5, bg_color=(255,255,255), text=f"~ Canva: Short Item ~", font_size=11)
+            draw_rounded_box(pdf, start_x, y+5, 60, 50, r=5, bg_color=(255,255,255), text=f"~ Tall Item ~", font_size=11)
+            draw_rounded_box(pdf, start_x+80, y+5, 60, 50, r=5, bg_color=(255,255,255), text=f"~ Short Item ~", font_size=11)
             pdf.ln(70)
 
     elif "odd one out" in clean_sub:
@@ -793,7 +793,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, 25, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ A ~", font_size=10)
             draw_rounded_box(pdf, 60, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ B ~", font_size=10)
             draw_rounded_box(pdf, 95, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ A ~", font_size=10)
-            draw_rounded_box(pdf, 140, y+5, 40, 35, r=5, bg_color=(255,255,255), text="~ Answer Box ~", font_size=10)
+            draw_rounded_box(pdf, 145, y+5, 40, 35, r=5, bg_color=(255,255,255), text="~ ? ~", font_size=14)
             pdf.ln(55)
 
     elif "where is it" in clean_sub:
