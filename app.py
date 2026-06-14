@@ -965,44 +965,40 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.ln(65)
 
     elif "picture graph" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Count the animals in the box. Then color the graph!", ln=True)
+        # ปรับโจทย์ให้ง่ายขึ้น: นับจำนวนแล้วระบายสีทีละกล่อง
+        pdf.cell(0, 10, f" Directions: Count the animals. Color one box for each animal.", ln=True)
         pdf.ln(5)
-        if pdf.get_y() > 50: pdf.add_page()
+        
+        # ป้องกันการโดดไปหน้าใหม่ถ้าระยะไม่พอ
+        if pdf.get_y() > 80: pdf.add_page()
         y = pdf.get_y()
         
-        # กล่องด้านบนสำหรับใส่รูปสัตว์รวมๆ
-        draw_rounded_box(pdf, 15, y, 185, 75, r=8, bg_color=theme_colors["box"], text="~ Canva: Scene with 3 types of animals ~", font_size=12)
+        # 1. กล่องด้านบน (ใส่รูปภาพสัตว์ปนกัน แค่ 2 ชนิดพอ)
+        draw_rounded_box(pdf, 15, y, 185, 75, r=8, bg_color=theme_colors["box"], text="~ Canva: Scene with 2 types of animals (e.g. 3 Cats, 4 Dogs) ~", font_size=11)
         
-        # กล่องด้านล่างสำหรับทำกราฟแท่ง
-        graph_y = y + 80
+        # 2. กราฟแนวนอน (Horizontal Graph) ด้านล่าง
+        graph_y = y + 85
         draw_rounded_box(pdf, 15, graph_y, 185, 95, r=8, bg_color=theme_colors["box"])
         
-        # โครงสร้างตารางกราฟแท่ง (3 คอลัมน์ 5 แถว)
-        col_w = 40
-        row_h = 12
-        start_gx = center_x - (col_w * 1.5)
-        start_gy = graph_y + 10
-        
         pdf.set_draw_color(*theme_colors["primary"])
-        pdf.set_line_width(0.5)
+        pdf.set_line_width(0.6)
         
-        for col in range(3):
-            # กล่องสำหรับใส่รูปสัตว์ใต้กราฟ
-            draw_rounded_box(pdf, start_gx + (col*col_w) + 5, start_gy + (5*row_h) + 5, 30, 15, r=3, bg_color=(255,255,255), text=f"~ Animal {col+1} ~", font_size=8)
+        # แถวที่ 1 (สัตว์ชนิดที่ 1)
+        row1_y = graph_y + 15
+        draw_rounded_box(pdf, 25, row1_y, 35, 25, r=5, bg_color=(255,255,255), text="~ Animal 1 ~", font_size=10)
+        # ช่องสี่เหลี่ยมให้ระบายสี 5 ช่อง (แนวนอน)
+        for b in range(5):
+            pdf.set_fill_color(255,255,255)
+            pdf.rect(68 + (b*22), row1_y, 20, 25, 'DF')
             
-            # ช่องสี่เหลี่ยมกราฟแท่ง
-            for row in range(5):
-                cur_x = start_gx + (col*col_w) + 5
-                cur_y = start_gy + ((4-row)*row_h)
-                pdf.set_fill_color(255, 255, 255)
-                pdf.rect(cur_x, cur_y, 30, row_h, 'DF')
-                
-                # ตัวเลขแกน Y ด้านซ้ายมือสุดของกราฟ
-                if col == 0:
-                    pdf.set_font("ComicNeue", "", 12)
-                    pdf.set_text_color(*theme_colors["primary"])
-                    pdf.text(cur_x - 10, cur_y + 8, str(row + 1))
-        
+        # แถวที่ 2 (สัตว์ชนิดที่ 2)
+        row2_y = graph_y + 55
+        draw_rounded_box(pdf, 25, row2_y, 35, 25, r=5, bg_color=(255,255,255), text="~ Animal 2 ~", font_size=10)
+        # ช่องสี่เหลี่ยมให้ระบายสี 5 ช่อง (แนวนอน)
+        for b in range(5):
+            pdf.set_fill_color(255,255,255)
+            pdf.rect(68 + (b*22), row2_y, 20, 25, 'DF')
+            
         pdf.ln(185)
 
     # ส่งคืนไฟล์ PDF ในรูปแบบ bytes
