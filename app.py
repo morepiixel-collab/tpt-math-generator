@@ -269,9 +269,11 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         ]
         random.shuffle(boxes) 
         
-        # ขยายกล่องให้ใหญ่ขึ้นเป็น w=65, h=50 และจัดตำแหน่ง (x, y) ใหม่ให้สมดุลรอบวงกลม
-        draw_rounded_box(pdf, 18, 60, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[0])
-        draw_rounded_box(pdf, 133, 60, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[1])
+        # แก้ไขพิกัด Y ของกล่องแถวบน (เปลี่ยนจาก 60 เป็น 70 เพื่อไม่ให้ทับโจทย์)
+        draw_rounded_box(pdf, 18, 70, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[0])
+        draw_rounded_box(pdf, 133, 70, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[1])
+        
+        # กล่องแถวเล่างอยู่ที่ตำแหน่ง 175 เหมือนเดิม
         draw_rounded_box(pdf, 18, 175, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[2]) 
         draw_rounded_box(pdf, 133, 175, 65, 50, r=6, bg_color=theme_colors["box"], text=boxes[3])
 
