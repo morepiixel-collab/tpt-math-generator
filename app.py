@@ -839,18 +839,31 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.ln(55)
 
     elif "where is it" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Follow the instructions below.", ln=True)
+        # เพิ่มคำสั่งให้ระบายสี และเปลี่ยนรูปแบบตัวเลือกให้เป็นวงกลมให้ระบายง่ายๆ
+        pdf.cell(0, 10, f" Directions: Color the object. Then color the circle for UNDER or ON.", ln=True)
         pdf.ln(5)
+        
         for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+            if pdf.get_y() > 215: pdf.add_page()
             y = pdf.get_y()
+            
+            # กรอบพื้นหลัง
             draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
-            draw_rounded_box(pdf, 25, y+5, 100, 45, r=5, bg_color=(255,255,255), text=f"~ Canva: Scene with objects ~", font_size=11)
-            pdf.set_font("ComicNeue", "", 12)
-            pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(135, y + 25, "Color the object")
-            pdf.set_font("ComicNeue", "", 14) 
-            pdf.text(135, y + 35, "UNDER / ON")
+            
+            # กล่องซ้ายสำหรับใส่รูปภาพ (Scene) ให้เด็กหารูปและระบายสี
+            draw_rounded_box(pdf, 25, y+5, 60, 45, r=5, bg_color=(255,255,255), text="~ Scene ~", font_size=12)
+            
+            # วงกลมตัวเลือก 1: UNDER
+            draw_rounded_box(pdf, 95, y+10, 35, 35, r=17.5, bg_color=(255,255,255), text="UNDER", font_size=11)
+            
+            # ตัวอักษรคำว่า "or" ตรงกลางแทนเครื่องหมาย /
+            pdf.set_font("ComicNeue", "", 16)
+            pdf.set_text_color(*theme_colors["secondary"])
+            pdf.text(134, y + 33, "or")
+            
+            # วงกลมตัวเลือก 2: ON
+            draw_rounded_box(pdf, 147, y+10, 35, 35, r=17.5, bg_color=(255,255,255), text="ON", font_size=11)
+            
             pdf.ln(65)
 
     # ==========================================
