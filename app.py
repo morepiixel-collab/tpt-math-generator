@@ -51,6 +51,16 @@ PRE_K_CURRICULUM = {
         "6. Odd One Out",
         "7. Finish the Pattern",
         "8. Where is it?"
+    ],
+    "4. Measurement & Data (การวัดและข้อมูล)": [
+        "1. Long or Short?",
+        "2. Heavy or Light?",
+        "3. Full or Empty?",
+        "4. Sort by Color",
+        "5. Sort by Category",
+        "6. Same and Different",
+        "7. Day or Night?",
+        "8. Simple Picture Graph"
     ]
 }
 
@@ -837,6 +847,158 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.set_font("ComicNeue", "", 14) 
             pdf.text(135, y + 35, "UNDER / ON")
             pdf.ln(65)
+
+    # ==========================================
+    # โซนแกนที่ 4 : MEASUREMENT, DATA & SORTING
+    # ==========================================
+    elif "long or short" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Look at the pictures. Color the LONG one in each box.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 215: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - 70
+            draw_rounded_box(pdf, start_x, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Long Item ~", font_size=11)
+            draw_rounded_box(pdf, start_x+80, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Short Item ~", font_size=11)
+            pdf.ln(60)
+
+    elif "heavy or light" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Color the HEAVY object. Cross out (X) the LIGHT object.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 215: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - 70
+            draw_rounded_box(pdf, start_x, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Heavy Object ~", font_size=11)
+            draw_rounded_box(pdf, start_x+80, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Light Object ~", font_size=11)
+            pdf.ln(60)
+
+    elif "full or empty" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Color the FULL jar. Circle the EMPTY jar.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 215: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - 70
+            draw_rounded_box(pdf, start_x, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Full Jar ~", font_size=11)
+            draw_rounded_box(pdf, start_x+80, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Empty Jar ~", font_size=11)
+            pdf.ln(60)
+
+    elif "sort by color" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Draw a line to match the objects that have the SAME color.", ln=True)
+        pdf.ln(5)
+        total_h = (num_q * 52) + 10
+        if pdf.get_y() + total_h > 250: pdf.add_page()
+        start_y = pdf.get_y()
+        
+        # กล่องพื้นหลังใหญ่รวมทุกข้อ
+        draw_rounded_box(pdf, 15, start_y, 185, total_h, r=8, bg_color=theme_colors["box"])
+        for i in range(num_q):
+            y = start_y + 6 + (i * 52)
+            draw_rounded_box(pdf, 24, y, 50, 42, r=5, bg_color=(255,255,255), text=f"~ Object 1 ~", font_size=10)
+            # จุดโยงซ้าย
+            pdf.set_fill_color(*theme_colors["primary"])
+            pdf.set_draw_color(*theme_colors["primary"])
+            pdf.ellipse(78, y + 17, 8, 8, style='DF')
+            
+            draw_rounded_box(pdf, 142, y, 50, 42, r=5, bg_color=(255,255,255), text=f"~ Object 2 ~", font_size=10)
+            # จุดโยงขวา
+            pdf.set_fill_color(*theme_colors["primary"])
+            pdf.set_draw_color(*theme_colors["primary"])
+            pdf.ellipse(130, y + 17, 8, 8, style='DF')
+        pdf.ln(total_h + 10)
+
+    elif "sort by category" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Circle the items that belong in the same group. Cross out the odd one.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 215: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            draw_rounded_box(pdf, 25, y+5, 165, 45, r=5, bg_color=(255,255,255), text=f"~ Canva: Add 3 related items + 1 unrelated item ~", font_size=11)
+            pdf.ln(60)
+
+    elif "same and different" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Color the two pictures that are exactly the SAME.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 215: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            for j in range(4):
+                draw_rounded_box(pdf, 25 + (j*42), y+7.5, 35, 40, r=5, bg_color=(255,255,255), text=f"~ Item ~", font_size=10)
+            pdf.ln(60)
+
+    elif "day or night" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Draw a line to match the activities to DAY or NIGHT.", ln=True)
+        pdf.ln(5)
+        if pdf.get_y() > 100: pdf.add_page()
+        y = pdf.get_y()
+        draw_rounded_box(pdf, 15, y, 185, 170, r=8, bg_color=theme_colors["box"])
+        
+        # พระอาทิตย์ และ พระจันทร์ ตรงกลาง
+        draw_rounded_box(pdf, center_x - 25, y + 20, 50, 50, r=25, bg_color=(255,255,255), text="~ SUN ~", font_size=12)
+        draw_rounded_box(pdf, center_x - 25, y + 100, 50, 50, r=25, bg_color=(255,255,255), text="~ MOON ~", font_size=12)
+        
+        # กิจกรรมด้านซ้ายและขวา (มีจุดโยง)
+        for i in range(3):
+            # ด้านซ้าย
+            draw_rounded_box(pdf, 25, y + 15 + (i*50), 45, 40, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=10)
+            pdf.set_fill_color(*theme_colors["primary"])
+            pdf.set_draw_color(*theme_colors["primary"])
+            pdf.ellipse(75, y + 31 + (i*50), 8, 8, style='DF')
+            
+            # ด้านขวา
+            draw_rounded_box(pdf, 145, y + 15 + (i*50), 45, 40, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=10)
+            pdf.set_fill_color(*theme_colors["primary"])
+            pdf.set_draw_color(*theme_colors["primary"])
+            pdf.ellipse(132, y + 31 + (i*50), 8, 8, style='DF')
+        
+        pdf.ln(180)
+
+    elif "picture graph" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Count the animals in the box. Then color the graph!", ln=True)
+        pdf.ln(5)
+        if pdf.get_y() > 50: pdf.add_page()
+        y = pdf.get_y()
+        
+        # กล่องด้านบนสำหรับใส่รูปสัตว์รวมๆ
+        draw_rounded_box(pdf, 15, y, 185, 75, r=8, bg_color=theme_colors["box"], text="~ Canva: Scene with 3 types of animals ~", font_size=12)
+        
+        # กล่องด้านล่างสำหรับทำกราฟแท่ง
+        graph_y = y + 80
+        draw_rounded_box(pdf, 15, graph_y, 185, 95, r=8, bg_color=theme_colors["box"])
+        
+        # โครงสร้างตารางกราฟแท่ง (3 คอลัมน์ 5 แถว)
+        col_w = 40
+        row_h = 12
+        start_gx = center_x - (col_w * 1.5)
+        start_gy = graph_y + 10
+        
+        pdf.set_draw_color(*theme_colors["primary"])
+        pdf.set_line_width(0.5)
+        
+        for col in range(3):
+            # กล่องสำหรับใส่รูปสัตว์ใต้กราฟ
+            draw_rounded_box(pdf, start_gx + (col*col_w) + 5, start_gy + (5*row_h) + 5, 30, 15, r=3, bg_color=(255,255,255), text=f"~ Animal {col+1} ~", font_size=8)
+            
+            # ช่องสี่เหลี่ยมกราฟแท่ง
+            for row in range(5):
+                cur_x = start_gx + (col*col_w) + 5
+                cur_y = start_gy + ((4-row)*row_h)
+                pdf.set_fill_color(255, 255, 255)
+                pdf.rect(cur_x, cur_y, 30, row_h, 'DF')
+                
+                # ตัวเลขแกน Y ด้านซ้ายมือสุดของกราฟ
+                if col == 0:
+                    pdf.set_font("ComicNeue", "", 12)
+                    pdf.set_text_color(*theme_colors["primary"])
+                    pdf.text(cur_x - 10, cur_y + 8, str(row + 1))
+        
+        pdf.ln(185)
 
     # ส่งคืนไฟล์ PDF ในรูปแบบ bytes
     return bytes(pdf.output(dest='S'))
