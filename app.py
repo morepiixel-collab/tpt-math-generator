@@ -734,13 +734,35 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "match to real objects" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the shape to the real object.", ln=True)
         pdf.ln(5)
+        
+        # คำนวณความสูงของกล่องใหญ่ตามจำนวนข้อ
+        total_h = (num_q * 50) + 10
+        if pdf.get_y() + total_h > 250: pdf.add_page()
+        start_y = pdf.get_y()
+        
+        # วาดกล่องพื้นหลังสีชมพูใหญ่กรอบเดียว
+        draw_rounded_box(pdf, 15, start_y, 185, total_h, r=8, bg_color=theme_colors["box"])
+        
         for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
-            y = pdf.get_y()
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
-            draw_rounded_box(pdf, 25, y+5, 45, 35, r=5, bg_color=(255,255,255), text=f"~ Basic Shape ~", font_size=10)
-            draw_rounded_box(pdf, 145, y+5, 45, 35, r=5, bg_color=(255,255,255), text=f"~ Real Object ~", font_size=10)
-            pdf.ln(55)
+            y = start_y + 5 + (i * 50)
+            
+            # กล่องด้านซ้าย (Basic Shape)
+            draw_rounded_box(pdf, 25, y, 45, 40, r=5, bg_color=(255,255,255), text=f"~ Basic Shape ~", font_size=10)
+            
+            # วาดจุดโยงเส้นด้านซ้าย (ใช้สี Primary ของธีม)
+            pdf.set_fill_color(*theme_colors["primary"])
+            pdf.set_draw_color(*theme_colors["primary"])
+            pdf.ellipse(75, y + 16, 8, 8, style='DF')
+            
+            # กล่องด้านขวา (Real Object)
+            draw_rounded_box(pdf, 145, y, 45, 40, r=5, bg_color=(255,255,255), text=f"~ Real Object ~", font_size=10)
+            
+            # วาดจุดโยงเส้นด้านขวา
+            pdf.set_fill_color(*theme_colors["primary"])
+            pdf.set_draw_color(*theme_colors["primary"])
+            pdf.ellipse(132, y + 16, 8, 8, style='DF')
+            
+        pdf.ln(total_h + 10)
 
     elif "big vs small" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the BIG picture in each box.", ln=True)
