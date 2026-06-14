@@ -732,11 +732,12 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         draw_rounded_box(pdf, 15, pdf.get_y(), 185, 160, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Big scene with hidden shapes ~", font_size=14)
 
     elif "match to real objects" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Draw a line to match the shape to the real object.", ln=True)
+        # ปรับโจทย์ใหม่ให้เพิ่มคำสั่งระบายสี (Match and color)
+        pdf.cell(0, 10, f" Directions: Draw a line to match the shape to the real object. Then color them!", ln=True)
         pdf.ln(5)
         
-        # คำนวณความสูงของกล่องใหญ่ตามจำนวนข้อ
-        total_h = (num_q * 50) + 10
+        # คำนวณความสูงของกล่องใหญ่ตามจำนวนข้อ (เพิ่มระยะเผื่อกล่องขาวที่ขยายขึ้น)
+        total_h = (num_q * 52) + 10
         if pdf.get_y() + total_h > 250: pdf.add_page()
         start_y = pdf.get_y()
         
@@ -744,23 +745,23 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         draw_rounded_box(pdf, 15, start_y, 185, total_h, r=8, bg_color=theme_colors["box"])
         
         for i in range(num_q):
-            y = start_y + 5 + (i * 50)
+            y = start_y + 6 + (i * 52)
             
-            # กล่องด้านซ้าย (Basic Shape)
-            draw_rounded_box(pdf, 25, y, 45, 40, r=5, bg_color=(255,255,255), text=f"~ Basic Shape ~", font_size=10)
+            # กล่องด้านซ้าย (ขยายขนาดเป็น w=50, h=42 เผื่อพื้นที่ระบายสี)
+            draw_rounded_box(pdf, 24, y, 50, 42, r=5, bg_color=(255,255,255), text=f"~ Basic Shape ~", font_size=10)
             
-            # วาดจุดโยงเส้นด้านซ้าย (ใช้สี Primary ของธีม)
+            # วาดจุดโยงเส้นด้านซ้าย (ขยับจุดมาอยู่กึ่งกลางกล่องใหม่พอดี)
             pdf.set_fill_color(*theme_colors["primary"])
             pdf.set_draw_color(*theme_colors["primary"])
-            pdf.ellipse(75, y + 16, 8, 8, style='DF')
+            pdf.ellipse(78, y + 17, 8, 8, style='DF')
             
-            # กล่องด้านขวา (Real Object)
-            draw_rounded_box(pdf, 145, y, 45, 40, r=5, bg_color=(255,255,255), text=f"~ Real Object ~", font_size=10)
+            # กล่องด้านขวา (ขยายขนาดเป็น w=50, h=42 เผื่อพื้นที่ระบายสี)
+            draw_rounded_box(pdf, 142, y, 50, 42, r=5, bg_color=(255,255,255), text=f"~ Real Object ~", font_size=10)
             
             # วาดจุดโยงเส้นด้านขวา
             pdf.set_fill_color(*theme_colors["primary"])
             pdf.set_draw_color(*theme_colors["primary"])
-            pdf.ellipse(132, y + 16, 8, 8, style='DF')
+            pdf.ellipse(130, y + 17, 8, 8, style='DF')
             
         pdf.ln(total_h + 10)
 
