@@ -781,13 +781,18 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.cell(0, 10, f" Directions: Color the TALL picture in each box.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+            # เปลี่ยนจาก 220 เป็น 200 ถ้าระยะเกินนี้ให้ปัดขึ้นหน้าใหม่เลย จะได้ไม่ทะลุกรอบ
+            if pdf.get_y() > 200: pdf.add_page()
             y = pdf.get_y()
+            
             draw_rounded_box(pdf, 15, y, 185, 60, r=8, bg_color=theme_colors["box"])
             start_x = center_x - 70
+            
             draw_rounded_box(pdf, start_x, y+5, 60, 50, r=5, bg_color=(255,255,255), text=f"~ Tall Item ~", font_size=11)
             draw_rounded_box(pdf, start_x+80, y+5, 60, 50, r=5, bg_color=(255,255,255), text=f"~ Short Item ~", font_size=11)
-            pdf.ln(70)
+            
+            # ลดระยะห่างบรรทัดลงจาก 70 เหลือ 65 เพื่อให้กล่อง 3 ข้อพอดีใน 1 หน้า
+            pdf.ln(65)
 
     elif "odd one out" in clean_sub:
         pdf.cell(0, 10, f" Directions: Cross out (X) the picture that is different.", ln=True)
