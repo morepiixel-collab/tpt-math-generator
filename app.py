@@ -319,24 +319,33 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         
         color_names = ["RED", "BLUE", "YELLOW", "GREEN"]
         
-        draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+        # ขยายความสูงของกล่อง Color Key ให้ใหญ่ขึ้นนิดหน่อย (เป็น 50) เพื่อไม่ให้แออัด
+        draw_rounded_box(pdf, 15, y, 185, 50, r=8, bg_color=theme_colors["box"])
         
         pdf.set_font("ComicNeue", "", 16)
         pdf.set_text_color(*theme_colors["primary"])
         tw = pdf.get_string_width("C O L O R   K E Y")
-        pdf.text(center_x - (tw/2), y + 10, "C O L O R   K E Y")
+        pdf.text(center_x - (tw/2), y + 8, "C O L O R   K E Y")
         
-        start_x = 22
+        # จัดพิกัดใหม่ให้อยู่กึ่งกลาง และวางกล่องบอกสีไว้ "ใต้" วงกลม
         for idx, n in enumerate(key_nums):
-            cx = start_x + (idx * 42)
-            draw_solid_circle(pdf, cx, y + 16, 16, str(n), font_size=18)
-            draw_rounded_box(pdf, cx + 18, y + 18, 22, 12, r=3, bg_color=(255,255,255), text=color_names[idx], font_size=9)
+            # คำนวณจุดกึ่งกลางของแต่ละชุดให้กระจายเท่าๆ กัน (x = 40, 85, 130, 175)
+            center_item_x = 40 + (idx * 45) 
+            
+            # 1. วาดวงกลมตัวเลขด้านบน
+            d = 18
+            draw_solid_circle(pdf, center_item_x - (d/2), y + 13, d, str(n), font_size=20)
+            
+            # 2. วาดกล่องบอกสีด้านล่างวงกลม
+            box_w = 26
+            box_h = 12
+            draw_rounded_box(pdf, center_item_x - (box_w/2), y + 34, box_w, box_h, r=3, bg_color=(255,255,255), text=color_names[idx], font_size=9)
         
-        pdf.ln(55)
+        pdf.ln(60) # เว้นระยะบรรทัดเพิ่มชดเชยกล่องที่สูงขึ้น
         
         nums_str = ", ".join(map(str, key_nums))
         placeholder_text = f"~ Canva: Add a 'Color by Number' graphic using numbers {nums_str} ~"
-        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 115, r=8, bg_color=theme_colors["box"], text=placeholder_text, font_size=12)
+        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 110, r=8, bg_color=theme_colors["box"], text=placeholder_text, font_size=12)
 
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers. Can you find where {target_num} goes?", ln=True)
