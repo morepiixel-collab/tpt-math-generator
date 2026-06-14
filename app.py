@@ -947,15 +947,15 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             # วาดกรอบพื้นหลังสำหรับแต่ละข้อ
             draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
             
-            # ฝั่งซ้าย: กล่องสำหรับใส่รูปภาพกิจกรรม (ขยายใหญ่กำลังดี)
+            # ฝั่งซ้าย: กล่องสำหรับใส่รูปภาพกิจกรรม
             draw_rounded_box(pdf, 25, y+5, 60, 45, r=5, bg_color=(255,255,255), text="~ Activity ~", font_size=12)
             
-            # วาดลูกศรหรือเส้นคั่นสายตา (ใช้ข้อความง่ายๆ)
+            # วาดลูกศรคั่นสายตา (ปรับแกน Y ให้กึ่งกลางแล้ว จาก 35 เป็น 31)
             pdf.set_font("ComicNeue", "", 24)
             pdf.set_text_color(*theme_colors["secondary"])
-            pdf.text(95, y + 35, ">")
+            pdf.text(95, y + 31, ">")
             
-            # ฝั่งขวา: ตัวเลือก DAY และ NIGHT (ทำเป็นวงกลมโดยใช้ r เท่ากับครึ่งนึงของความกว้าง)
+            # ฝั่งขวา: ตัวเลือก DAY และ NIGHT
             # ตัวเลือก DAY
             draw_rounded_box(pdf, 115, y+10, 35, 35, r=17.5, bg_color=(255,255,255), text="DAY", font_size=12)
             
