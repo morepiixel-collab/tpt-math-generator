@@ -417,6 +417,10 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "color to add" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the first group, then color the second group. Add them together!", ln=True)
         pdf.ln(5)
+        
+        # เพิ่มลิสต์สีสำหรับสุ่ม เพื่อให้ใบงานดูน่าสนุกขึ้น
+        color_choices = ["red", "blue", "yellow", "green", "pink", "purple", "orange"]
+        
         for i in range(num_q):
             if pdf.get_y() > 220: pdf.add_page()
             y = pdf.get_y()
@@ -424,28 +428,46 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             n1 = random.randint(1, target_num - 1) if target_num > 1 else 1
             n2 = target_num - n1 if target_num > 1 else 0
             
+            # สุ่มดึงสีมา 2 สีที่ไม่ซ้ำกันในแต่ละข้อ
+            c1, c2 = random.sample(color_choices, 2)
+            
             draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (160 / 2)
             
+            # --- กล่องที่ 1 ---
             draw_rounded_box(pdf, start_x, y+5, 50, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n1} outlines ~", font_size=11)
             
+            # วางข้อความบอกสี ไว้ด้านล่าง "ข้างใน" กล่องขาว
+            pdf.set_font("ComicNeue", "", 10)
+            pdf.set_text_color(130, 130, 130)
+            txt1 = f"Color {n1} {c1}."
+            w1 = pdf.get_string_width(txt1)
+            pdf.text(start_x + (50/2) - (w1/2), y + 36, txt1)
+            
+            # เครื่องหมายบวก
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
             pdf.text(start_x + 55, y + 28, "+")
             
+            # --- กล่องที่ 2 ---
             draw_rounded_box(pdf, start_x + 65, y+5, 50, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} outlines ~", font_size=11)
             
+            # วางข้อความบอกสี ไว้ด้านล่าง "ข้างใน" กล่องขาว
+            pdf.set_font("ComicNeue", "", 10)
+            pdf.set_text_color(130, 130, 130)
+            txt2 = f"Color {n2} {c2}."
+            w2 = pdf.get_string_width(txt2)
+            pdf.text(start_x + 65 + (50/2) - (w2/2), y + 36, txt2)
+            
+            # เครื่องหมายเท่ากับ
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
             pdf.text(start_x + 120, y + 28, "=")
             
+            # --- กล่องคำตอบ ---
             ans_val = str(target_num) if pdf.is_key else ""
             draw_rounded_box(pdf, start_x + 130, y+5, 30, 35, r=5, bg_color=(255,255,255), text=ans_val, font_size=28)
             
-            pdf.set_font("ComicNeue", "", 10)
-            pdf.set_text_color(120, 120, 120)
-            pdf.text(start_x + 5, y + 48, f"Color {n1} red.")
-            pdf.text(start_x + 70, y + 48, f"Color {n2} blue.")
             pdf.ln(55)
 
     elif "count and color total" in clean_sub:
