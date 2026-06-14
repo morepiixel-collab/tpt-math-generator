@@ -41,6 +41,16 @@ PRE_K_CURRICULUM = {
         "6. Draw and Color More",
         "7. Cross Out and Color",
         "8. Color the Correct Sum"
+    ],
+    "3. Geometry & Patterns (รูปร่างและแบบรูป)": [
+        "1. Trace the Shapes",
+        "2. Find the Hidden Shapes",
+        "3. Match to Real Objects",
+        "4. Big vs Small",
+        "5. Tall vs Short",
+        "6. Odd One Out",
+        "7. Finish the Pattern",
+        "8. Where is it?"
     ]
 }
 
@@ -708,6 +718,98 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, start_x + 108, y+10, 22, 25, r=4, bg_color=bg2, text=str(choices[1]), font_size=20)
             draw_rounded_box(pdf, start_x + 136, y+10, 22, 25, r=4, bg_color=bg3, text=str(choices[2]), font_size=20)
             pdf.ln(55)
+
+    # ==========================================
+    # โซนแกนที่ 3 : GEOMETRY & PATTERNS
+    # ==========================================
+    elif "trace the shapes" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Trace the shapes and color them.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 50, r=8, bg_color=theme_colors["box"])
+            draw_rounded_box(pdf, 20, y+5, 175, 40, r=5, bg_color=(255,255,255), text=f"~ Canva: Dashed Shapes for Tracing ~", font_size=12)
+            pdf.ln(60)
+
+    elif "hidden shapes" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Find and color the hidden shapes in the picture.", ln=True)
+        pdf.ln(5)
+        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 180, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Big scene with hidden shapes ~", font_size=14)
+
+    elif "match to real" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Draw a line to match the shape to the real object.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            draw_rounded_box(pdf, 30, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Basic Shape ~", font_size=10)
+            draw_rounded_box(pdf, 145, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Real Object ~", font_size=10)
+            pdf.ln(55)
+
+    elif "big vs small" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Color the BIG picture in each box.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - 70
+            draw_rounded_box(pdf, start_x, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Canva: Big Item ~", font_size=11)
+            draw_rounded_box(pdf, start_x+80, y+5, 60, 45, r=5, bg_color=(255,255,255), text=f"~ Canva: Small Item ~", font_size=11)
+            pdf.ln(65)
+
+    elif "tall vs short" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Color the TALL picture in each box.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 60, r=8, bg_color=theme_colors["box"])
+            start_x = center_x - 70
+            draw_rounded_box(pdf, start_x, y+5, 60, 50, r=5, bg_color=(255,255,255), text=f"~ Canva: Tall Item ~", font_size=11)
+            draw_rounded_box(pdf, start_x+80, y+5, 60, 50, r=5, bg_color=(255,255,255), text=f"~ Canva: Short Item ~", font_size=11)
+            pdf.ln(70)
+
+    elif "odd one out" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Cross out (X) the picture that is different.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            for j in range(4):
+                draw_rounded_box(pdf, 25 + (j*42), y+5, 35, 35, r=5, bg_color=(255,255,255), text=f"~ Item ~", font_size=10)
+            pdf.ln(55)
+
+    elif "finish the pattern" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Look at the pattern. Draw or color what comes next.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            draw_rounded_box(pdf, 25, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ A ~", font_size=10)
+            draw_rounded_box(pdf, 60, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ B ~", font_size=10)
+            draw_rounded_box(pdf, 95, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ A ~", font_size=10)
+            draw_rounded_box(pdf, 140, y+5, 40, 35, r=5, bg_color=(255,255,255), text="~ Answer Box ~", font_size=10)
+            pdf.ln(55)
+
+    elif "where is it" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Follow the instructions below.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            draw_rounded_box(pdf, 25, y+5, 100, 45, r=5, bg_color=(255,255,255), text=f"~ Canva: Scene with objects ~", font_size=11)
+            pdf.set_font("ComicNeue", "", 12)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(135, y + 25, "Color the object")
+            pdf.set_font("ComicNeue", "", 14) 
+            pdf.text(135, y + 35, "UNDER / ON")
+            pdf.ln(65)
             
     return bytes(pdf.output(dest='S'))
 
