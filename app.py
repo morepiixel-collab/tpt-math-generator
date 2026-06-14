@@ -856,10 +856,10 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             # วงกลมตัวเลือก 1: UNDER
             draw_rounded_box(pdf, 95, y+10, 35, 35, r=17.5, bg_color=(255,255,255), text="UNDER", font_size=11)
             
-            # ตัวอักษรคำว่า "or" ตรงกลางแทนเครื่องหมาย /
+            # ตัวอักษรคำว่า "or" (ปรับให้กึ่งกลางเป๊ะทั้ง X และ Y)
             pdf.set_font("ComicNeue", "", 16)
             pdf.set_text_color(*theme_colors["secondary"])
-            pdf.text(134, y + 33, "or")
+            pdf.text(135, y + 30, "or")
             
             # วงกลมตัวเลือก 2: ON
             draw_rounded_box(pdf, 147, y+10, 35, 35, r=17.5, bg_color=(255,255,255), text="ON", font_size=11)
