@@ -1127,11 +1127,11 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             part1 = random.randint(1, total - 1)
             part2 = total - part1
             
-            # สุ่มซ่อนตัวเลข
+            # สุ่มซ่อนตัวเลข (เอาเครื่องหมาย ? ออก เปลี่ยนเป็นช่องว่าง "")
             hide_idx = random.choice([0, 1, 2])
-            val_total = str(total) if (hide_idx != 0 or pdf.is_key) else "?"
-            val_p1 = str(part1) if (hide_idx != 1 or pdf.is_key) else "?"
-            val_p2 = str(part2) if (hide_idx != 2 or pdf.is_key) else "?"
+            val_total = str(total) if (hide_idx != 0 or pdf.is_key) else ""
+            val_p1 = str(part1) if (hide_idx != 1 or pdf.is_key) else ""
+            val_p2 = str(part2) if (hide_idx != 2 or pdf.is_key) else ""
             
             # วาดเส้นเชื่อม (ปรับให้สั้นลงตามขนาดกล่อง)
             pdf.set_line_width(1.2)
