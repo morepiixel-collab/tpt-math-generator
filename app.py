@@ -1318,10 +1318,10 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.ln(2) 
         
         y_start = pdf.get_y()
-        box_h = 28   # บีบความสูงกล่องลงอีกเพื่อให้ยัด 5 ข้อได้พอดี
-        gap_y = 6    # ลดระยะห่างระหว่างแต่ละข้อ
+        box_h = 34   # เพิ่มความสูงกล่องขึ้นจาก 28 เป็น 34 ให้ดูใหญ่และเต็มตาขึ้น
+        gap_y = 7    # ปรับระยะห่างระหว่างข้อเล็กน้อย
         
-        for i in range(5): # เปลี่ยนจำนวนข้อเป็น 5 ข้อ
+        for i in range(5): # 5 ข้อ
             y = y_start + i * (box_h + gap_y)
             
             # วาดกรอบสีพื้นหลัง (กว้างเต็มหน้ากระดาษ)
@@ -1334,14 +1334,14 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             ans = (h * 100) + (t * 10) + o
             
             # กล่องใหญ่ด้านซ้ายสำหรับใส่ภาพบล็อก (Base Ten Blocks)
-            # ปรับตำแหน่ง Y และความสูงกล่องขาว (20) ให้สมดุลกับความสูงใหม่
-            draw_rounded_box(pdf, 22, y + 4, 115, 20, r=4, bg_color=(255,255,255), text=f"~ Canva: {h} Hundreds, {t} Tens, {o} Ones ~", font_size=11)
+            # ขยายความสูงกล่องขาวตามกล่องหลัก
+            draw_rounded_box(pdf, 22, y + 4.5, 115, 25, r=4, bg_color=(255,255,255), text=f"~ Canva: {h} Hundreds, {t} Tens, {o} Ones ~", font_size=12)
             
             # กล่องเล็กด้านขวาสำหรับเขียนคำตอบ
             ans_text = str(ans) if pdf.is_key else ""
-            draw_rounded_box(pdf, 145, y + 4, 45, 20, r=4, bg_color=(255,255,255), text=ans_text, font_size=20) 
+            draw_rounded_box(pdf, 145, y + 4.5, 45, 25, r=4, bg_color=(255,255,255), text=ans_text, font_size=24) 
             
-        # เลื่อนเคอร์เซอร์ Y ให้พ้นกล่องทั้งหมด 5 ข้อ
+        # เลื่อนเคอร์เซอร์ Y ให้พ้นกล่องทั้งหมด
         pdf.set_y(y_start + 5 * (box_h + gap_y))
 
     elif "2-digit" in clean_sub:
