@@ -64,6 +64,19 @@ PRE_K_CURRICULUM = {
     ]
 }
 
+GRADE_1_CURRICULUM = {
+    "1. Addition & Subtraction (การบวกและลบ)": [
+        "1. Addition Within 20",
+        "2. Number Bonds",
+        "3. Fact Families"
+    ],
+    "2. Number Sense & Place Value (จำนวนและค่าประจำหลัก)": [
+        "1. Place Value Basics",
+        "2. Counting to 120",
+        "3. Greater Than / Less Than"
+    ]
+}
+
 THEME_COLORS = {
     "Sweet Pink (ชมพูหวานแหวว) 🎀": {"primary": (244, 143, 177), "secondary": (129, 212, 250), "box": (255, 240, 245)},
     "Cotton Candy (ฟ้า-ชมพู)": {"primary": (118, 165, 234), "secondary": (244, 164, 185), "box": (248, 250, 255)},
@@ -114,10 +127,11 @@ class PremiumTpTPDF(FPDF):
         self.set_font("ComicNeue", "", 24)
         clean_topic = self.topic_name.split(". ", 1)[-1].upper()
         
-        # แก้ไขจุดที่ 1: อัปเดตคีย์เวิร์ดของแกนที่ 3 และ 4 ทั้งหมดเพื่อซ่อนคำว่า : NUMBER
+        # เพิ่มคีย์เวิร์ดของ Grade 1 เข้าไปในลิสต์ด้วย
         hide_keywords = [
             "color by number", "shape", "match to real", "big", "tall", "odd", "pattern", "where",
-            "long", "heavy", "full", "sort", "same", "day", "graph"
+            "long", "heavy", "full", "sort", "same", "day", "graph",
+            "addition", "bonds", "fact", "place value", "counting to", "greater"
         ]
         if any(kw in clean_topic.lower() for kw in hide_keywords):
             title = f"{clean_topic}" + (" (KEY)" if self.is_key else "")
@@ -1015,6 +1029,97 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.rect(68 + (b*22), row2_y, 20, 25, 'DF')
             
         pdf.ln(185)
+
+
+
+    # ==========================================
+    # 🥉 โซน GRADE 1 (ป.1)
+    # ==========================================
+    elif "addition" in clean_sub: 
+        pdf.cell(0, 10, f" Directions: Solve the math problems. Write the answers in the boxes.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            
+            a = random.randint(1, 15)
+            b = random.randint(1, 20 - a) # ผลลัพธ์ไม่เกิน 20
+            ans = a + b
+            
+            start_x = center_x - 50
+            draw_rounded_box(pdf, start_x, y+5, 100, 35, r=5, bg_color=(255,255,255), text=f"{a}  +  {b}  =  _____", font_size=28)
+            
+            # หน้าเฉลยโชว์คำตอบ
+            if pdf.is_key:
+                pdf.set_text_color(*theme_colors["secondary"])
+                pdf.text(start_x + 75, y + 27, str(ans))
+                
+            pdf.ln(55)
+
+    elif "number bonds" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Fill in the missing number to complete the number bonds.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 200: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 75, r=8, bg_color=theme_colors["box"])
+            
+            # สร้างตัวเลขสำหรับ Number Bond
+            total = random.randint(5, 20)
+            part1 = random.randint(1, total - 1)
+            part2 = total - part1
+            
+            # สุ่มซ่อนตัวเลข 1 ตำแหน่ง (0=ซ่อนผลรวม, 1=ซ่อนส่วนที่1, 2=ซ่อนส่วนที่2)
+            hide_idx = random.choice([0, 1, 2])
+            val_total = str(total) if (hide_idx != 0 or pdf.is_key) else "?"
+            val_p1 = str(part1) if (hide_idx != 1 or pdf.is_key) else "?"
+            val_p2 = str(part2) if (hide_idx != 2 or pdf.is_key) else "?"
+            
+            # วาดเส้นเชื่อมวงกลม
+            pdf.set_line_width(2.0)
+            pdf.set_draw_color(*theme_colors["primary"])
+            pdf.line(center_x, y + 25, center_x - 30, y + 45) # เส้นไปซ้าย
+            pdf.line(center_x, y + 25, center_x + 30, y + 45) # เส้นไปขวา
+            
+            # วาดวงกลม 3 วง
+            draw_solid_circle(pdf, center_x - 20, y + 5, 40, val_total, font_size=28) # วงกลมใหญ่(บน)
+            draw_solid_circle(pdf, center_x - 50, y + 38, 32, val_p1, font_size=24)  # วงกลมเล็ก(ซ้าย)
+            draw_solid_circle(pdf, center_x + 18, y + 38, 32, val_p2, font_size=24)  # วงกลมเล็ก(ขวา)
+            
+            pdf.ln(85)
+
+    elif "greater than" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Compare the numbers. Write > , < , or = in the circle.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            
+            n1 = random.randint(10, 99)
+            n2 = random.randint(10, 99)
+            if random.random() > 0.85: n2 = n1 # โอกาส 15% ที่เลขจะเท่ากัน
+            
+            ans = "=" if n1 == n2 else (">" if n1 > n2 else "<")
+            show_ans = ans if pdf.is_key else "?"
+            
+            start_x = center_x - 70
+            
+            # กล่องเลขซ้าย
+            draw_rounded_box(pdf, start_x, y+5, 45, 35, r=5, bg_color=(255,255,255), text=str(n1), font_size=32)
+            
+            # วงกลมใส่เครื่องหมายตรงกลาง
+            if pdf.is_key:
+                draw_solid_circle(pdf, start_x + 52.5, y + 5, 35, show_ans, font_size=36)
+            else:
+                draw_circle_placeholder(pdf, start_x + 52.5, y + 5, 35, show_ans)
+                
+            # กล่องเลขขวา
+            draw_rounded_box(pdf, start_x + 95, y+5, 45, 35, r=5, bg_color=(255,255,255), text=str(n2), font_size=32)
+            
+            pdf.ln(55)
 
     # ส่งคืนไฟล์ PDF ในรูปแบบ bytes
     return bytes(pdf.output(dest='S'))
