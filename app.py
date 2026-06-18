@@ -86,8 +86,21 @@ GRADE_2_CURRICULUM = {
     ]
 }
 
+GRADE_3_CURRICULUM = {
+    "3. Grade 3 Math Topics (รวมหัวข้อ ป.3)": [
+        "1. Word Problems",
+        "2. Multiplication",
+        "3. Fractions",
+        "4. Measurement",
+        "5. Time",
+        "6. Money",
+        "7. Math Logic Puzzles",
+        "8. Number Patterns"
+    ]
+}
+
 THEME_COLORS = {
-    "Sweet Pink (ชมพูหวานแหวว) 🎀": {"primary": (244, 143, 177), "secondary": (129, 212, 250), "box": (255, 240, 245)},
+    "Sweet Pink (ชมพูหวานแหวว)": {"primary": (244, 143, 177), "secondary": (129, 212, 250), "box": (255, 240, 245)},
     "Cotton Candy (ฟ้า-ชมพู)": {"primary": (118, 165, 234), "secondary": (244, 164, 185), "box": (248, 250, 255)},
     "Minty Fresh (เขียวมิ้นต์)": {"primary": (104, 195, 163), "secondary": (243, 156, 18), "box": (245, 255, 250)},
     "Lavender Dream (ม่วงอ่อน)": {"primary": (155, 89, 182), "secondary": (26, 188, 156), "box": (252, 248, 255)},
