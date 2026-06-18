@@ -1869,66 +1869,68 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             y = y_start + i * (box_h + gap_y)
             draw_rounded_box(pdf, 15, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
-            # --- Dynamic Logic (สุ่มใหม่หมดทุกข้อ) ---
+            # --- Dynamic Logic System (แก้ไขให้ถูกต้อง ไม่ติดลบ สมเหตุสมผลสำหรับ ป.3) ---
             shapes = ["circle", "square", "triangle"]
             random.shuffle(shapes)
             s1, s2, s3 = shapes[0], shapes[1], shapes[2]
             
-            val1 = random.randint(3, 10)
-            val2 = random.randint(2, 8)
-            val3 = random.randint(1, 6)
+            val1 = random.randint(4, 10)
+            op = random.choice(["+", "-"])
             
+            # ออกแบบตัวเลขให้สัมพันธ์กับเครื่องหมายแถวที่ 3 ตั้งแต่แรก ป้องกันโลจิกพัง
+            if op == "+":
+                val2 = random.randint(2, 8)
+                val3 = random.randint(2, 8)
+                eq3_ans = val2 + val3
+            else:
+                # เครื่องหมายลบ: บังคับให้ ตัวตั้ง (val2) มากกว่า ตัวลบ (val3) เสมอ! เด็กลบได้จริง ไม่ติดลบ
+                val2 = random.randint(5, 10)
+                val3 = random.randint(1, val2 - 1) # มั่นใจร้อยเปอร์เซ็นต์ว่า val2 > val3
+                eq3_ans = val2 - val3
+                
+            # คำนวณผลลัพธ์แถว 1 และ 2 ให้สัมพันธ์กับค่าที่แท้จริง
             eq1_ans = val1 + val1
             eq2_ans = val1 + val2
             
-            op = random.choice(["+", "-"])
-            if op == "+":
-                eq3_ans = val2 + val3
-            else:
-                eq3_ans = val2 - val3
-                if eq3_ans < 0: 
-                    val2, val3 = val3, val2
-                    eq3_ans = val2 - val3
-            
+            # สุ่มเลือกรูปทรงที่จะถามคำตอบท้ายข้อ
             target_s = random.choice([s1, s2, s3])
-            target_val = val1 if target_s == s1 else (val2 if target_s == s2 else val3)
+            if target_s == s1: target_val = val1
+            elif target_s == s2: target_val = val2
+            else: target_val = val3
             
             pdf.set_text_color(*theme_colors["primary"])
             
-            # --- ตั้งค่าระยะช่องไฟของสมการ (แกน X) ---
+            # --- ตั้งค่าระยะช่องไฟของสมการ จัดเครื่องหมายให้อยู่กึ่งกลางเป๊ะ ---
             shape_size = 9
-            col1_x = 25  # พิกัด X รูปที่ 1
-            col2_x = 46  # พิกัด X รูปที่ 2
-            # คำนวณจุดกึ่งกลางระหว่าง 2 รูปทรงให้เป๊ะ
+            col1_x = 25  
+            col2_x = 46  
             op_center_x = col1_x + shape_size + ((col2_x - (col1_x + shape_size)) / 2) 
             eq_start_x = col2_x + shape_size + 4
             
-            # ฟังก์ชันย่อยสำหรับวาดสมการ 1 แถวให้ตรงเป๊ะ
             def draw_row(row_y, shape_a, operator_str, shape_b, ans_val):
                 # 1. วาดรูปทรงแรก
                 draw_shape(pdf, shape_a, col1_x, row_y, size=shape_size)
                 
-                # 2. วาดเครื่องหมาย (ปรับฟอนต์ใหญ่ Size 24 และจัดให้อยู่ตรงกลาง)
+                # 2. วาดเครื่องหมายขนาดใหญ่ 24 และจัดกึ่งกลาง X, Y เป๊ะๆ
                 try: pdf.set_font("ComicNeue", "", 24)
                 except: pdf.set_font("Arial", "", 24)
                 w_op = pdf.get_string_width(operator_str)
-                # จัดกึ่งกลางแนวนอน และบวกแกน Y ให้ตรงกับกึ่งกลางรูปทรง
-                pdf.text(op_center_x - w_op/2, row_y + 8, operator_str) 
+                pdf.text(op_center_x - w_op/2, row_y + 7.5, operator_str) 
                 
                 # 3. วาดรูปทรงที่สอง
                 draw_shape(pdf, shape_b, col2_x, row_y, size=shape_size)
                 
-                # 4. วาดเครื่องหมายเท่ากับและคำตอบ
+                # 4. วาดผลลัพธ์คำตอบ
                 try: pdf.set_font("ComicNeue", "", 18)
                 except: pdf.set_font("Arial", "", 18)
-                pdf.text(eq_start_x, row_y + 8, f"=  {ans_val}")
+                pdf.text(eq_start_x, row_y + 7.5, f"=  {ans_val}")
 
-            # สั่งวาดทั้ง 3 แถว
+            # สั่งวาดสมการทั้ง 3 แถวที่ถูกต้องตามหลักคณิตศาสตร์
             draw_row(y + 5, s1, "+", s1, eq1_ans)
             draw_row(y + 17, s1, "+", s2, eq2_ans)
             draw_row(y + 29, s2, op, s3, eq3_ans)
             
-            # --- ฝั่งขวา: คำถามท้ายข้อแบบ Dynamic ---
+            # --- ฝั่งขวา: คำถามท้ายข้อ ---
             pdf.set_text_color(0, 0, 0)
             try: pdf.set_font("ComicNeue", "", 16)
             except: pdf.set_font("Arial", "", 16)
@@ -1936,13 +1938,14 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             q_str = "Value of"
             w_q = pdf.get_string_width(q_str)
             pdf.text(90, y + 27, q_str)
-            # วาดรูปทรงที่จะถามต่อจากข้อความ
             draw_shape(pdf, target_s, 90 + w_q + 3, y + 20, size=9)
             pdf.text(90 + w_q + 15, y + 27, "?")
             
-            # กล่องคำตอบ
+            # กล่องคำตอบขาวๆ ขวาจัด
             ans = str(target_val) if pdf.is_key else ""
             draw_rounded_box(pdf, 160, y + 11, 23, 23, r=4, bg_color=(255,255,255), text=ans, font_size=18)
+            
+        pdf.set_y(y_start + 4 * (box_h + gap_y))
             
     elif "number patterns" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find the rule and complete the number pattern.", ln=True)
