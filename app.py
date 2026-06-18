@@ -1646,38 +1646,28 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         box_w, box_h = 85, 32
         gap_x, gap_y = 15, 8
         
-        for i in range(10): # 10 ข้อ (5 แถว x 2 คอลัมน์) 
+        for i in range(10): # 10 ข้อ (5 แถว x 2 คอลัมน์)
             row = i // 2
             col = i % 2
             x = 15 + col * (box_w + gap_x)
             y = y_start + row * (box_h + gap_y)
             
-            # วาดกรอบสีพื้นหลัง
+            # วาดกรอบพื้นหลัง
             draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
             n1, n2 = random.randint(2, 12), random.randint(2, 12)
             ans = n1 * n2
             
-            # 1. กล่องตัวเลขตัวแรก
-            draw_rounded_box(pdf, x + 3, y + 6, 20, 20, r=4, bg_color=(255,255,255), text=str(n1), font_size=18)
+            # จัดตำแหน่งตัวเลขและเครื่องหมายให้สมดุลภายในกรอบ
+            # ระยะขอบซ้ายเริ่มต้นที่ x+5
+            draw_rounded_box(pdf, x + 5, y + 6, 18, 20, r=4, bg_color=(255,255,255), text=str(n1), font_size=18)
+            pdf.text(x + 28, y + 21, "x")
+            draw_rounded_box(pdf, x + 36, y + 6, 18, 20, r=4, bg_color=(255,255,255), text=str(n2), font_size=18)
+            pdf.text(x + 58, y + 21, "=")
             
-            # เครื่องหมาย X (ปรับ Y เป็น y+19 ให้ตรงกับจุดกึ่งกลางของกล่องพอดีเป๊ะ)
-            pdf.set_text_color(*theme_colors["primary"])
-            try:
-                pdf.set_font("ComicNeue", "", 20)
-            except:
-                pdf.set_font("Arial", "", 20)
-            pdf.text(x + 27, y + 19, "x")
-            
-            # 2. กล่องตัวเลขตัวที่สอง
-            draw_rounded_box(pdf, x + 33, y + 6, 20, 20, r=4, bg_color=(255,255,255), text=str(n2), font_size=18)
-            
-            # เครื่องหมาย =
-            pdf.text(x + 57, y + 19, "=")
-            
-            # 3. กล่องคำตอบ (ขยายความกว้างเป็น 22 ให้สมดุลกับช่องโจทย์)
+            # ช่องคำตอบ: ปรับให้ขยายพอดีและอยู่ตรงกลางความสูงพอดี
             ans_text = str(ans) if pdf.is_key else ""
-            draw_rounded_box(pdf, x + 63, y + 6, 22, 20, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
+            draw_rounded_box(pdf, x + 66, y + 6, 16, 20, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
             
         pdf.set_y(y_start + 5 * (box_h + gap_y))
 
