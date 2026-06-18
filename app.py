@@ -1529,13 +1529,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
     elif "skip counting" in clean_sub:
         pdf.cell(0, 10, f" Directions: Skip count to fill in the missing numbers.", ln=True)
-        pdf.ln(5)
+        pdf.ln(3) # ลดระยะบรรทัดลงนิดหน่อยเพื่อเผื่อพื้นที่ให้ 5 ข้อ
         
         y_start = pdf.get_y()
-        box_h = 42
-        gap_y = 12
+        box_h = 36   # ลดความสูงกล่องลงจาก 42 เป็น 36 เพื่อให้ใส่ได้ 5 ข้อพอดี
+        gap_y = 7    # ปรับระยะห่างระหว่างข้อเพื่อให้กระจายเต็มหน้ากระดาษ
         
-        for i in range(4): # ให้ข้อละ 1 แถวยาวๆ รวม 4 ข้อ
+        for i in range(5): # เปลี่ยนเป็น 5 ข้อ
             y = y_start + i * (box_h + gap_y)
             draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
             
@@ -1544,20 +1544,22 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             seq = [start_num + (j * step) for j in range(5)]
             hide_idx = random.sample([1, 2, 3, 4], 2) # ซ่อน 2 วง (วงแรกให้เปิดไว้เสมอ)
             
-            circle_d = 28 
+            circle_d = 26 # ปรับขนาดวงกลมให้เล็กลงนิดหน่อยให้สมดุลกับความสูงกล่องใหม่
             start_x = center_x - (170 / 2) 
             
             for j in range(5):
                 x = start_x + (j * 35) 
-                circle_y = y + 7       
+                circle_y = y + 5 # ปรับพิกัด Y ของวงกลมให้อยู่กึ่งกลางกล่อง
                 
                 if j in hide_idx:
                     val = str(seq[j]) if pdf.is_key else "" 
                     draw_circle_placeholder(pdf, x, circle_y, circle_d, val)
                 else:
-                    draw_solid_circle(pdf, x, circle_y, circle_d, str(seq[j]), font_size=20)
+                    # ปรับลด font_size ลงเล็กน้อยให้พอดีกับขนาดวงกลมใหม่
+                    draw_solid_circle(pdf, x, circle_y, circle_d, str(seq[j]), font_size=18)
                     
-        pdf.set_y(y_start + 4 * (box_h + gap_y))
+        # เลื่อนตำแหน่ง Y เผื่อเนื้อหาด้านล่าง
+        pdf.set_y(y_start + 5 * (box_h + gap_y))
 
     # ส่งคืนไฟล์ PDF ในรูปแบบ bytes
     return bytes(pdf.output(dest='S'))
