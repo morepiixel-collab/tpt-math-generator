@@ -1041,24 +1041,65 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "addition within 20" in clean_sub: 
         pdf.cell(0, 10, f" Directions: Solve the math problems. Write the answers in the boxes.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
-            y = pdf.get_y()
+        
+        y_start = pdf.get_y()
+        box_w = 85   # ความกว้างกล่องต่อ 1 คอลัมน์
+        box_h = 50   # ความสูงของกล่อง
+        gap_x = 15   # ระยะห่างระหว่างคอลัมน์ซ้าย-ขวา
+        gap_y = 15   # ระยะห่างระหว่างแถวบน-ล่าง
+        
+        for i in range(6): # บังคับให้มี 6 ข้อในหน้านี้เสมอ
+            row = i // 2
+            col = i % 2
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # คำนวณพิกัด X, Y อัตโนมัติ
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
             
+            # วาดกรอบสีพื้นหลัง
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            # สุ่มตัวเลข
             a = random.randint(1, 15)
             b = random.randint(1, 20 - a) # ผลลัพธ์ไม่เกิน 20
             ans = a + b
             
-            start_x = center_x - 60
-            draw_rounded_box(pdf, start_x, y+5, 120, 35, r=5, bg_color=(255,255,255), text=f"{a}   +   {b}   =   _____", font_size=28)
+            # กล่องขาวสำหรับใส่โจทย์ด้านใน
+            inner_w = 70
+            inner_h = 35
+            inner_x = x + 7.5
+            inner_y = y + 7.5
+            draw_rounded_box(pdf, inner_x, inner_y, inner_w, inner_h, r=5, bg_color=(255,255,255))
             
+            # จัดการตัวหนังสือให้อยู่กึ่งกลางเป๊ะ
+            pdf.set_font("ComicNeue", "", 24)
+            eq_text = f"{a}  +  {b}  =  "
+            line_text = "____"
+            ans_text = str(ans)
+            
+            w_eq = pdf.get_string_width(eq_text)
+            w_line = pdf.get_string_width(line_text)
+            w_ans = pdf.get_string_width(ans_text)
+            
+            total_w = w_eq + w_line
+            start_text_x = inner_x + (inner_w - total_w) / 2
+            
+            # พิมพ์โจทย์
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(start_text_x, inner_y + 23, eq_text)
+            
+            # พิมพ์ช่องว่าง หรือ เฉลย
             if pdf.is_key:
-                pdf.set_text_color(*theme_colors["secondary"])
-                pdf.text(start_x + 95, y + 27, str(ans))
+                pdf.set_text_color(*theme_colors["secondary"]) # สีเฉลย
+                # คำนวณให้เลขเฉลยลอยอยู่ตรงกลางของเส้นใต้พอดี
+                center_line = start_text_x + w_eq + (w_line / 2)
+                pdf.text(center_line - (w_ans / 2), inner_y + 22, ans_text) 
+            else:
+                pdf.set_text_color(*theme_colors["primary"])
+                pdf.text(start_text_x + w_eq, inner_y + 23, line_text)
                 
-            pdf.ln(55)
+        # เลื่อนระยะบรรทัด Y ลงมาให้พ้นกล่องชุดนี้ เผื่อมีหน้าถัดไป
+        pdf.set_y(y_start + 3 * (box_h + gap_y))
 
     elif "number bonds" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing number to complete the number bonds.", ln=True)
