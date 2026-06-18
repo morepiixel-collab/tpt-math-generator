@@ -1561,6 +1561,212 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         # เซ็ตจุดสิ้นสุดของ Y ให้หยุดก่อนถึงขอบล่าง
         pdf.set_y(y_start + 5 * (box_h + gap_y))
 
+    # ==========================================
+    # โซนแกนที่ 3 : GRADE 3 TOPICS (ป.3)
+    # ==========================================
+    elif "word problems" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Read carefully and solve the word problems.", ln=True)
+        pdf.ln(2)
+        y_start = pdf.get_y()
+        box_h = 42   # 4 ข้อ ให้กล่องใหญ่หน่อยเพื่อใส่โจทย์ยาวๆ ได้
+        gap_y = 8
+        
+        problems = [
+            ("Sarah has {a} apples. She buys {b} more. How many does she have?", "+"),
+            ("Tom had {a} dollars. He spent {b} dollars. How much is left?", "-"),
+            ("There are {a} boxes. Each has {b} toys. How many toys in total?", "*")
+        ]
+        
+        for i in range(4): # 4 ข้อพอดีหน้า
+            y = y_start + i * (box_h + gap_y)
+            draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
+            
+            prob_template, op = random.choice(problems)
+            a = random.randint(10, 50)
+            b = random.randint(2, 9) if op == "*" else random.randint(10, 30)
+            if op == "-" and a < b: a, b = b, a
+            
+            ans = a + b if op == "+" else (a - b if op == "-" else a * b)
+            question_text = prob_template.format(a=a, b=b)
+            
+            pdf.set_y(y + 8)
+            pdf.set_x(20)
+            try:
+                pdf.set_font("ComicNeue", "", 16)
+            except:
+                pdf.set_font("Arial", "", 16)
+            pdf.multi_cell(120, 8, f"{i+1}. {question_text}")
+            
+            ans_text = str(ans) if pdf.is_key else ""
+            draw_rounded_box(pdf, 150, y + 8, 40, 25, r=4, bg_color=(255,255,255), text=ans_text, font_size=20)
+            
+        pdf.set_y(y_start + 4 * (box_h + gap_y))
+
+    elif "multiplication" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Find the product.", ln=True)
+        pdf.ln(2)
+        y_start = pdf.get_y()
+        box_w, box_h = 85, 32
+        gap_x, gap_y = 15, 8
+        
+        for i in range(10): # 10 ข้อ (5 แถว x 2 คอลัมน์) ไม่ทะลุกรอบแน่นอน
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            n1, n2 = random.randint(2, 12), random.randint(2, 12)
+            ans = n1 * n2
+            
+            draw_rounded_box(pdf, x + 5, y + 6, 20, 20, r=4, bg_color=(255,255,255), text=str(n1), font_size=18)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.set_font("ComicNeue", "", 20)
+            pdf.text(x + 29, y + 20, "x")
+            draw_rounded_box(pdf, x + 37, y + 6, 20, 20, r=4, bg_color=(255,255,255), text=str(n2), font_size=18)
+            pdf.text(x + 60, y + 20, "=")
+            
+            ans_text = str(ans) if pdf.is_key else ""
+            draw_rounded_box(pdf, x + 67, y + 6, 15, 20, r=4, bg_color=(255,255,255), text=ans_text, font_size=16)
+            
+        pdf.set_y(y_start + 5 * (box_h + gap_y))
+
+    elif "fractions" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Write the fraction for the shaded parts.", ln=True)
+        pdf.ln(2)
+        y_start = pdf.get_y()
+        box_w, box_h = 85, 32
+        gap_x, gap_y = 15, 8
+        
+        for i in range(10):
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            num = random.randint(1, 5)
+            den = random.randint(num + 1, 8)
+            
+            draw_rounded_box(pdf, x + 5, y + 4, 35, 24, r=4, bg_color=(255,255,255), text=f"~ {num}/{den} shape ~", font_size=10)
+            
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(x + 45, y + 20, "=")
+            
+            ans_num = str(num) if pdf.is_key else ""
+            ans_den = str(den) if pdf.is_key else ""
+            draw_rounded_box(pdf, x + 55, y + 3, 20, 11, r=2, bg_color=(255,255,255), text=ans_num, font_size=14)
+            pdf.set_line_width(0.8)
+            pdf.set_draw_color(*theme_colors["primary"])
+            pdf.line(x + 55, y + 16, x + 75, y + 16)
+            draw_rounded_box(pdf, x + 55, y + 18, 20, 11, r=2, bg_color=(255,255,255), text=ans_den, font_size=14)
+
+        pdf.set_y(y_start + 5 * (box_h + gap_y))
+
+    elif "measurement" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Read the ruler and write the length.", ln=True)
+        pdf.ln(2)
+        y_start = pdf.get_y()
+        box_h, gap_y = 32, 6
+        for i in range(5):
+            y = y_start + i * (box_h + gap_y)
+            draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
+            length = random.randint(2, 12)
+            draw_rounded_box(pdf, 20, y + 5, 120, 22, r=4, bg_color=(255,255,255), text=f"~ Canva: Object {length} inches long above a ruler ~", font_size=12)
+            ans_text = f"{length} in" if pdf.is_key else ""
+            draw_rounded_box(pdf, 145, y + 5, 35, 22, r=4, bg_color=(255,255,255), text=ans_text, font_size=16)
+        pdf.set_y(y_start + 5 * (box_h + gap_y))
+
+    elif "time" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Read the clock and write the time.", ln=True)
+        pdf.ln(2)
+        y_start = pdf.get_y()
+        box_w, box_h = 85, 32
+        gap_x, gap_y = 15, 8
+        for i in range(10):
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            h = random.randint(1, 12)
+            m = random.choice(["00", "15", "30", "45"])
+            draw_rounded_box(pdf, x + 5, y + 4, 30, 24, r=12, bg_color=(255,255,255), text=f"~ Clock {h}:{m} ~", font_size=9)
+            ans_text = f"{h}:{m}" if pdf.is_key else ":"
+            draw_rounded_box(pdf, x + 45, y + 6, 35, 20, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
+        pdf.set_y(y_start + 5 * (box_h + gap_y))
+
+    elif "money" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Count the coins and write the total amount.", ln=True)
+        pdf.ln(2)
+        y_start = pdf.get_y()
+        box_h, gap_y = 32, 6
+        for i in range(5):
+            y = y_start + i * (box_h + gap_y)
+            draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
+            cents = random.randint(15, 99)
+            draw_rounded_box(pdf, 20, y + 5, 120, 22, r=4, bg_color=(255,255,255), text=f"~ Canva: Coins totaling {cents}¢ ~", font_size=12)
+            ans_text = f"{cents}¢" if pdf.is_key else "¢"
+            draw_rounded_box(pdf, 145, y + 5, 35, 22, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
+        pdf.set_y(y_start + 5 * (box_h + gap_y))
+
+    elif "math logic puzzles" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Find the value of each shape.", ln=True)
+        pdf.ln(2)
+        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 180, r=8, bg_color=theme_colors["box"])
+        pdf.set_y(pdf.get_y() + 10)
+        pdf.set_font("ComicNeue", "", 18)
+        pdf.set_text_color(*theme_colors["primary"])
+        
+        # ตัวอย่าง Puzzle ป.3
+        pdf.cell(0, 10, "★ + ★ = 10", ln=True, align="C")
+        pdf.cell(0, 10, "★ + ♥ = 12", ln=True, align="C")
+        pdf.cell(0, 10, "♥ - ▲ = 3", ln=True, align="C")
+        pdf.ln(10)
+        pdf.cell(0, 10, "What is the value of ▲ ?", ln=True, align="C")
+        
+        ans_text = "4" if pdf.is_key else ""
+        draw_rounded_box(pdf, 107.95 - 20, pdf.get_y() + 5, 40, 25, r=4, bg_color=(255,255,255), text=ans_text, font_size=24)
+        pdf.set_y(pdf.get_y() + 40)
+
+    elif "number patterns" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Find the rule and complete the number pattern.", ln=True)
+        pdf.ln(2)
+        y_start = pdf.get_y()
+        box_h, gap_y = 32, 6
+        for i in range(5):
+            y = y_start + i * (box_h + gap_y)
+            draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
+            
+            pattern_type = random.choice(["add", "sub", "mul"])
+            if pattern_type == "add":
+                step = random.randint(10, 50)
+                start = random.randint(10, 100)
+                seq = [start + (j * step) for j in range(5)]
+            elif pattern_type == "sub":
+                step = random.randint(5, 20)
+                start = random.randint(100, 200)
+                seq = [start - (j * step) for j in range(5)]
+            else: 
+                step = random.choice([2, 3])
+                start = random.randint(2, 5)
+                seq = [start * (step ** j) for j in range(5)]
+            
+            hide_idx = random.sample([3, 4], 2) # ซ่อน 2 ตัวท้าย
+            
+            for j in range(5):
+                x = 25 + (j * 32)
+                circle_y = y + 4
+                if j in hide_idx:
+                    val = str(seq[j]) if pdf.is_key else "" 
+                    draw_circle_placeholder(pdf, x, circle_y, 24, val)
+                else:
+                    draw_solid_circle(pdf, x, circle_y, 24, str(seq[j]), font_size=16)
+        pdf.set_y(y_start + 5 * (box_h + gap_y))
+
     # ส่งคืนไฟล์ PDF ในรูปแบบ bytes
     return bytes(pdf.output(dest='S'))
 
