@@ -1420,22 +1420,24 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
     elif "3-digit" in clean_sub: # Comparing Numbers
         pdf.cell(0, 10, f" Directions: Compare the numbers. Write > , < , or = in the circle.", ln=True)
-        pdf.ln(5)
+        pdf.ln(2) # ลดระยะห่างบรรทัดลงเพื่อให้มีพื้นที่สำหรับ 4 แถว
         
         y_start = pdf.get_y()
         box_w = 85
-        box_h = 45
+        box_h = 36   # บีบความสูงของกล่องหลักลง
         gap_x = 15
-        gap_y = 12
+        gap_y = 8    # ลดระยะห่างระหว่างแถวบน-ล่าง
         
-        for i in range(6):
+        for i in range(8): # เปลี่ยนจาก 6 เป็น 8 ข้อ
             row = i // 2
             col = i % 2
             x = 15 + col * (box_w + gap_x)
             y = y_start + row * (box_h + gap_y)
             
+            # วาดกรอบสีพื้นหลัง
             draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
+            # สุ่มตัวเลข 3 หลัก
             n1 = random.randint(100, 999)
             n2 = random.randint(100, 999)
             if random.random() > 0.85: n2 = n1 
@@ -1443,17 +1445,21 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             ans = "=" if n1 == n2 else (">" if n1 > n2 else "<")
             show_ans = ans if pdf.is_key else ""
             
-            draw_rounded_box(pdf, x + 4, y + 8.5, 27, 28, r=4, bg_color=(255,255,255), text=str(n1), font_size=20)
+            # กล่องตัวเลขฝั่งซ้าย (ปรับขนาดความสูงลงเหลือ 24 และจัดให้อยู่กึ่งกลาง)
+            draw_rounded_box(pdf, x + 4, y + 6, 27, 24, r=4, bg_color=(255,255,255), text=str(n1), font_size=18)
             
-            circle_d = 20
+            # วงกลมตรงกลางสำหรับเครื่องหมาย
+            circle_d = 18
             if pdf.is_key:
-                draw_solid_circle(pdf, x + 32.5, y + 12.5, circle_d, show_ans, font_size=24)
+                draw_solid_circle(pdf, x + 33.5, y + 9, circle_d, show_ans, font_size=20)
             else:
-                draw_circle_placeholder(pdf, x + 32.5, y + 12.5, circle_d, show_ans) 
+                draw_circle_placeholder(pdf, x + 33.5, y + 9, circle_d, show_ans) 
                 
-            draw_rounded_box(pdf, x + 54, y + 8.5, 27, 28, r=4, bg_color=(255,255,255), text=str(n2), font_size=20)
+            # กล่องตัวเลขฝั่งขวา
+            draw_rounded_box(pdf, x + 54, y + 6, 27, 24, r=4, bg_color=(255,255,255), text=str(n2), font_size=18)
             
-        pdf.set_y(y_start + 3 * (box_h + gap_y))
+        # เลื่อนตำแหน่ง Y เผื่อเนื้อหาด้านล่าง
+        pdf.set_y(y_start + 4 * (box_h + gap_y))
 
     elif "expanded form" in clean_sub:
         pdf.cell(0, 10, f" Directions: Write each number in expanded form.", ln=True)
