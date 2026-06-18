@@ -1850,13 +1850,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.cell(0, 10, f" Directions: Find the value of each shape.", ln=True)
         pdf.ln(2)
         y_start = pdf.get_y()
-        box_w, box_h = 185, 50  # แบ่งเป็น 3 กล่อง กล่องละ 50 มม. จะพอดีกับพื้นที่หน้ากระดาษ ไม่โล่งแล้ว
+        box_w, box_h = 185, 45  # ปรับให้ได้ 4 ข้อพอดีหน้า
         gap_y = 6
         
-        # ฟังก์ชันวาดรูปทรงสดๆ ลง PDF (แก้ปัญหาสัญลักษณ์ ★ ♥ ▲ ล่องหนหายไป)
-        def draw_puzzle_shape(p, stype, sx, sy, size=8):
+        # ฟังก์ชันวาดรูปทรงเรขาคณิตแบบ Dynamic (ใช้ Canvas วาด ไม่ต้องพึ่งฟอนต์)
+        def draw_shape(p, stype, sx, sy, size=7.5):
             p.set_draw_color(*theme_colors["primary"])
-            p.set_fill_color(255, 255, 255)  # เติมสีขาวด้านในรูปทรงให้เด่นชัด
+            p.set_fill_color(255, 255, 255)
             p.set_line_width(0.5)
             if stype == "circle":
                 p.ellipse(sx, sy, size, size, style='FD')
@@ -1865,72 +1865,69 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             elif stype == "triangle":
                 p.polygon([(sx, sy + size), (sx + size/2, sy), (sx + size, sy + size)], style='FD')
 
-        for i in range(3):  # เจนโจทย์ 3 ชุดกระจายเต็มหน้ากระดาษพอดี
+        for i in range(4): # วนลูป 4 ข้อตามสั่ง
             y = y_start + i * (box_h + gap_y)
-            
-            # วาดกรอบพื้นหลังประจำข้อ
             draw_rounded_box(pdf, 15, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
-            # สุ่มตัวเลขสำหรับ Logic ปริศนา (ระดับ G3 เลขกำลังสนุก)
-            val_circle = random.randint(3, 10)
-            val_square = random.randint(2, 10)
-            val_triangle = random.randint(1, 9)
+            # --- สร้าง Logic แบบ Dynamic ---
+            shapes = ["circle", "square", "triangle"]
+            random.shuffle(shapes)
+            s1, s2, s3 = shapes[0], shapes[1], shapes[2]
             
-            eq1_ans = val_circle + val_circle
-            eq2_ans = val_circle + val_square
-            eq3_ans = val_square - val_triangle
-            if eq3_ans < 0:  # ป้องกันกรณีลบแล้วติดลบ
-                val_square, val_triangle = val_triangle, val_square
-                eq3_ans = val_square - val_triangle
+            # สุ่มค่า (ให้อยู่ในระดับที่เด็ก ป.3 คำนวณในใจได้)
+            val1 = random.randint(3, 10)
+            val2 = random.randint(2, 8)
+            val3 = random.randint(1, 6)
             
-            # สุ่มเลือกรูปทรงที่จะถามท้ายข้อ
-            target_shape = random.choice(["circle", "square", "triangle"])
-            target_ans = val_circle if target_shape == "circle" else (val_square if target_shape == "square" else val_triangle)
+            eq1_ans = val1 + val1
+            eq2_ans = val1 + val2
             
-            try:
-                pdf.set_font("ComicNeue", "", 16)
-            except:
-                pdf.set_font("Arial", "", 16)
+            # สุ่มเลือกเครื่องหมายบรรทัดสุดท้าย (+ หรือ -)
+            op = random.choice(["+", "-"])
+            if op == "+":
+                eq3_ans = val2 + val3
+            else:
+                eq3_ans = val2 - val3
+                if eq3_ans < 0: # กันค่าติดลบ
+                    val2, val3 = val3, val2
+                    eq3_ans = val2 - val3
             
+            # สุ่มรูปที่จะถาม
+            target_s = random.choice([s1, s2, s3])
+            target_val = val1 if target_s == s1 else (val2 if target_s == s2 else val3)
+            
+            pdf.set_font("ComicNeue", "", 14)
             pdf.set_text_color(*theme_colors["primary"])
             
-            # --- ฝั่งซ้าย: สมการ 3 แถว ---
-            # แถวที่ 1: วงกลม + วงกลม
-            r1_y = y + 6
-            draw_puzzle_shape(pdf, "circle", 25, r1_y)
-            pdf.text(36, r1_y + 6.5, "+")
-            draw_puzzle_shape(pdf, "circle", 43, r1_y)
-            pdf.text(54, r1_y + 6.5, f"=  {eq1_ans}")
+            # วาดสมการลงไป (ตำแหน่ง Dynamic ตามบรรทัด)
+            # บรรทัด 1
+            draw_shape(pdf, s1, 25, y + 5)
+            pdf.text(35, y + 11, "+")
+            draw_shape(pdf, s1, 42, y + 5)
+            pdf.text(53, y + 11, f"= {eq1_ans}")
             
-            # แถวที่ 2: วงกลม + สี่เหลี่ยม
-            r2_y = y + 17
-            draw_puzzle_shape(pdf, "circle", 25, r2_y)
-            pdf.text(36, r2_y + 6.5, "+")
-            draw_puzzle_shape(pdf, "square", 43, r2_y)
-            pdf.text(54, r2_y + 6.5, f"=  {eq2_ans}")
+            # บรรทัด 2
+            draw_shape(pdf, s1, 25, y + 16)
+            pdf.text(35, y + 22, "+")
+            draw_shape(pdf, s2, 42, y + 16)
+            pdf.text(53, y + 22, f"= {eq2_ans}")
             
-            # แถวที่ 3: สี่เหลี่ยม - สามเหลี่ยม
-            r3_y = y + 28
-            draw_puzzle_shape(pdf, "square", 25, r3_y)
-            pdf.text(36, r3_y + 6.5, "-")
-            draw_puzzle_shape(pdf, "triangle", 43, r3_y)
-            pdf.text(54, r3_y + 6.5, f"=  {eq3_ans}")
+            # บรรทัด 3
+            draw_shape(pdf, s2, 25, y + 27)
+            pdf.text(35, y + 33, op)
+            draw_shape(pdf, s3, 42, y + 27)
+            pdf.text(53, y + 33, f"= {eq3_ans}")
             
-            # --- ฝั่งขวา: ประโยคคำถามและกล่องคำตอบ ---
+            # คำถามท้ายข้อ
             pdf.set_text_color(0, 0, 0)
-            q_text = "What is the value of "
-            pdf.text(95, y + 28, q_text)
+            pdf.text(90, y + 25, "Value of")
+            draw_shape(pdf, target_s, 115, y + 19, size=8)
+            pdf.text(125, y + 25, "?")
             
-            # วาดรูปทรงที่ถามต่อท้ายข้อความ
-            w_q = pdf.get_string_width(q_text)
-            draw_puzzle_shape(pdf, target_shape, 95 + w_q + 2, y + 21, size=10) # รูปใหญ่ขึ้นนิดนึงให้ชัดเจน
-            pdf.text(95 + w_q + 15, y + 28, "?")
+            # กล่องคำตอบ
+            ans = str(target_val) if pdf.is_key else ""
+            draw_rounded_box(pdf, 160, y + 11, 23, 23, r=4, bg_color=(255,255,255), text=ans, font_size=16)
             
-            # กล่องขาวเขียนคำตอบ
-            ans_text = str(target_ans) if pdf.is_key else ""
-            draw_rounded_box(pdf, 160, y + 12, 25, 25, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
-            
-        pdf.set_y(y_start + 3 * (box_h + gap_y))
     elif "number patterns" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find the rule and complete the number pattern.", ln=True)
         pdf.ln(2)
