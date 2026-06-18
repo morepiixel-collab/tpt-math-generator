@@ -1208,32 +1208,36 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
     elif "counting to 120" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers.", ln=True)
-        pdf.ln(5)
+        pdf.ln(2) # ลดระยะห่างบรรทัดตรงนี้ลงนิดหน่อยให้ประหยัดพื้นที่
         
         y_start = pdf.get_y()
-        box_h = 42   # ความสูงของแต่ละกล่อง
-        gap_y = 12   # ระยะห่างระหว่างกล่อง
+        box_h = 38   # ลดความสูงกล่องลง (เพื่อให้ 4 ข้อ พอดีหน้ากระดาษ)
+        gap_y = 8    # ลดระยะห่างระหว่างแถว
         
-        for i in range(4): # ล็อกจำนวนข้อไว้ที่ 4 ข้อต่อหน้า
+        for i in range(4): # ล็อกจำนวนข้อไว้ที่ 4 ข้อ
             y = y_start + i * (box_h + gap_y)
             
+            # วาดกรอบสีพื้นหลัง
             draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
             
             start_num = random.randint(50, 115)
             seq = [start_num + j for j in range(5)]
             hide_idx = random.sample([0, 1, 2, 3, 4], 2) # สุ่มซ่อน 2 ตำแหน่ง
             
-            start_x = center_x - (172 / 2)
+            circle_d = 26 # ขยับขนาดวงกลมลงนิดนึงให้พอดีกับกล่องใหม่
+            start_x = center_x - (165 / 2) # จัดระยะ X ใหม่ให้สมดุล
+            
             for j in range(5):
-                x = start_x + (j * 36)
+                x = start_x + (j * 34) # ขยับระยะห่างแต่ละวงกลมให้พอดี
+                circle_y = y + 6       # จัดให้วงกลมอยู่กึ่งกลางแนวตั้งของกล่องเป๊ะๆ
+                
                 if j in hide_idx:
-                    # ถ้าเป็นหน้าเฉลยจะโชว์ตัวเลข ถ้าเป็นหน้าโจทย์จะเป็นช่องว่าง (เอา ? ออก)
                     val = str(seq[j]) if pdf.is_key else "" 
-                    draw_circle_placeholder(pdf, x, y+7, 28, val)
+                    draw_circle_placeholder(pdf, x, circle_y, circle_d, val)
                 else:
-                    draw_solid_circle(pdf, x, y+7, 28, str(seq[j]), font_size=20)
+                    draw_solid_circle(pdf, x, circle_y, circle_d, str(seq[j]), font_size=20)
                     
-        # เลื่อนเคอร์เซอร์ Y ลงมาด้านล่างสุด เผื่อมีการสร้างข้อความอื่นๆ ต่อ
+        # เลื่อนเคอร์เซอร์ Y ลงมาให้พ้นกล่อง
         pdf.set_y(y_start + 4 * (box_h + gap_y))
 
     elif "greater than" in clean_sub:
