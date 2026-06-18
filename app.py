@@ -1850,14 +1850,14 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.cell(0, 10, f" Directions: Find the value of each shape.", ln=True)
         pdf.ln(2)
         y_start = pdf.get_y()
-        box_w, box_h = 185, 45  # ปรับให้ได้ 4 ข้อพอดีหน้า
+        box_w, box_h = 185, 45  
         gap_y = 6
         
-        # ฟังก์ชันวาดรูปทรงเรขาคณิตแบบ Dynamic (ใช้ Canvas วาด ไม่ต้องพึ่งฟอนต์)
-        def draw_shape(p, stype, sx, sy, size=7.5):
+        # ฟังก์ชันวาดรูปทรงเรขาคณิต
+        def draw_shape(p, stype, sx, sy, size=9):
             p.set_draw_color(*theme_colors["primary"])
             p.set_fill_color(255, 255, 255)
-            p.set_line_width(0.5)
+            p.set_line_width(0.6)
             if stype == "circle":
                 p.ellipse(sx, sy, size, size, style='FD')
             elif stype == "square":
@@ -1865,16 +1865,15 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             elif stype == "triangle":
                 p.polygon([(sx, sy + size), (sx + size/2, sy), (sx + size, sy + size)], style='FD')
 
-        for i in range(4): # วนลูป 4 ข้อตามสั่ง
+        for i in range(4): 
             y = y_start + i * (box_h + gap_y)
             draw_rounded_box(pdf, 15, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
-            # --- สร้าง Logic แบบ Dynamic ---
+            # --- Dynamic Logic (สุ่มใหม่หมดทุกข้อ) ---
             shapes = ["circle", "square", "triangle"]
             random.shuffle(shapes)
             s1, s2, s3 = shapes[0], shapes[1], shapes[2]
             
-            # สุ่มค่า (ให้อยู่ในระดับที่เด็ก ป.3 คำนวณในใจได้)
             val1 = random.randint(3, 10)
             val2 = random.randint(2, 8)
             val3 = random.randint(1, 6)
@@ -1882,51 +1881,68 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             eq1_ans = val1 + val1
             eq2_ans = val1 + val2
             
-            # สุ่มเลือกเครื่องหมายบรรทัดสุดท้าย (+ หรือ -)
             op = random.choice(["+", "-"])
             if op == "+":
                 eq3_ans = val2 + val3
             else:
                 eq3_ans = val2 - val3
-                if eq3_ans < 0: # กันค่าติดลบ
+                if eq3_ans < 0: 
                     val2, val3 = val3, val2
                     eq3_ans = val2 - val3
             
-            # สุ่มรูปที่จะถาม
             target_s = random.choice([s1, s2, s3])
             target_val = val1 if target_s == s1 else (val2 if target_s == s2 else val3)
             
-            pdf.set_font("ComicNeue", "", 14)
             pdf.set_text_color(*theme_colors["primary"])
             
-            # วาดสมการลงไป (ตำแหน่ง Dynamic ตามบรรทัด)
-            # บรรทัด 1
-            draw_shape(pdf, s1, 25, y + 5)
-            pdf.text(35, y + 11, "+")
-            draw_shape(pdf, s1, 42, y + 5)
-            pdf.text(53, y + 11, f"= {eq1_ans}")
+            # --- ตั้งค่าระยะช่องไฟของสมการ (แกน X) ---
+            shape_size = 9
+            col1_x = 25  # พิกัด X รูปที่ 1
+            col2_x = 46  # พิกัด X รูปที่ 2
+            # คำนวณจุดกึ่งกลางระหว่าง 2 รูปทรงให้เป๊ะ
+            op_center_x = col1_x + shape_size + ((col2_x - (col1_x + shape_size)) / 2) 
+            eq_start_x = col2_x + shape_size + 4
             
-            # บรรทัด 2
-            draw_shape(pdf, s1, 25, y + 16)
-            pdf.text(35, y + 22, "+")
-            draw_shape(pdf, s2, 42, y + 16)
-            pdf.text(53, y + 22, f"= {eq2_ans}")
+            # ฟังก์ชันย่อยสำหรับวาดสมการ 1 แถวให้ตรงเป๊ะ
+            def draw_row(row_y, shape_a, operator_str, shape_b, ans_val):
+                # 1. วาดรูปทรงแรก
+                draw_shape(pdf, shape_a, col1_x, row_y, size=shape_size)
+                
+                # 2. วาดเครื่องหมาย (ปรับฟอนต์ใหญ่ Size 24 และจัดให้อยู่ตรงกลาง)
+                try: pdf.set_font("ComicNeue", "", 24)
+                except: pdf.set_font("Arial", "", 24)
+                w_op = pdf.get_string_width(operator_str)
+                # จัดกึ่งกลางแนวนอน และบวกแกน Y ให้ตรงกับกึ่งกลางรูปทรง
+                pdf.text(op_center_x - w_op/2, row_y + 8, operator_str) 
+                
+                # 3. วาดรูปทรงที่สอง
+                draw_shape(pdf, shape_b, col2_x, row_y, size=shape_size)
+                
+                # 4. วาดเครื่องหมายเท่ากับและคำตอบ
+                try: pdf.set_font("ComicNeue", "", 18)
+                except: pdf.set_font("Arial", "", 18)
+                pdf.text(eq_start_x, row_y + 8, f"=  {ans_val}")
+
+            # สั่งวาดทั้ง 3 แถว
+            draw_row(y + 5, s1, "+", s1, eq1_ans)
+            draw_row(y + 17, s1, "+", s2, eq2_ans)
+            draw_row(y + 29, s2, op, s3, eq3_ans)
             
-            # บรรทัด 3
-            draw_shape(pdf, s2, 25, y + 27)
-            pdf.text(35, y + 33, op)
-            draw_shape(pdf, s3, 42, y + 27)
-            pdf.text(53, y + 33, f"= {eq3_ans}")
-            
-            # คำถามท้ายข้อ
+            # --- ฝั่งขวา: คำถามท้ายข้อแบบ Dynamic ---
             pdf.set_text_color(0, 0, 0)
-            pdf.text(90, y + 25, "Value of")
-            draw_shape(pdf, target_s, 115, y + 19, size=8)
-            pdf.text(125, y + 25, "?")
+            try: pdf.set_font("ComicNeue", "", 16)
+            except: pdf.set_font("Arial", "", 16)
+            
+            q_str = "Value of"
+            w_q = pdf.get_string_width(q_str)
+            pdf.text(90, y + 27, q_str)
+            # วาดรูปทรงที่จะถามต่อจากข้อความ
+            draw_shape(pdf, target_s, 90 + w_q + 3, y + 20, size=9)
+            pdf.text(90 + w_q + 15, y + 27, "?")
             
             # กล่องคำตอบ
             ans = str(target_val) if pdf.is_key else ""
-            draw_rounded_box(pdf, 160, y + 11, 23, 23, r=4, bg_color=(255,255,255), text=ans, font_size=16)
+            draw_rounded_box(pdf, 160, y + 11, 23, 23, r=4, bg_color=(255,255,255), text=ans, font_size=18)
             
     elif "number patterns" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find the rule and complete the number pattern.", ln=True)
