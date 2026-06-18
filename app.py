@@ -95,7 +95,7 @@ THEME_COLORS = {
 }
 
 # ==========================================
-# 2. คลาสหน้ากระดาษ Premium Border
+# 2. คลาสหน้ากระดาษ Premium Border (รองรับถึง Grade 3)
 # ==========================================
 class PremiumTpTPDF(FPDF):
     def __init__(self, topic_name, color_theme, shop_name, target_num, is_key=False):
@@ -108,63 +108,70 @@ class PremiumTpTPDF(FPDF):
         self.set_auto_page_break(auto=True, margin=15)
         
         if os.path.exists(FONT_FILE):
-            self.add_font("ComicNeue", "", FONT_FILE)
-        else:
-            self.add_font("ComicNeue", "", "helvetica") 
+            self.add_font("ComicNeue", "", FONT_FILE, uni=True)
 
     def header(self):
+        # 1. วาดกรอบรอบหน้ากระดาษ
         self.set_line_width(2.0)
         self.set_draw_color(*self.colors["primary"])
         self.rect(8, 8, 200, 263)
         
-        self.set_line_width(0.3)
-        self.set_draw_color(*self.colors["secondary"])
-        # ตรวจสอบว่าถ้ามี target_number (กรณี Pre-K) ให้พิมพ์ต่อท้าย แต่ถ้าไม่มี (G1, G2) ให้พิมพ์แค่ชื่อหัวข้อเฉยๆ
-        if hasattr(self, 'target_number') and self.target_number:
-            display_title = f"{self.topic_name.upper()} : NUMBER {self.target_number}"
-        else:
-            display_title = self.topic_name.upper()
-            
-        self.set_font("ComicNeue", "B", 22)
+        # 2. ตั้งค่าฟอนต์
+        try:
+            self.set_font("ComicNeue", "", 12)
+        except:
+            self.set_font("Arial", "", 12)
         self.set_text_color(*self.colors["primary"])
-        self.cell(0, 12, display_title, ln=True, align="C")
         
-        # ตรวจจับหัวข้อเพื่อเปลี่ยนชื่อชั้นให้ถูกต้อง
+        # 3. พิมพ์บรรทัดแรก: บอกระดับชั้น (รองรับ Grade 1, 2, 3)
         title_upper = self.topic_name.upper()
         if any(kw in title_upper for kw in ["HUNDREDS", "2-DIGIT", "EVEN OR ODD", "3-DIGIT", "EXPANDED", "SKIP COUNTING"]):
             header_title = " G R A D E   2   M A T H "
         elif any(kw in title_upper for kw in ["120", "WITHIN 20", "FACT FAMILIES", "BONDS", "GREATER", "VALUE BASICS"]):
             header_title = " G R A D E   1   M A T H "
+        elif any(kw in title_upper for kw in ["FRACTION", "MULTIPLICATION", "DIVISION", "GRADE 3"]): # รองรับ Grade 3 ในอนาคต
+            header_title = " G R A D E   3   M A T H "
         else:
             header_title = " P R E - K   M A T H "
             
+        self.set_y(12)
         self.cell(0, 8, header_title, ln=True, align="C")
         
-        self.set_font("ComicNeue", "", 24)
+        # 4. พิมพ์บรรทัดที่สอง: ชื่อหัวข้อใบงาน
+        try:
+            self.set_font("ComicNeue", "", 24) 
+        except:
+            self.set_font("Arial", "B", 24)
+            
         clean_topic = self.topic_name.split(". ", 1)[-1].upper()
         
-        # เพิ่มคีย์เวิร์ดของ Grade 1 เข้าไปในลิสต์ด้วย
-        hide_keywords = [
-            "color by number", "shape", "match to real", "big", "tall", "odd", "pattern", "where",
-            "long", "heavy", "full", "sort", "same", "day", "graph",
-            "addition", "bonds", "fact", "place value", "counting to", "greater"
-        ]
-        if any(kw in clean_topic.lower() for kw in hide_keywords):
-            title = f"{clean_topic}" + (" (KEY)" if self.is_key else "")
+        # --- ตรรกะใหม่: โชว์ NUMBER เฉพาะ Pre-K เท่านั้น ---
+        is_prek = not any(grade in header_title for grade in ["GRADE 1", "GRADE 2", "GRADE 3"])
+        
+        if is_prek and self.target_num:
+            display_title = f"{clean_topic} : NUMBER {self.target_num}"
         else:
-            title = f"{clean_topic} : NUMBER {self.target_num}" + (" (KEY)" if self.is_key else "")
+            display_title = clean_topic
             
-        self.cell(0, 10, title, ln=True, align="C")
+        if self.is_key:
+            display_title += " (KEY)"
+            
+        self.cell(0, 10, display_title, ln=True, align="C")
         self.ln(6)
         
+        # 5. วาดกล่องใส่ชื่อ (Name / Date)
         self.set_fill_color(245, 245, 245)
         self.set_draw_color(200, 200, 200)
         self.set_line_width(0.2)
-        self.rect(11, 41, 194, 12, style='DF')
+        self.rect(11, 38, 194, 12, style='DF')
         
-        self.set_font("ComicNeue", "", 14)
+        try:
+            self.set_font("ComicNeue", "", 14)
+        except:
+            self.set_font("Arial", "", 14)
+            
         self.set_text_color(100, 100, 100)
-        self.set_y(44)
+        self.set_y(41)
         self.cell(10, 5, "", ln=0)
         self.cell(90, 5, "Name: ___________________________", ln=0, align="L")
         self.cell(80, 5, "Date: _______________", ln=1, align="R")
@@ -172,10 +179,12 @@ class PremiumTpTPDF(FPDF):
 
     def footer(self):
         self.set_y(-15)
-        self.set_font("ComicNeue", "", 10)
+        try:
+            self.set_font("ComicNeue", "", 10)
+        except:
+            self.set_font("Arial", "", 10)
         self.set_text_color(150, 150, 150)
         self.cell(0, 10, f"© {self.shop_name} | All Rights Reserved.", align="C")
-
 # ==========================================
 # 3. Helpers สำหรับวาด 
 # ==========================================
