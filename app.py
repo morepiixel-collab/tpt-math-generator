@@ -1387,31 +1387,36 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
     elif "even or odd" in clean_sub:
         pdf.cell(0, 10, f" Directions: Look at the number. Color 'Even' or 'Odd'.", ln=True)
-        pdf.ln(5)
+        pdf.ln(2) # ลดระยะเว้นบรรทัดเพื่อให้มีพื้นที่พอสำหรับ 4 แถว
         
         y_start = pdf.get_y()
         box_w = 85
-        box_h = 45
+        box_h = 36   # บีบความสูงกล่องลงเพื่อให้ 4 แถว พอดีหน้ากระดาษ
         gap_x = 15
-        gap_y = 12
+        gap_y = 8    # ลดระยะห่างระหว่างแถวลง
         
-        for i in range(6):
+        for i in range(8): # เปลี่ยนจาก 6 เป็น 8 ข้อ (4 แถว x 2 คอลัมน์)
             row = i // 2
             col = i % 2
             x = 15 + col * (box_w + gap_x)
             y = y_start + row * (box_h + gap_y)
             
+            # วาดกรอบสีพื้นหลัง
             draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
+            # สุ่มตัวเลข 2 หลัก
             num = random.randint(10, 99)
             is_even = (num % 2 == 0)
             
-            draw_rounded_box(pdf, x + 5, y + 8, 30, 30, r=5, bg_color=(255,255,255), text=str(num), font_size=28)
+            # กล่องสีขาวสำหรับใส่ตัวเลข (ปรับขนาดให้เล็กลงและอยู่กึ่งกลางกล่องใหม่)
+            draw_rounded_box(pdf, x + 5, y + 5.5, 25, 25, r=4, bg_color=(255,255,255), text=str(num), font_size=24)
             
-            draw_solid_circle(pdf, x + 42, y + 10, 18, "Even", font_size=12, is_path=(pdf.is_key and is_even))
-            draw_solid_circle(pdf, x + 62, y + 10, 18, "Odd", font_size=12, is_path=(pdf.is_key and not is_even))
+            # วงกลมคำว่า Even / Odd (ปรับตำแหน่งให้สมดุลกับความสูงกล่องใหม่)
+            draw_solid_circle(pdf, x + 38, y + 9, 18, "Even", font_size=12, is_path=(pdf.is_key and is_even))
+            draw_solid_circle(pdf, x + 62, y + 9, 18, "Odd", font_size=12, is_path=(pdf.is_key and not is_even))
             
-        pdf.set_y(y_start + 3 * (box_h + gap_y))
+        # เลื่อนตำแหน่ง Y เผื่อเนื้อหาด้านล่าง
+        pdf.set_y(y_start + 4 * (box_h + gap_y))
 
     elif "3-digit" in clean_sub: # Comparing Numbers
         pdf.cell(0, 10, f" Directions: Compare the numbers. Write > , < , or = in the circle.", ln=True)
