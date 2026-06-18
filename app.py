@@ -142,7 +142,8 @@ class PremiumTpTPDF(FPDF):
             header_title = " G R A D E   2   M A T H "
         elif any(kw in title_upper for kw in ["120", "WITHIN 20", "FACT FAMILIES", "BONDS", "GREATER", "VALUE BASICS"]):
             header_title = " G R A D E   1   M A T H "
-        elif any(kw in title_upper for kw in ["FRACTION", "MULTIPLICATION", "DIVISION", "GRADE 3"]): # รองรับ Grade 3 ในอนาคต
+        # หาบล็อกนี้ใน def header(self): แล้วแก้บรรทัด Grade 3 ครับ
+        elif any(kw in title_upper for kw in ["FRACTION", "MULTIPLICATION", "DIVISION", "ROUNDING", "WORD PROBLEMS", "MEASUREMENT", "TIME", "PATTERN", "LOGIC", "GRADE 3"]): 
             header_title = " G R A D E   3   M A T H "
         else:
             header_title = " P R E - K   M A T H "
@@ -1798,11 +1799,10 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             # วาดกรอบสีพื้นหลัง
             draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
-            # สุ่มโจทย์: ครึ่งนึงปัดเศษหลักสิบ อีกครึ่งปัดเศษหลักร้อย
             is_nearest_10 = random.choice([True, False])
             if is_nearest_10:
                 num = random.randint(11, 99)
-                while num % 10 == 0: num = random.randint(11, 99) # ไม่เอาเลขที่ลงตัวอยู่แล้ว
+                while num % 10 == 0: num = random.randint(11, 99)
                 ans = round(num / 10.0) * 10
                 instruction = "Nearest 10"
             else:
@@ -1816,34 +1816,33 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             except:
                 pdf.set_font("Arial", "", 12)
                 
-            w_inst = pdf.get_string_width(instruction)
-            
-            # กำหนดขนาดกล่อง
-            w_num = 22 # กล่องโจทย์กว้าง 22
-            w_ans = 24 # กล่องคำตอบกว้าง 24 (เผื่อเลข 3 หลัก)
+            # แก้ปัญหาทับซ้อน: กำหนดขนาดกว้างตายตัวไปเลย ไม่ต้องพึ่งการวัดฟอนต์
+            w_num = 20  
+            w_inst = 25 # จองพื้นที่กว้าง 25mm ให้คำว่า Nearest 10/100 (ปลอดภัยไม่โดนทับชัวร์)
+            w_ans = 20  
             spacing = 4 
             
-            # คำนวณกึ่งกลางเป๊ะๆ
             total_content_w = w_num + spacing + w_inst + spacing + w_ans
             start_x = x + (box_w - total_content_w) / 2
-            inner_h = 20
+            inner_h = 18
             start_y = y + (box_h - inner_h) / 2
             
             curr_x = start_x
             
-            # 1. กล่องโจทย์ (ตัวเลขที่ให้มา)
-            draw_rounded_box(pdf, curr_x, start_y, w_num, inner_h, r=4, bg_color=(255,255,255), text=str(num), font_size=16)
+            # 1. กล่องโจทย์
+            draw_rounded_box(pdf, curr_x, start_y, w_num, inner_h, r=4, bg_color=(255,255,255), text=str(num), font_size=14)
             curr_x += w_num + spacing
             
-            # 2. ข้อความคำสั่ง (Nearest 10 / Nearest 100)
+            # 2. ข้อความคำสั่ง (จัดให้อยู่กึ่งกลางของพื้นที่ 25mm ที่จองไว้)
             pdf.set_text_color(*theme_colors["primary"])
-            # ปรับแกน Y ให้ข้อความอยู่กึ่งกลางระดับเดียวกับกล่อง
-            pdf.text(curr_x, start_y + 12.5, instruction) 
+            w_text = pdf.get_string_width(instruction)
+            text_x = curr_x + (w_inst - w_text) / 2
+            pdf.text(text_x, start_y + 11.5, instruction) 
             curr_x += w_inst + spacing
             
-            # 3. กล่องคำตอบ
+            # 3. กล่องคำตอบ (จะไม่ทับตัวหนังสือแล้ว เพราะเว้นระยะ curr_x มาพอดีเป๊ะ)
             ans_text = str(ans) if pdf.is_key else ""
-            draw_rounded_box(pdf, curr_x, start_y, w_ans, inner_h, r=4, bg_color=(255,255,255), text=ans_text, font_size=16)
+            draw_rounded_box(pdf, curr_x, start_y, w_ans, inner_h, r=4, bg_color=(255,255,255), text=ans_text, font_size=14)
             
         pdf.set_y(y_start + 5 * (box_h + gap_y))
 
