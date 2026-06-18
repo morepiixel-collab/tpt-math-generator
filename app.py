@@ -119,18 +119,15 @@ class PremiumTpTPDF(FPDF):
         
         self.set_line_width(0.3)
         self.set_draw_color(*self.colors["secondary"])
-        if hasattr(self, 'set_dash_pattern'):
-            self.set_dash_pattern(dash=2, gap=2)
-            self.rect(11, 11, 194, 257)
-            self.set_dash_pattern()
+        # ตรวจสอบว่าถ้ามี target_number (กรณี Pre-K) ให้พิมพ์ต่อท้าย แต่ถ้าไม่มี (G1, G2) ให้พิมพ์แค่ชื่อหัวข้อเฉยๆ
+        if hasattr(self, 'target_number') and self.target_number:
+            display_title = f"{self.topic_name.upper()} : NUMBER {self.target_number}"
         else:
-            self.rect(11, 11, 194, 257) 
-
-        self.set_fill_color(*self.colors["primary"])
-        self.rect(11, 11, 194, 28, style='F')
-        
-        self.set_font("ComicNeue", "", 12)
-        self.set_text_color(255, 255, 255)
+            display_title = self.topic_name.upper()
+            
+        self.set_font("ComicNeue", "B", 22)
+        self.set_text_color(*self.colors["primary"])
+        self.cell(0, 12, display_title, ln=True, align="C")
         
         # ตรวจจับหัวข้อเพื่อเปลี่ยนชื่อชั้นให้ถูกต้อง
         title_upper = self.topic_name.upper()
@@ -1602,12 +1599,19 @@ with st.sidebar:
         sub_topic = st.selectbox("📝 3. เลือกกิจกรรม:", GRADE_2_CURRICULUM[main_topic])
         
     # ถ้าไม่ใช่ G3 ให้โชว์ปุ่มตั้งค่าต่อ
+    # ถ้าไม่ใช่ G3 ให้โชว์ปุ่มตั้งค่าต่อ
     if grade_level in ["Pre-K", "Grade 1", "Grade 2"]:
         theme_choice = st.selectbox("🖌️ 4. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
         selected_colors = THEME_COLORS[theme_choice]
         
         st.markdown("---")
-        target_num = st.selectbox("🎯 5. เลือกตัวเลขเป้าหมาย:", list(range(1, 21))) 
+        
+        # ปรับตรงนี้: ให้โชว์ตัวเลขเป้าหมายเฉพาะ Pre-K เท่านั้น ถ้าเป็น G1, G2 จะถูกซ่อนอัตโนมัติ
+        if grade_level == "Pre-K":
+            target_num = st.selectbox("🎯 5. เลือกตัวเลขเป้าหมาย:", list(range(1, 21)))
+        else:
+            target_num = None # สำหรับ G1, G2 ไม่ต้องมีค่าตัวเลขเป้าหมาย
+            
         num_q = st.slider("📝 6. จำนวนข้อต่อหน้า:", min_value=2, max_value=8, value=3)
         
         st.markdown("---")
