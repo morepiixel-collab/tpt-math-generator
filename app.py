@@ -1784,7 +1784,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.set_y(y_start + 5 * (box_h + gap_y))
 
     elif "rounding" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Round each number to the nearest 10 or 100.", ln=True)
+        # เปลี่ยนประโยคคำสั่งให้ชัดเจนว่าต้อง "เขียน" ลงในกล่อง (Write the answer in the box)
+        pdf.cell(0, 10, f" Directions: Round each number and write the answer in the box.", ln=True)
         pdf.ln(2)
         y_start = pdf.get_y()
         box_w, box_h = 85, 32
@@ -1816,9 +1817,8 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             except:
                 pdf.set_font("Arial", "", 12)
                 
-            # แก้ปัญหาทับซ้อน: กำหนดขนาดกว้างตายตัวไปเลย ไม่ต้องพึ่งการวัดฟอนต์
             w_num = 20  
-            w_inst = 25 # จองพื้นที่กว้าง 25mm ให้คำว่า Nearest 10/100 (ปลอดภัยไม่โดนทับชัวร์)
+            w_inst = 25 # จองพื้นที่กว้าง 25mm ให้คำสั่งตรงกลาง
             w_ans = 20  
             spacing = 4 
             
@@ -1833,14 +1833,14 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, curr_x, start_y, w_num, inner_h, r=4, bg_color=(255,255,255), text=str(num), font_size=14)
             curr_x += w_num + spacing
             
-            # 2. ข้อความคำสั่ง (จัดให้อยู่กึ่งกลางของพื้นที่ 25mm ที่จองไว้)
+            # 2. ข้อความคำสั่ง (Nearest 10 / Nearest 100)
             pdf.set_text_color(*theme_colors["primary"])
             w_text = pdf.get_string_width(instruction)
             text_x = curr_x + (w_inst - w_text) / 2
             pdf.text(text_x, start_y + 11.5, instruction) 
             curr_x += w_inst + spacing
             
-            # 3. กล่องคำตอบ (จะไม่ทับตัวหนังสือแล้ว เพราะเว้นระยะ curr_x มาพอดีเป๊ะ)
+            # 3. กล่องคำตอบ
             ans_text = str(ans) if pdf.is_key else ""
             draw_rounded_box(pdf, curr_x, start_y, w_ans, inner_h, r=4, bg_color=(255,255,255), text=ans_text, font_size=14)
             
