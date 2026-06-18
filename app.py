@@ -1243,30 +1243,50 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "greater than" in clean_sub:
         pdf.cell(0, 10, f" Directions: Compare the numbers. Write > , < , or = in the circle.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
-            y = pdf.get_y()
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+        
+        y_start = pdf.get_y()
+        box_w = 85   # ความกว้างกล่อง
+        box_h = 45   # ปรับความสูงกล่องลดลง เพื่อให้ 3 แถวไม่ล้นหน้ากระดาษ
+        gap_x = 15   # ระยะห่างระหว่างคอลัมน์ซ้าย-ขวา
+        gap_y = 12   # ระยะห่างระหว่างแถวบน-ล่าง
+        
+        for i in range(6): # ล็อกไว้ที่ 6 ข้อ (3 แถว x 2 คอลัมน์)
+            row = i // 2
+            col = i % 2
             
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            # วาดกรอบสีพื้นหลัง
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            # สุ่มตัวเลข 2 หลัก
             n1 = random.randint(10, 99)
             n2 = random.randint(10, 99)
-            if random.random() > 0.85: n2 = n1 
+            if random.random() > 0.85: n2 = n1 # สุ่มให้มีโอกาส 15% ที่เลขจะเท่ากัน
             
             ans = "=" if n1 == n2 else (">" if n1 > n2 else "<")
-            show_ans = ans if pdf.is_key else "?"
             
-            start_x = center_x - 70
+            # ถ้าเป็นเฉลยโชว์เครื่องหมาย ถ้าไม่ใช่ให้เป็นค่าว่าง (เอา ? ออก)
+            show_ans = ans if pdf.is_key else ""
             
-            draw_rounded_box(pdf, start_x, y+5, 45, 35, r=5, bg_color=(255,255,255), text=str(n1), font_size=32)
+            # กล่องตัวเลขฝั่งซ้าย
+            draw_rounded_box(pdf, x + 6, y + 8.5, 24, 28, r=4, bg_color=(255,255,255), text=str(n1), font_size=24)
             
+            # วงกลมตรงกลางสำหรับใส่เครื่องหมาย
+            circle_x = x + 31.5
+            circle_y = y + 11.5
+            circle_d = 22
             if pdf.is_key:
-                draw_solid_circle(pdf, start_x + 52.5, y + 5, 35, show_ans, font_size=36)
+                draw_solid_circle(pdf, circle_x, circle_y, circle_d, show_ans, font_size=24)
             else:
-                draw_circle_placeholder(pdf, start_x + 52.5, y + 5, 35, show_ans)
+                draw_circle_placeholder(pdf, circle_x, circle_y, circle_d, show_ans) # ตอนนี้จะว่างเปล่า
                 
-            draw_rounded_box(pdf, start_x + 95, y+5, 45, 35, r=5, bg_color=(255,255,255), text=str(n2), font_size=32)
+            # กล่องตัวเลขฝั่งขวา
+            draw_rounded_box(pdf, x + 55, y + 8.5, 24, 28, r=4, bg_color=(255,255,255), text=str(n2), font_size=24)
             
-            pdf.ln(55)
+        # เลื่อนระยะ Y เผื่อหน้ากระดาษไว้
+        pdf.set_y(y_start + 3 * (box_h + gap_y))
 
     # ส่งคืนไฟล์ PDF ในรูปแบบ bytes
     return bytes(pdf.output(dest='S'))
