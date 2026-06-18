@@ -65,15 +65,13 @@ PRE_K_CURRICULUM = {
 }
 
 GRADE_1_CURRICULUM = {
-    "1. Addition & Subtraction (การบวกและลบ)": [
+    "1. Grade 1 Math Topics (รวมหัวข้อ ป.1)": [
         "1. Addition Within 20",
         "2. Number Bonds",
-        "3. Fact Families"
-    ],
-    "2. Number Sense & Place Value (จำนวนและค่าประจำหลัก)": [
-        "1. Place Value Basics",
-        "2. Counting to 120",
-        "3. Greater Than / Less Than"
+        "3. Fact Families",
+        "4. Place Value Basics",
+        "5. Counting to 120",
+        "6. Greater Than / Less Than"
     ]
 }
 
