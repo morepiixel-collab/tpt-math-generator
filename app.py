@@ -1799,9 +1799,9 @@ def display_pdf_preview(pdf_bytes):
 # ==========================================
 # 6. Streamlit User Interface
 # ==========================================
-st.set_page_config(page_title="Pre-K Math Generator", layout="wide")
+st.set_page_config(page_title="Math Worksheet Generator", layout="wide")
 
-st.title("🖍️ Pre-K Math Worksheet Generator")
+st.title("🖍️ Math Worksheet Generator")
 
 with st.sidebar:
     st.header("🎨 ตกแต่งใบงาน (Customize)")
@@ -1809,12 +1809,12 @@ with st.sidebar:
     shop_name = st.text_input("🏪 ชื่อร้าน (Copyright):", value="Kindergarten Learning Press")
     st.markdown("---")
     
-    # เพิ่ม Grade 1 และโชว์ Grade 2, Grade 3 มารอไว้ตามสั่งครับ
+    # 1. เอา (Coming Soon) ออก ให้เป็น "Grade 3" เฉยๆ
     grade_level = st.selectbox("📚 1. เลือกระดับชั้น (Grade Level):", [
         "Pre-K", 
         "Grade 1", 
         "Grade 2", 
-        "Grade 3 (Coming Soon)"
+        "Grade 3" 
     ])
     
     # จัดการเมนูย่อยตามระดับชั้นที่เลือก
@@ -1827,29 +1827,30 @@ with st.sidebar:
     elif grade_level == "Grade 2":
         main_topic = st.selectbox("🎯 2. เลือกแกนหลัก:", list(GRADE_2_CURRICULUM.keys()))
         sub_topic = st.selectbox("📝 3. เลือกกิจกรรม:", GRADE_2_CURRICULUM[main_topic])
+    # 2. เพิ่มเงื่อนไขให้ดึงข้อมูล Grade 3 ออกมาโชว์
+    elif grade_level == "Grade 3":
+        main_topic = st.selectbox("🎯 2. เลือกแกนหลัก:", list(GRADE_3_CURRICULUM.keys()))
+        sub_topic = st.selectbox("📝 3. เลือกกิจกรรม:", GRADE_3_CURRICULUM[main_topic])
         
-    # ถ้าไม่ใช่ G3 ให้โชว์ปุ่มตั้งค่าต่อ
-    # ถ้าไม่ใช่ G3 ให้โชว์ปุ่มตั้งค่าต่อ
-    if grade_level in ["Pre-K", "Grade 1", "Grade 2"]:
+    # 3. เพิ่ม "Grade 3" เข้าไปในลิสต์ให้ผ่านเงื่อนไขลงมาตั้งค่าได้
+    if grade_level in ["Pre-K", "Grade 1", "Grade 2", "Grade 3"]:
         theme_choice = st.selectbox("🖌️ 4. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
         selected_colors = THEME_COLORS[theme_choice]
         
         st.markdown("---")
         
-        # ปรับตรงนี้: ให้โชว์ตัวเลขเป้าหมายเฉพาะ Pre-K เท่านั้น ถ้าเป็น G1, G2 จะถูกซ่อนอัตโนมัติ
         if grade_level == "Pre-K":
             target_num = st.selectbox("🎯 5. เลือกตัวเลขเป้าหมาย:", list(range(1, 21)))
         else:
-            target_num = None # สำหรับ G1, G2 ไม่ต้องมีค่าตัวเลขเป้าหมาย
+            target_num = None # สำหรับ G1, G2, G3 ไม่ต้องมีค่าตัวเลขเป้าหมาย
             
-        num_q = st.slider("📝 6. จำนวนข้อต่อหน้า:", min_value=2, max_value=8, value=3)
+        num_q = st.slider("📝 6. จำนวนข้อต่อหน้า:", min_value=2, max_value=10, value=3)
         
         st.markdown("---")
         generate_btn = st.button("🚀 สร้างโครงร่าง (Generate PDF)", use_container_width=True)
     else:
         st.info(f"🚧 ระบบกำลังพัฒนาเนื้อหาสำหรับ {grade_level} ครับ!")
         generate_btn = False
-
 # ==========================================
 # 5. พรีวิวด้วย PyMuPDF (ถ้ายังไม่มี ให้ใส่ไว้บนสุดก่อนส่วน UI)
 # ==========================================
