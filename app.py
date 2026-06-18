@@ -1173,34 +1173,69 @@ with st.sidebar:
         st.info(f"🚧 ระบบกำลังพัฒนาเนื้อหาสำหรับ {grade_level} ครับ!")
         generate_btn = False
 
-if generate_btn:
-    with st.spinner("Generating PDF..."):
-        # สร้าง PDF หลัก
-        pdf_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, session_seed, is_key=False)
-        # สร้าง PDF เฉลย
-        key_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, session_seed, is_key=True)
+# ==========================================
+# 5. พรีวิวด้วย PyMuPDF (ถ้ายังไม่มี ให้ใส่ไว้บนสุดก่อนส่วน UI)
+# ==========================================
+def display_pdf_preview(pdf_bytes):
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        page = doc.load_page(0) 
+        pix = page.get_pixmap(dpi=150)
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         
+        st.markdown(
+            """
+            <style>
+            .premium-paper { box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-radius: 12px; background: white; padding: 10px; border: 1px solid #f0f0f0; }
+            </style>
+            """, unsafe_allow_html=True
+        )
+        st.markdown("<div class='premium-paper'>", unsafe_allow_html=True)
+        st.image(img, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        doc.close()
+    except Exception as e:
+        st.error(f"⚠️ พรีวิวขัดข้อง: {e}")
+
+# ==========================================
+# 6. ส่วนประมวลผลเมื่อกดปุ่ม Generate (วางไว้ล่างสุดของไฟล์)
+# ==========================================
+if generate_btn:
+    # 1. กำหนด session_seed ก่อนเรียกใช้ฟังก์ชัน (ป้องกัน NameError)
+    session_seed = random.randint(1, 9999999)
+    
+    with st.spinner(f"กำลังสร้างใบงานแบบ Dynamic โฟกัสเลข {target_num}..."):
+        # 2. เรียกใช้งานทีละ 2 ชุด (โจทย์ และ เฉลย)
+        ws_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, session_seed, is_key=False)
+        ans_bytes = generate_worksheet(sub_topic, selected_colors, num_q, shop_name, target_num, session_seed, is_key=True)
+
         col1, col2 = st.columns([1.5, 1])
+        
         with col1:
-            st.subheader("Preview (Page 1)")
-            display_pdf_preview(pdf_bytes)
+            display_pdf_preview(ws_bytes)
             
         with col2:
-            st.subheader("Download")
-            clean_name = sub_topic.replace(" ", "_").replace("?", "")
+            st.subheader(f"📥 ดาวน์โหลดไฟล์")
+            st.success(f"✅ สร้างใบงานสำเร็จ! เลย์เอาต์พร้อมสำหรับการใส่ภาพจาก Nano Banana")
+            
+            # จัดการชื่อไฟล์ให้สวยงาม
+            clean_level = grade_level.replace(" ", "")
+            file_title = sub_topic.split('. ')[-1].replace(' ', '_')
             
             st.download_button(
-                label="⬇️ Download Worksheet",
-                data=pdf_bytes,
-                file_name=f"PreK_{clean_name}.pdf",
+                label=f"📄 โหลดโครงร่าง (Worksheet)",
+                data=ws_bytes,
+                file_name=f"{clean_level}_{file_title}_Num_{target_num}.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
-            
             st.download_button(
-                label="🔑 Download Answer Key",
-                data=key_bytes,
-                file_name=f"PreK_{clean_name}_KEY.pdf",
+                label=f"🔑 โหลดเฉลย (Answer Key)",
+                data=ans_bytes,
+                file_name=f"{clean_level}_{file_title}_Num_{target_num}_KEY.pdf",
                 mime="application/pdf",
                 use_container_width=True
             )
+
+elif grade_level in ["Pre-K", "Grade 1"]:
+    st.info("👈 กรุณาเลือก **กิจกรรมและตัวเลขที่ต้องการ** แล้วกดปุ่มสร้างใบงานได้เลยครับ มีพื้นที่ให้ตกแต่งภาพรอไว้เพียบ!")
