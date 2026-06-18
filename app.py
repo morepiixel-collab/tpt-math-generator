@@ -1652,13 +1652,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             x = 15 + col * (box_w + gap_x)
             y = y_start + row * (box_h + gap_y)
             
-            # 1. วาดกรอบสีพื้นหลัง
+            # วาดกรอบสีพื้นหลัง
             draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
             n1, n2 = random.randint(2, 12), random.randint(2, 12)
             ans = n1 * n2
             
-            # 2. ตั้งค่า Font เพื่อวัดความกว้างของเครื่องหมาย
+            # วัดขนาดกว้างของเครื่องหมาย
             try:
                 pdf.set_font("ComicNeue", "", 20)
             except:
@@ -1667,30 +1667,37 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             w_x = pdf.get_string_width("x")
             w_eq = pdf.get_string_width("=")
             
-            # 3. กำหนดขนาดกล่องย่อยและช่องไฟ (หน่วย: มิลลิเมตร)
+            # กำหนดขนาดกล่องย่อยและช่องไฟ
             w_num1 = 16
             w_num2 = 16
-            w_ans = 22 # ขยายช่องคำตอบให้กว้างจุใจ (จากเดิมที่เล็กไป)
-            spacing = 3 # ระยะช่องไฟระหว่างแต่ละชิ้น
+            w_ans = 22 # ช่องคำตอบขนาดใหญ่
+            spacing = 3 
             
-            # 4. คำนวณความกว้างรวมของเนื้อหาทั้งหมด
+            # คำนวณความกว้างรวมทั้งหมดเพื่อจัดให้อยู่ตรงกลางกรอบ
             total_content_w = w_num1 + spacing + w_x + spacing + w_num2 + spacing + w_eq + spacing + w_ans
             
-            # 5. คำนวณจุดกึ่งกลางเป๊ะๆ (จัด Center อัตโนมัติ)
-            start_x = x + (box_w - total_content_w) / 2  # จัดกึ่งกลางแนวนอน
-            inner_h = 20 # ความสูงกล่องตัวเลขสีขาว
-            start_y = y + (box_h - inner_h) / 2          # จัดกึ่งกลางแนวตั้ง
+            start_x = x + (box_w - total_content_w) / 2  # จัดกึ่งกลางแกน X
+            inner_h = 20
+            start_y = y + (box_h - inner_h) / 2          # จัดกึ่งกลางแกน Y
             
-            # --- เริ่มวาดเรียงทีละชิ้นจากซ้ายไปขวา ---
+            # ----------------------------------------------------
+            # **แก้ไขจุดนี้:** ปรับพิกัดแกน Y ของเครื่องหมายให้ตรงเป๊ะกับตัวเลข
+            # ----------------------------------------------------
+            sym_y = start_y + 13.2  # ปรับจูนให้ Base line ของ X และ = ตรงกับตัวเลข
+            
             curr_x = start_x
             
             # กล่องเลขที่ 1
             draw_rounded_box(pdf, curr_x, start_y, w_num1, inner_h, r=4, bg_color=(255,255,255), text=str(n1), font_size=18)
             curr_x += w_num1 + spacing
             
-            # เครื่องหมาย x (แกน Y บวก 14.5 เพื่อให้ตรงกับ Center ของกล่องพอดี)
+            # เครื่องหมาย x
             pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(curr_x, start_y + 14.5, "x")
+            try:
+                pdf.set_font("ComicNeue", "", 20)
+            except:
+                pdf.set_font("Arial", "", 20)
+            pdf.text(curr_x, sym_y, "x")
             curr_x += w_x + spacing
             
             # กล่องเลขที่ 2
@@ -1698,10 +1705,10 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             curr_x += w_num2 + spacing
             
             # เครื่องหมาย =
-            pdf.text(curr_x, start_y + 14.5, "=")
+            pdf.text(curr_x, sym_y, "=")
             curr_x += w_eq + spacing
             
-            # กล่องคำตอบ (ขนาดใหญ่กว้าง 22mm วางสมดุลเป๊ะ)
+            # กล่องคำตอบ
             ans_text = str(ans) if pdf.is_key else ""
             draw_rounded_box(pdf, curr_x, start_y, w_ans, inner_h, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
             
