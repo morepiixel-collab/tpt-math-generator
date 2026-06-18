@@ -75,6 +75,17 @@ GRADE_1_CURRICULUM = {
     ]
 }
 
+GRADE_2_CURRICULUM = {
+    "2. Grade 2 Math Topics (รวมหัวข้อ ป.2)": [
+        "1. Place Value (Hundreds, Tens, Ones)",
+        "2. 2-Digit Addition & Subtraction",
+        "3. Number Sense (Even or Odd)",
+        "4. Comparing Numbers (3-Digit)",
+        "5. Expanded Form",
+        "6. Skip Counting"
+    ]
+}
+
 THEME_COLORS = {
     "Sweet Pink (ชมพูหวานแหวว) 🎀": {"primary": (244, 143, 177), "secondary": (129, 212, 250), "box": (255, 240, 245)},
     "Cotton Candy (ฟ้า-ชมพู)": {"primary": (118, 165, 234), "secondary": (244, 164, 185), "box": (248, 250, 255)},
@@ -120,7 +131,12 @@ class PremiumTpTPDF(FPDF):
         
         self.set_font("ComicNeue", "", 12)
         self.set_text_color(255, 255, 255)
-        if "120" in self.topic_name or "Addition" in self.topic_name or "Fact" in self.topic_name or "Place Value" in self.topic_name or "Bonds" in self.topic_name or "Greater" in self.topic_name:
+        
+        # ตรวจจับหัวข้อเพื่อเปลี่ยนชื่อชั้นให้ถูกต้อง
+        title_upper = self.topic_name.upper()
+        if any(kw in title_upper for kw in ["HUNDREDS", "2-DIGIT", "EVEN OR ODD", "3-DIGIT", "EXPANDED", "SKIP COUNTING"]):
+            header_title = " G R A D E   2   M A T H "
+        elif any(kw in title_upper for kw in ["120", "WITHIN 20", "FACT FAMILIES", "BONDS", "GREATER", "VALUE BASICS"]):
             header_title = " G R A D E   1   M A T H "
         else:
             header_title = " P R E - K   M A T H "
@@ -1288,6 +1304,227 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         # เลื่อนระยะ Y เผื่อหน้ากระดาษไว้
         pdf.set_y(y_start + 3 * (box_h + gap_y))
 
+    # ==========================================
+    # 🥈 โซน GRADE 2 (ป.2)
+    # ==========================================
+    elif "hundreds, tens, ones" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Write the number that matches the blocks.", ln=True)
+        pdf.ln(5)
+        
+        y_start = pdf.get_y()
+        box_w = 85
+        box_h = 45
+        gap_x = 15
+        gap_y = 12
+        
+        for i in range(6):
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            h = random.randint(1, 9)
+            t = random.randint(1, 9)
+            o = random.randint(1, 9)
+            ans = (h * 100) + (t * 10) + o
+            
+            draw_rounded_box(pdf, x + 5, y + 5, 55, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {h}H, {t}T, {o}O ~", font_size=9)
+            
+            ans_text = str(ans) if pdf.is_key else ""
+            draw_rounded_box(pdf, x + 65, y + 10, 15, 25, r=3, bg_color=(255,255,255), text=ans_text, font_size=16)
+            
+        pdf.set_y(y_start + 3 * (box_h + gap_y))
+
+    elif "2-digit" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Solve the addition and subtraction problems.", ln=True)
+        pdf.ln(5)
+        
+        y_start = pdf.get_y()
+        box_w = 85
+        box_h = 55
+        gap_x = 15
+        gap_y = 10
+        
+        for i in range(6):
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            inner_x = x + 15
+            inner_y = y + 5
+            draw_rounded_box(pdf, inner_x, inner_y, 55, 45, r=5, bg_color=(255,255,255))
+            
+            # สุ่มการตั้งบวกลบแนวตั้ง
+            op = random.choice(["+", "-"])
+            if op == "+":
+                a = random.randint(10, 89)
+                b = random.randint(10, 99 - a)
+                ans = a + b
+            else:
+                a = random.randint(20, 99)
+                b = random.randint(10, a - 1)
+                ans = a - b
+                
+            pdf.set_font("ComicNeue", "", 28)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(inner_x + 20, inner_y + 15, str(a).rjust(2))
+            pdf.text(inner_x + 10, inner_y + 25, op)
+            pdf.text(inner_x + 20, inner_y + 28, str(b).rjust(2))
+            
+            pdf.set_line_width(0.8)
+            pdf.line(inner_x + 10, inner_y + 32, inner_x + 45, inner_y + 32)
+            
+            if pdf.is_key:
+                pdf.set_text_color(*theme_colors["secondary"])
+                pdf.text(inner_x + 20, inner_y + 42, str(ans).rjust(2))
+                
+        pdf.set_y(y_start + 3 * (box_h + gap_y))
+
+    elif "even or odd" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Look at the number. Color 'Even' or 'Odd'.", ln=True)
+        pdf.ln(5)
+        
+        y_start = pdf.get_y()
+        box_w = 85
+        box_h = 45
+        gap_x = 15
+        gap_y = 12
+        
+        for i in range(6):
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            num = random.randint(10, 99)
+            is_even = (num % 2 == 0)
+            
+            draw_rounded_box(pdf, x + 5, y + 8, 30, 30, r=5, bg_color=(255,255,255), text=str(num), font_size=28)
+            
+            draw_solid_circle(pdf, x + 42, y + 10, 18, "Even", font_size=12, is_path=(pdf.is_key and is_even))
+            draw_solid_circle(pdf, x + 62, y + 10, 18, "Odd", font_size=12, is_path=(pdf.is_key and not is_even))
+            
+        pdf.set_y(y_start + 3 * (box_h + gap_y))
+
+    elif "3-digit" in clean_sub: # Comparing Numbers
+        pdf.cell(0, 10, f" Directions: Compare the numbers. Write > , < , or = in the circle.", ln=True)
+        pdf.ln(5)
+        
+        y_start = pdf.get_y()
+        box_w = 85
+        box_h = 45
+        gap_x = 15
+        gap_y = 12
+        
+        for i in range(6):
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            n1 = random.randint(100, 999)
+            n2 = random.randint(100, 999)
+            if random.random() > 0.85: n2 = n1 
+            
+            ans = "=" if n1 == n2 else (">" if n1 > n2 else "<")
+            show_ans = ans if pdf.is_key else ""
+            
+            draw_rounded_box(pdf, x + 4, y + 8.5, 27, 28, r=4, bg_color=(255,255,255), text=str(n1), font_size=20)
+            
+            circle_d = 20
+            if pdf.is_key:
+                draw_solid_circle(pdf, x + 32.5, y + 12.5, circle_d, show_ans, font_size=24)
+            else:
+                draw_circle_placeholder(pdf, x + 32.5, y + 12.5, circle_d, show_ans) 
+                
+            draw_rounded_box(pdf, x + 54, y + 8.5, 27, 28, r=4, bg_color=(255,255,255), text=str(n2), font_size=20)
+            
+        pdf.set_y(y_start + 3 * (box_h + gap_y))
+
+    elif "expanded form" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Write each number in expanded form.", ln=True)
+        pdf.ln(5)
+        
+        y_start = pdf.get_y()
+        box_w = 85
+        box_h = 45
+        gap_x = 15
+        gap_y = 12
+        
+        for i in range(6):
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            h = random.randint(1, 9) * 100
+            t = random.randint(1, 9) * 10
+            o = random.randint(1, 9)
+            val = h + t + o
+            
+            draw_rounded_box(pdf, x + 5, y + 10, 25, 25, r=4, bg_color=(255,255,255), text=str(val), font_size=18)
+            
+            pdf.set_font("ComicNeue", "", 18)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(x + 32, y + 27, "=")
+            
+            if pdf.is_key:
+                ans_str = f"{h} + {t} + {o}"
+                pdf.set_font("ComicNeue", "", 14)
+                pdf.set_text_color(*theme_colors["secondary"])
+                pdf.text(x + 40, y + 27, ans_str)
+            else:
+                pdf.set_line_width(0.5)
+                pdf.line(x + 40, y + 28, x + 50, y + 28)
+                pdf.text(x + 52, y + 27, "+")
+                pdf.line(x + 58, y + 28, x + 68, y + 28)
+                pdf.text(x + 70, y + 27, "+")
+                pdf.line(x + 76, y + 28, x + 82, y + 28)
+                
+        pdf.set_y(y_start + 3 * (box_h + gap_y))
+
+    elif "skip counting" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Skip count to fill in the missing numbers.", ln=True)
+        pdf.ln(5)
+        
+        y_start = pdf.get_y()
+        box_h = 42
+        gap_y = 12
+        
+        for i in range(4): # ให้ข้อละ 1 แถวยาวๆ รวม 4 ข้อ
+            y = y_start + i * (box_h + gap_y)
+            draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
+            
+            step = random.choice([2, 5, 10])
+            start_num = random.randint(1, 20) * step
+            seq = [start_num + (j * step) for j in range(5)]
+            hide_idx = random.sample([1, 2, 3, 4], 2) # ซ่อน 2 วง (วงแรกให้เปิดไว้เสมอ)
+            
+            circle_d = 28 
+            start_x = center_x - (170 / 2) 
+            
+            for j in range(5):
+                x = start_x + (j * 35) 
+                circle_y = y + 7       
+                
+                if j in hide_idx:
+                    val = str(seq[j]) if pdf.is_key else "" 
+                    draw_circle_placeholder(pdf, x, circle_y, circle_d, val)
+                else:
+                    draw_solid_circle(pdf, x, circle_y, circle_d, str(seq[j]), font_size=20)
+                    
+        pdf.set_y(y_start + 4 * (box_h + gap_y))
+
     # ส่งคืนไฟล์ PDF ในรูปแบบ bytes
     return bytes(pdf.output(dest='S'))
 
@@ -1321,7 +1558,7 @@ with st.sidebar:
     grade_level = st.selectbox("📚 1. เลือกระดับชั้น (Grade Level):", [
         "Pre-K", 
         "Grade 1", 
-        "Grade 2 (Coming Soon)", 
+        "Grade 2 , 
         "Grade 3 (Coming Soon)"
     ])
     
@@ -1332,14 +1569,17 @@ with st.sidebar:
     elif grade_level == "Grade 1":
         main_topic = st.selectbox("🎯 2. เลือกแกนหลัก:", list(GRADE_1_CURRICULUM.keys()))
         sub_topic = st.selectbox("📝 3. เลือกกิจกรรม:", GRADE_1_CURRICULUM[main_topic])
+    elif grade_level == "Grade 2":
+        main_topic = st.selectbox("🎯 2. เลือกแกนหลัก:", list(GRADE_2_CURRICULUM.keys()))
+        sub_topic = st.selectbox("📝 3. เลือกกิจกรรม:", GRADE_2_CURRICULUM[main_topic])
         
-    # ถ้าไม่ใช่ G2, G3 ให้โชว์ปุ่มตั้งค่าต่อ
-    if grade_level in ["Pre-K", "Grade 1"]:
+    # ถ้าไม่ใช่ G3 ให้โชว์ปุ่มตั้งค่าต่อ
+    if grade_level in ["Pre-K", "Grade 1", "Grade 2"]:
         theme_choice = st.selectbox("🖌️ 4. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
         selected_colors = THEME_COLORS[theme_choice]
         
         st.markdown("---")
-        target_num = st.selectbox("🎯 5. เลือกตัวเลขเป้าหมาย:", list(range(1, 21))) # ขยายถึง 20 เผื่อ G1
+        target_num = st.selectbox("🎯 5. เลือกตัวเลขเป้าหมาย:", list(range(1, 21))) 
         num_q = st.slider("📝 6. จำนวนข้อต่อหน้า:", min_value=2, max_value=8, value=3)
         
         st.markdown("---")
