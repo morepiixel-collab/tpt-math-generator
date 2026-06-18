@@ -122,7 +122,12 @@ class PremiumTpTPDF(FPDF):
         
         self.set_font("ComicNeue", "", 12)
         self.set_text_color(255, 255, 255)
-        self.cell(0, 8, " P R E - K   M A T H", ln=True, align="C")
+        if "120" in self.topic_name or "Addition" in self.topic_name or "Fact" in self.topic_name or "Place Value" in self.topic_name or "Bonds" in self.topic_name or "Greater" in self.topic_name:
+            header_title = " G R A D E   1   M A T H "
+        else:
+            header_title = " P R E - K   M A T H "
+            
+        self.cell(0, 8, header_title, ln=True, align="C")
         
         self.set_font("ComicNeue", "", 24)
         clean_topic = self.topic_name.split(". ", 1)[-1].upper()
@@ -1033,7 +1038,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
 
     # ==========================================
-    # 🥉 โซน GRADE 1 (ป.1)
+    # 🥉 โซน GRADE 1 (ป.1) ฉบับสมบูรณ์
     # ==========================================
     elif "addition within 20" in clean_sub: 
         pdf.cell(0, 10, f" Directions: Solve the math problems. Write the answers in the boxes.", ln=True)
@@ -1048,12 +1053,12 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             b = random.randint(1, 20 - a) # ผลลัพธ์ไม่เกิน 20
             ans = a + b
             
-            start_x = center_x - 50
-            draw_rounded_box(pdf, start_x, y+5, 100, 35, r=5, bg_color=(255,255,255), text=f"{a}  +  {b}  =  _____", font_size=28)
+            start_x = center_x - 60
+            draw_rounded_box(pdf, start_x, y+5, 120, 35, r=5, bg_color=(255,255,255), text=f"{a}   +   {b}   =   _____", font_size=28)
             
             if pdf.is_key:
                 pdf.set_text_color(*theme_colors["secondary"])
-                pdf.text(start_x + 75, y + 27, str(ans))
+                pdf.text(start_x + 95, y + 27, str(ans))
                 
             pdf.ln(55)
 
@@ -1084,6 +1089,87 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_solid_circle(pdf, center_x + 18, y + 38, 32, val_p2, font_size=24)  
             
             pdf.ln(85)
+
+    elif "fact families" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Use the 3 numbers to write two addition and two subtraction facts.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 200: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 80, r=8, bg_color=theme_colors["box"])
+            
+            # สร้างตัวเลข
+            p1 = random.randint(2, 9)
+            p2 = random.randint(2, 9)
+            if p1 == p2: p2 += 1
+            total = p1 + p2
+            
+            # กล่องใส่ตัวเลข 3 ตัวฝั่งซ้าย (เสมือนหลังคาบ้าน)
+            draw_rounded_box(pdf, 25, y+10, 60, 60, r=5, bg_color=(255,255,255))
+            pdf.set_font("ComicNeue", "", 24)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(35, y + 40, f"{p1} , {p2} , {total}")
+            
+            # กล่องสมการ 4 บรรทัดฝั่งขวา
+            start_x = 95
+            h_box = 12
+            draw_rounded_box(pdf, start_x, y+10, 80, h_box, r=2, bg_color=(255,255,255), text="_____ + _____ = _____", font_size=16)
+            draw_rounded_box(pdf, start_x, y+25, 80, h_box, r=2, bg_color=(255,255,255), text="_____ + _____ = _____", font_size=16)
+            draw_rounded_box(pdf, start_x, y+40, 80, h_box, r=2, bg_color=(255,255,255), text="_____ - _____ = _____", font_size=16)
+            draw_rounded_box(pdf, start_x, y+55, 80, h_box, r=2, bg_color=(255,255,255), text="_____ - _____ = _____", font_size=16)
+            
+            # โชว์เฉลย
+            if pdf.is_key:
+                pdf.set_font("ComicNeue", "", 16)
+                pdf.set_text_color(*theme_colors["secondary"])
+                pdf.text(start_x+5, y+18, f"{p1}         {p2}         {total}")
+                pdf.text(start_x+5, y+33, f"{p2}         {p1}         {total}")
+                pdf.text(start_x+5, y+48, f"{total}         {p1}         {p2}")
+                pdf.text(start_x+5, y+63, f"{total}         {p2}         {p1}")
+                
+            pdf.ln(90)
+
+    elif "place value" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Count the Tens and Ones. Write the number.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 55, r=8, bg_color=theme_colors["box"])
+            
+            tens = random.randint(1, 9)
+            ones = random.randint(1, 9)
+            ans = (tens * 10) + ones
+            
+            # กล่องซ้ายใส่ Tens / Ones
+            draw_rounded_box(pdf, 25, y+5, 100, 45, r=5, bg_color=(255,255,255), text=f"~ {tens} Tens & {ones} Ones ~", font_size=14)
+            
+            # กล่องขวาคำตอบ
+            ans_text = str(ans) if pdf.is_key else ""
+            draw_rounded_box(pdf, 140, y+5, 45, 45, r=5, bg_color=(255,255,255), text=ans_text, font_size=32)
+            pdf.ln(65)
+
+    elif "counting to 120" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Fill in the missing numbers.", ln=True)
+        pdf.ln(5)
+        for i in range(num_q):
+            if pdf.get_y() > 220: pdf.add_page()
+            y = pdf.get_y()
+            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            
+            start_num = random.randint(50, 110)
+            seq = [start_num + j for j in range(5)]
+            hide_idx = random.sample([1, 2, 3], 2) # ซ่อน 2 ตำแหน่ง
+            
+            start_x = center_x - (172 / 2)
+            for j in range(5):
+                x = start_x + (j * 36)
+                if j in hide_idx:
+                    val = str(seq[j]) if pdf.is_key else "?"
+                    draw_circle_placeholder(pdf, x, y+8.5, 28, val)
+                else:
+                    draw_solid_circle(pdf, x, y+8.5, 28, str(seq[j]), font_size=20)
+            pdf.ln(55)
 
     elif "greater than" in clean_sub:
         pdf.cell(0, 10, f" Directions: Compare the numbers. Write > , < , or = in the circle.", ln=True)
