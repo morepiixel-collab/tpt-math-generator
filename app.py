@@ -1315,13 +1315,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     # ==========================================
     elif "hundreds, tens, ones" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the Hundreds, Tens, and Ones. Write the number.", ln=True)
-        pdf.ln(2) # ลดการเว้นบรรทัดตรงนี้ลงเพื่อดึงพื้นที่ด้านบนกลับมา
+        pdf.ln(2) 
         
         y_start = pdf.get_y()
-        box_h = 35   # บีบความสูงของกล่องลงอีก เพื่อให้พ้นขอบล่างชัวร์ๆ
-        gap_y = 8    # ลดระยะห่างระหว่างแต่ละข้อ
+        box_h = 28   # บีบความสูงกล่องลงอีกเพื่อให้ยัด 5 ข้อได้พอดี
+        gap_y = 6    # ลดระยะห่างระหว่างแต่ละข้อ
         
-        for i in range(4): # 4 ข้อต่อหน้า
+        for i in range(5): # เปลี่ยนจำนวนข้อเป็น 5 ข้อ
             y = y_start + i * (box_h + gap_y)
             
             # วาดกรอบสีพื้นหลัง (กว้างเต็มหน้ากระดาษ)
@@ -1334,15 +1334,15 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             ans = (h * 100) + (t * 10) + o
             
             # กล่องใหญ่ด้านซ้ายสำหรับใส่ภาพบล็อก (Base Ten Blocks)
-            # ปรับตำแหน่ง Y ของกล่องขาวด้านในให้สมดุลกับความสูงใหม่
-            draw_rounded_box(pdf, 22, y + 5, 115, 25, r=5, bg_color=(255,255,255), text=f"~ Canva: {h} Hundreds, {t} Tens, {o} Ones ~", font_size=12)
+            # ปรับตำแหน่ง Y และความสูงกล่องขาว (20) ให้สมดุลกับความสูงใหม่
+            draw_rounded_box(pdf, 22, y + 4, 115, 20, r=4, bg_color=(255,255,255), text=f"~ Canva: {h} Hundreds, {t} Tens, {o} Ones ~", font_size=11)
             
             # กล่องเล็กด้านขวาสำหรับเขียนคำตอบ
             ans_text = str(ans) if pdf.is_key else ""
-            draw_rounded_box(pdf, 145, y + 5, 45, 25, r=5, bg_color=(255,255,255), text=ans_text, font_size=24) # ลดฟอนต์ลงนิดนึงให้พอดีกล่อง
+            draw_rounded_box(pdf, 145, y + 4, 45, 20, r=4, bg_color=(255,255,255), text=ans_text, font_size=20) 
             
-        # เลื่อนเคอร์เซอร์ Y ให้พ้นกล่อง
-        pdf.set_y(y_start + 4 * (box_h + gap_y))
+        # เลื่อนเคอร์เซอร์ Y ให้พ้นกล่องทั้งหมด 5 ข้อ
+        pdf.set_y(y_start + 5 * (box_h + gap_y))
 
     elif "2-digit" in clean_sub:
         pdf.cell(0, 10, f" Directions: Solve the addition and subtraction problems.", ln=True)
