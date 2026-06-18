@@ -1104,30 +1104,48 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "number bonds" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing number to complete the number bonds.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 200: pdf.add_page()
-            y = pdf.get_y()
-            draw_rounded_box(pdf, 15, y, 185, 75, r=8, bg_color=theme_colors["box"])
+        
+        y_start = pdf.get_y()
+        box_w = 85   # ความกว้างกล่อง
+        box_h = 70   # ความสูงกล่อง
+        gap_x = 15   # ระยะห่างซ้าย-ขวา
+        gap_y = 10   # ระยะห่างบน-ล่าง
+        
+        for i in range(6): # ล็อกไว้ที่ 6 ข้อ (3 แถว x 2 คอลัมน์)
+            row = i // 2
+            col = i % 2
             
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            # วาดกรอบสีพื้นหลัง
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            box_center_x = x + (box_w / 2) # คำนวณจุดกึ่งกลางของกล่องนี้
+            
+            # สุ่มตัวเลข
             total = random.randint(5, 20)
             part1 = random.randint(1, total - 1)
             part2 = total - part1
             
+            # สุ่มซ่อนตัวเลข
             hide_idx = random.choice([0, 1, 2])
             val_total = str(total) if (hide_idx != 0 or pdf.is_key) else "?"
             val_p1 = str(part1) if (hide_idx != 1 or pdf.is_key) else "?"
             val_p2 = str(part2) if (hide_idx != 2 or pdf.is_key) else "?"
             
-            pdf.set_line_width(2.0)
+            # วาดเส้นเชื่อม (ปรับให้พอดีกับกล่อง)
+            pdf.set_line_width(1.5)
             pdf.set_draw_color(*theme_colors["primary"])
-            pdf.line(center_x, y + 25, center_x - 30, y + 45) 
-            pdf.line(center_x, y + 25, center_x + 30, y + 45) 
+            pdf.line(box_center_x, y + 25, box_center_x - 22, y + 42) 
+            pdf.line(box_center_x, y + 25, box_center_x + 22, y + 42) 
             
-            draw_solid_circle(pdf, center_x - 20, y + 5, 40, val_total, font_size=28) 
-            draw_solid_circle(pdf, center_x - 50, y + 38, 32, val_p1, font_size=24)  
-            draw_solid_circle(pdf, center_x + 18, y + 38, 32, val_p2, font_size=24)  
+            # วาดวงกลม 3 วง (ย่อขนาดลงนิดหน่อยเพื่อให้สมส่วน)
+            draw_solid_circle(pdf, box_center_x - 16, y + 6, 32, val_total, font_size=24) # วงกลมบน (ผลรวม)
+            draw_solid_circle(pdf, box_center_x - 38, y + 36, 26, val_p1, font_size=20)  # วงกลมซ้ายล่าง
+            draw_solid_circle(pdf, box_center_x + 12, y + 36, 26, val_p2, font_size=20)  # วงกลมขวาล่าง
             
-            pdf.ln(85)
+        # เลื่อนตำแหน่ง Y ให้พ้นกล่องชุดนี้
+        pdf.set_y(y_start + 3 * (box_h + gap_y))
 
     elif "fact families" in clean_sub:
         pdf.cell(0, 10, f" Directions: Use the 3 numbers to write two addition and two subtraction facts.", ln=True)
