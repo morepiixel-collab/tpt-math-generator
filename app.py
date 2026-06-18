@@ -1558,7 +1558,7 @@ with st.sidebar:
     grade_level = st.selectbox("📚 1. เลือกระดับชั้น (Grade Level):", [
         "Pre-K", 
         "Grade 1", 
-        "Grade 2 , 
+        "Grade 2", 
         "Grade 3 (Coming Soon)"
     ])
     
