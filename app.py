@@ -1107,9 +1107,9 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         
         y_start = pdf.get_y()
         box_w = 85   # ความกว้างกล่อง
-        box_h = 70   # ความสูงกล่อง
+        box_h = 60   # ปรับความสูงกล่องลดลงจาก 70 เป็น 60 จะได้ไม่ล้นหน้า
         gap_x = 15   # ระยะห่างซ้าย-ขวา
-        gap_y = 10   # ระยะห่างบน-ล่าง
+        gap_y = 12   # ระยะห่างบน-ล่าง
         
         for i in range(6): # ล็อกไว้ที่ 6 ข้อ (3 แถว x 2 คอลัมน์)
             row = i // 2
@@ -1133,16 +1133,16 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             val_p1 = str(part1) if (hide_idx != 1 or pdf.is_key) else "?"
             val_p2 = str(part2) if (hide_idx != 2 or pdf.is_key) else "?"
             
-            # วาดเส้นเชื่อม (ปรับให้พอดีกับกล่อง)
-            pdf.set_line_width(1.5)
+            # วาดเส้นเชื่อม (ปรับความยาวและจุดเชื่อมให้พอดีกับกล่องใหม่)
+            pdf.set_line_width(1.2)
             pdf.set_draw_color(*theme_colors["primary"])
-            pdf.line(box_center_x, y + 25, box_center_x - 22, y + 42) 
-            pdf.line(box_center_x, y + 25, box_center_x + 22, y + 42) 
+            pdf.line(box_center_x, y + 20, box_center_x - 18, y + 36) 
+            pdf.line(box_center_x, y + 20, box_center_x + 18, y + 36) 
             
-            # วาดวงกลม 3 วง (ย่อขนาดลงนิดหน่อยเพื่อให้สมส่วน)
-            draw_solid_circle(pdf, box_center_x - 16, y + 6, 32, val_total, font_size=24) # วงกลมบน (ผลรวม)
-            draw_solid_circle(pdf, box_center_x - 38, y + 36, 26, val_p1, font_size=20)  # วงกลมซ้ายล่าง
-            draw_solid_circle(pdf, box_center_x + 12, y + 36, 26, val_p2, font_size=20)  # วงกลมขวาล่าง
+            # วาดวงกลม 3 วง (ย่อขนาดและปรับพิกัดให้สมมาตร)
+            draw_solid_circle(pdf, box_center_x - 14, y + 5, 28, val_total, font_size=22) # วงกลมบน (ผลรวม)
+            draw_solid_circle(pdf, box_center_x - 30, y + 31, 24, val_p1, font_size=18)  # วงกลมซ้ายล่าง
+            draw_solid_circle(pdf, box_center_x + 6, y + 31, 24, val_p2, font_size=18)   # วงกลมขวาล่าง
             
         # เลื่อนตำแหน่ง Y ให้พ้นกล่องชุดนี้
         pdf.set_y(y_start + 3 * (box_h + gap_y))
