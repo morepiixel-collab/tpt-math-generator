@@ -1463,47 +1463,63 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
     elif "expanded form" in clean_sub:
         pdf.cell(0, 10, f" Directions: Write each number in expanded form.", ln=True)
-        pdf.ln(5)
+        pdf.ln(2) # ลดระยะห่างบรรทัดลงเพื่อเผื่อที่ให้ 4 แถว
         
         y_start = pdf.get_y()
         box_w = 85
-        box_h = 45
+        box_h = 36   # ปรับความสูงกล่องเพื่อให้ใส่ได้ 4 แถวพอดี
         gap_x = 15
-        gap_y = 12
+        gap_y = 8    # ระยะห่างระหว่างแถวบน-ล่าง
         
-        for i in range(6):
+        for i in range(8): # เปลี่ยนเป็น 8 ข้อ
             row = i // 2
             col = i % 2
             x = 15 + col * (box_w + gap_x)
             y = y_start + row * (box_h + gap_y)
             
+            # วาดกรอบสีพื้นหลัง
             draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
             
+            # สุ่มเลขหลักร้อย สิบ หน่วย
             h = random.randint(1, 9) * 100
             t = random.randint(1, 9) * 10
             o = random.randint(1, 9)
             val = h + t + o
             
-            draw_rounded_box(pdf, x + 5, y + 10, 25, 25, r=4, bg_color=(255,255,255), text=str(val), font_size=18)
+            # 1. กล่องตัวเลขโจทย์ (ด้านซ้ายสุด)
+            draw_rounded_box(pdf, x + 2, y + 10, 18, 16, r=3, bg_color=(255,255,255), text=str(val), font_size=14)
             
-            pdf.set_font("ComicNeue", "", 18)
+            # เครื่องหมาย =
+            pdf.set_font("ComicNeue", "", 16)
             pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(x + 32, y + 27, "=")
+            pdf.text(x + 22, y + 21, "=")
             
-            if pdf.is_key:
-                ans_str = f"{h} + {t} + {o}"
-                pdf.set_font("ComicNeue", "", 14)
-                pdf.set_text_color(*theme_colors["secondary"])
-                pdf.text(x + 40, y + 27, ans_str)
-            else:
-                pdf.set_line_width(0.5)
-                pdf.line(x + 40, y + 28, x + 50, y + 28)
-                pdf.text(x + 52, y + 27, "+")
-                pdf.line(x + 58, y + 28, x + 68, y + 28)
-                pdf.text(x + 70, y + 27, "+")
-                pdf.line(x + 76, y + 28, x + 82, y + 28)
+            # เตรียมข้อความเฉลย (ถ้าเป็นโหมดเฉลยจะโชว์เลข ถ้าไม่ใช่จะว่างไว้)
+            ans_h = str(h) if pdf.is_key else ""
+            ans_t = str(t) if pdf.is_key else ""
+            ans_o = str(o) if pdf.is_key else ""
+            
+            # 2. กล่องหลักร้อย
+            draw_rounded_box(pdf, x + 26, y + 10, 15, 16, r=3, bg_color=(255,255,255), text=ans_h, font_size=12)
+            
+            # เครื่องหมาย +
+            pdf.set_font("ComicNeue", "", 16)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(x + 43, y + 21, "+")
+            
+            # 3. กล่องหลักสิบ
+            draw_rounded_box(pdf, x + 48, y + 10, 14, 16, r=3, bg_color=(255,255,255), text=ans_t, font_size=12)
+            
+            # เครื่องหมาย +
+            pdf.set_font("ComicNeue", "", 16)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(x + 64, y + 21, "+")
+            
+            # 4. กล่องหลักหน่วย
+            draw_rounded_box(pdf, x + 69, y + 10, 13, 16, r=3, bg_color=(255,255,255), text=ans_o, font_size=12)
                 
-        pdf.set_y(y_start + 3 * (box_h + gap_y))
+        # เลื่อนตำแหน่ง Y เผื่อเนื้อหาด้านล่าง
+        pdf.set_y(y_start + 4 * (box_h + gap_y))
 
     elif "skip counting" in clean_sub:
         pdf.cell(0, 10, f" Directions: Skip count to fill in the missing numbers.", ln=True)
