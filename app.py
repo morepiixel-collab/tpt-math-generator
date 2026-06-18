@@ -93,7 +93,7 @@ GRADE_3_CURRICULUM = {
         "3. Fractions",
         "4. Measurement",
         "5. Time",
-        "6. Money",
+        "6. Division",  # <--- เปลี่ยนจาก Money เป็น Division
         "7. Math Logic Puzzles",
         "8. Number Patterns"
     ]
@@ -1782,18 +1782,73 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             draw_rounded_box(pdf, x + 45, y + 6, 35, 20, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
         pdf.set_y(y_start + 5 * (box_h + gap_y))
 
-    elif "money" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Count the coins and write the total amount.", ln=True)
+    elif "division" in clean_sub:
+        pdf.cell(0, 10, f" Directions: Find the quotient.", ln=True)
         pdf.ln(2)
         y_start = pdf.get_y()
-        box_h, gap_y = 32, 6
-        for i in range(5):
-            y = y_start + i * (box_h + gap_y)
-            draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
-            cents = random.randint(15, 99)
-            draw_rounded_box(pdf, 20, y + 5, 120, 22, r=4, bg_color=(255,255,255), text=f"~ Canva: Coins totaling {cents}¢ ~", font_size=12)
-            ans_text = f"{cents}¢" if pdf.is_key else "¢"
-            draw_rounded_box(pdf, 145, y + 5, 35, 22, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
+        box_w, box_h = 85, 32
+        gap_x, gap_y = 15, 8
+        
+        for i in range(10): # 10 ข้อ (5 แถว x 2 คอลัมน์)
+            row = i // 2
+            col = i % 2
+            x = 15 + col * (box_w + gap_x)
+            y = y_start + row * (box_h + gap_y)
+            
+            # วาดกรอบสีพื้นหลัง
+            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            
+            # สุ่มโจทย์การหารให้ลงตัว (สำหรับ ป.3)
+            ans = random.randint(2, 12)
+            divisor = random.randint(2, 12)
+            dividend = ans * divisor # ตัวตั้ง
+            
+            try:
+                pdf.set_font("ComicNeue", "", 24) # ขยาย font เครื่องหมายให้ชัดขึ้น
+            except:
+                pdf.set_font("Arial", "", 24)
+                
+            w_div = pdf.get_string_width(chr(247)) # เครื่องหมายหาร (÷)
+            w_eq = pdf.get_string_width("=")
+            
+            # กำหนดขนาดกล่องตัวเลข
+            w_num1 = 20 # ตัวตั้งอาจจะมี 2-3 หลัก เลยให้กว้างหน่อย
+            w_num2 = 16 
+            w_ans = 22  # ช่องคำตอบ
+            spacing = 3 
+            
+            # คำนวณกึ่งกลางเป๊ะๆ
+            total_content_w = w_num1 + spacing + w_div + spacing + w_num2 + spacing + w_eq + spacing + w_ans
+            start_x = x + (box_w - total_content_w) / 2
+            inner_h = 20
+            start_y = y + (box_h - inner_h) / 2
+            
+            # ปรับพิกัด Y ของเครื่องหมายให้ตรงกับ Base line ของตัวเลข
+            sym_y = start_y + 13.5
+            
+            curr_x = start_x
+            
+            # กล่องเลขที่ 1 (ตัวตั้ง)
+            draw_rounded_box(pdf, curr_x, start_y, w_num1, inner_h, r=4, bg_color=(255,255,255), text=str(dividend), font_size=18)
+            curr_x += w_num1 + spacing
+            
+            # เครื่องหมาย ÷
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(curr_x, sym_y, chr(247)) # พิมพ์เครื่องหมาย ÷
+            curr_x += w_div + spacing
+            
+            # กล่องเลขที่ 2 (ตัวหาร)
+            draw_rounded_box(pdf, curr_x, start_y, w_num2, inner_h, r=4, bg_color=(255,255,255), text=str(divisor), font_size=18)
+            curr_x += w_num2 + spacing
+            
+            # เครื่องหมาย =
+            pdf.text(curr_x, sym_y, "=")
+            curr_x += w_eq + spacing
+            
+            # กล่องคำตอบ
+            ans_text = str(ans) if pdf.is_key else ""
+            draw_rounded_box(pdf, curr_x, start_y, w_ans, inner_h, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
+            
         pdf.set_y(y_start + 5 * (box_h + gap_y))
 
     elif "math logic puzzles" in clean_sub:
