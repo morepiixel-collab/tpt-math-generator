@@ -1308,34 +1308,34 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     # 🥈 โซน GRADE 2 (ป.2)
     # ==========================================
     elif "hundreds, tens, ones" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Write the number that matches the blocks.", ln=True)
-        pdf.ln(5)
+        pdf.cell(0, 10, f" Directions: Count the Hundreds, Tens, and Ones. Write the number.", ln=True)
+        pdf.ln(5) # ลดระยะห่างบรรทัดลงนิดหน่อย
         
         y_start = pdf.get_y()
-        box_w = 85
-        box_h = 45
-        gap_x = 15
-        gap_y = 12
+        box_h = 42   # ความสูงกล่องพอดีๆ สำหรับ 4 ข้อ
+        gap_y = 10   # ระยะห่างระหว่างข้อ
         
-        for i in range(6):
-            row = i // 2
-            col = i % 2
-            x = 15 + col * (box_w + gap_x)
-            y = y_start + row * (box_h + gap_y)
+        for i in range(4): # ล็อกจำนวนข้อไว้ที่ 4 ข้อต่อหน้า
+            y = y_start + i * (box_h + gap_y)
             
-            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            # วาดกรอบสีพื้นหลัง (กว้างเต็มหน้ากระดาษ)
+            draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
             
+            # สุ่มตัวเลขหลักร้อย สิบ หน่วย
             h = random.randint(1, 9)
             t = random.randint(1, 9)
             o = random.randint(1, 9)
             ans = (h * 100) + (t * 10) + o
             
-            draw_rounded_box(pdf, x + 5, y + 5, 55, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {h}H, {t}T, {o}O ~", font_size=9)
+            # กล่องใหญ่ด้านซ้ายสำหรับใส่ภาพบล็อก (Base Ten Blocks)
+            draw_rounded_box(pdf, 22, y + 6, 115, 30, r=5, bg_color=(255,255,255), text=f"~ Canva: {h} Hundreds, {t} Tens, {o} Ones ~", font_size=12)
             
+            # กล่องเล็กด้านขวาสำหรับเขียนคำตอบ
             ans_text = str(ans) if pdf.is_key else ""
-            draw_rounded_box(pdf, x + 65, y + 10, 15, 25, r=3, bg_color=(255,255,255), text=ans_text, font_size=16)
+            draw_rounded_box(pdf, 145, y + 6, 45, 30, r=5, bg_color=(255,255,255), text=ans_text, font_size=28)
             
-        pdf.set_y(y_start + 3 * (box_h + gap_y))
+        # เลื่อนเคอร์เซอร์ Y ให้พ้นกล่อง
+        pdf.set_y(y_start + 4 * (box_h + gap_y))
 
     elif "2-digit" in clean_sub:
         pdf.cell(0, 10, f" Directions: Solve the addition and subtraction problems.", ln=True)
