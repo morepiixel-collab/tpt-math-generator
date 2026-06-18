@@ -1202,7 +1202,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                 
             pdf.ln(90)
 
-    elif "place value" in clean_sub:
+    elif "place value basics" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count the Tens and Ones. Write the number.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
