@@ -1393,15 +1393,15 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
     elif "even or odd" in clean_sub:
         pdf.cell(0, 10, f" Directions: Look at the number. Color 'Even' or 'Odd'.", ln=True)
-        pdf.ln(1) # ลดระยะเว้นบรรทัดเพื่อให้มีพื้นที่พอสำหรับ 5 แถว
+        pdf.ln(2) # เพิ่มระยะเว้นบรรทัดกลับมานิดหน่อยให้สวยงาม
         
         y_start = pdf.get_y()
         box_w = 85
-        box_h = 28   # บีบความสูงกล่องลงเพื่อให้ 5 แถว พอดีหน้ากระดาษ
+        box_h = 32   # ขยายความสูงกล่องให้เต็มตาขึ้น (จากเดิม 28)
         gap_x = 15
-        gap_y = 7    # ลดระยะห่างระหว่างแถวลง
+        gap_y = 8    # เพิ่มระยะห่างระหว่างแถวให้กระจายเต็มหน้ากระดาษพอดี
         
-        for i in range(10): # เปลี่ยนเป็น 10 ข้อ (5 แถว x 2 คอลัมน์)
+        for i in range(10): # 10 ข้อ (5 แถว x 2 คอลัมน์)
             row = i // 2
             col = i % 2
             x = 15 + col * (box_w + gap_x)
@@ -1414,12 +1414,12 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             num = random.randint(10, 99)
             is_even = (num % 2 == 0)
             
-            # กล่องสีขาวสำหรับใส่ตัวเลข (ย่อขนาดและฟอนต์ลงนิดหน่อยให้สมดุล)
-            draw_rounded_box(pdf, x + 4, y + 4, 22, 20, r=4, bg_color=(255,255,255), text=str(num), font_size=20)
+            # กล่องสีขาวสำหรับใส่ตัวเลข (ขยายขนาดให้ใหญ่ขึ้น)
+            draw_rounded_box(pdf, x + 5, y + 4, 24, 24, r=4, bg_color=(255,255,255), text=str(num), font_size=22)
             
-            # วงกลมคำว่า Even / Odd (ย่อขนาดวงกลมเหลือ 16 และจัดให้อยู่กึ่งกลางแนวตั้งของกล่อง)
-            draw_solid_circle(pdf, x + 35, y + 6, 16, "Even", font_size=10, is_path=(pdf.is_key and is_even))
-            draw_solid_circle(pdf, x + 58, y + 6, 16, "Odd", font_size=10, is_path=(pdf.is_key and not is_even))
+            # วงกลมคำว่า Even / Odd (ขยายขนาดกลับมาเป็น 18 และปรับตำแหน่งให้อยู่กึ่งกลางพอดี)
+            draw_solid_circle(pdf, x + 38, y + 7, 18, "Even", font_size=11, is_path=(pdf.is_key and is_even))
+            draw_solid_circle(pdf, x + 62, y + 7, 18, "Odd", font_size=11, is_path=(pdf.is_key and not is_even))
             
         # เลื่อนตำแหน่ง Y เผื่อเนื้อหาด้านล่าง
         pdf.set_y(y_start + 5 * (box_h + gap_y))
