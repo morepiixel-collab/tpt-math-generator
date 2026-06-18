@@ -1643,33 +1643,44 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.cell(0, 10, f" Directions: Find the product.", ln=True)
         pdf.ln(2)
         y_start = pdf.get_y()
-        box_w, box_h = 85, 32
-        gap_x, gap_y = 15, 8
         
-        for i in range(10): # 10 ข้อ (5 แถว x 2 คอลัมน์)
+        # จัด Layout ให้เป็น Grid: 5 แถว, แถวละ 2 ข้อ
+        for i in range(10):
             row = i // 2
             col = i % 2
-            x = 15 + col * (box_w + gap_x)
-            y = y_start + row * (box_h + gap_y)
             
-            # วาดกรอบพื้นหลัง
-            draw_rounded_box(pdf, x, y, box_w, box_h, r=8, bg_color=theme_colors["box"])
+            # x_base คือจุดเริ่มต้นแต่ละคอลัมน์
+            x_base = 20 + (col * 95)
+            # y_base คือจุดเริ่มต้นแต่ละแถว
+            y_base = y_start + (row * 35)
+            
+            # วาดกล่องพื้นหลัง
+            draw_rounded_box(pdf, x_base, y_base, 85, 30, r=6, bg_color=theme_colors["box"])
             
             n1, n2 = random.randint(2, 12), random.randint(2, 12)
             ans = n1 * n2
             
-            # จัดตำแหน่งตัวเลขและเครื่องหมายให้สมดุลภายในกรอบ
-            # ระยะขอบซ้ายเริ่มต้นที่ x+5
-            draw_rounded_box(pdf, x + 5, y + 6, 18, 20, r=4, bg_color=(255,255,255), text=str(n1), font_size=18)
-            pdf.text(x + 28, y + 21, "x")
-            draw_rounded_box(pdf, x + 36, y + 6, 18, 20, r=4, bg_color=(255,255,255), text=str(n2), font_size=18)
-            pdf.text(x + 58, y + 21, "=")
+            # --- วางตำแหน่งแบบ Fixed ตำแหน่ง ---
+            # ใช้ pdf.text เพื่อควบคุมตำแหน่งให้เป๊ะที่สุด
+            pdf.set_font("Arial", "", 16)
             
-            # ช่องคำตอบ: ปรับให้ขยายพอดีและอยู่ตรงกลางความสูงพอดี
+            # 1. ตัวเลขที่ 1
+            pdf.text(x_base + 10, y_base + 20, str(n1))
+            
+            # 2. เครื่องหมาย X (ตำแหน่ง X: x_base + 25)
+            pdf.text(x_base + 25, y_base + 20, "x")
+            
+            # 3. ตัวเลขที่ 2
+            pdf.text(x_base + 40, y_base + 20, str(n2))
+            
+            # 4. เครื่องหมาย =
+            pdf.text(x_base + 55, y_base + 20, "=")
+            
+            # 5. ช่องคำตอบ (ขยายความกว้างเป็น 20 เพื่อให้เลข 3 หลักลงได้พอดี)
             ans_text = str(ans) if pdf.is_key else ""
-            draw_rounded_box(pdf, x + 66, y + 6, 16, 20, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
+            draw_rounded_box(pdf, x_base + 65, y_base + 5, 20, 20, r=4, bg_color=(255, 255, 255), text=ans_text, font_size=16)
             
-        pdf.set_y(y_start + 5 * (box_h + gap_y))
+        pdf.set_y(y_start + 5 * 35)
 
     elif "fractions" in clean_sub:
         pdf.cell(0, 10, f" Directions: Write the fraction for the shaded parts.", ln=True)
