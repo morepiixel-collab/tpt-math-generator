@@ -1035,7 +1035,7 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     # ==========================================
     # 🥉 โซน GRADE 1 (ป.1)
     # ==========================================
-    elif "addition" in clean_sub: 
+    elif "addition within 20" in clean_sub: 
         pdf.cell(0, 10, f" Directions: Solve the math problems. Write the answers in the boxes.", ln=True)
         pdf.ln(5)
         for i in range(num_q):
@@ -1051,7 +1051,6 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             start_x = center_x - 50
             draw_rounded_box(pdf, start_x, y+5, 100, 35, r=5, bg_color=(255,255,255), text=f"{a}  +  {b}  =  _____", font_size=28)
             
-            # หน้าเฉลยโชว์คำตอบ
             if pdf.is_key:
                 pdf.set_text_color(*theme_colors["secondary"])
                 pdf.text(start_x + 75, y + 27, str(ans))
@@ -1066,27 +1065,23 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             y = pdf.get_y()
             draw_rounded_box(pdf, 15, y, 185, 75, r=8, bg_color=theme_colors["box"])
             
-            # สร้างตัวเลขสำหรับ Number Bond
             total = random.randint(5, 20)
             part1 = random.randint(1, total - 1)
             part2 = total - part1
             
-            # สุ่มซ่อนตัวเลข 1 ตำแหน่ง (0=ซ่อนผลรวม, 1=ซ่อนส่วนที่1, 2=ซ่อนส่วนที่2)
             hide_idx = random.choice([0, 1, 2])
             val_total = str(total) if (hide_idx != 0 or pdf.is_key) else "?"
             val_p1 = str(part1) if (hide_idx != 1 or pdf.is_key) else "?"
             val_p2 = str(part2) if (hide_idx != 2 or pdf.is_key) else "?"
             
-            # วาดเส้นเชื่อมวงกลม
             pdf.set_line_width(2.0)
             pdf.set_draw_color(*theme_colors["primary"])
-            pdf.line(center_x, y + 25, center_x - 30, y + 45) # เส้นไปซ้าย
-            pdf.line(center_x, y + 25, center_x + 30, y + 45) # เส้นไปขวา
+            pdf.line(center_x, y + 25, center_x - 30, y + 45) 
+            pdf.line(center_x, y + 25, center_x + 30, y + 45) 
             
-            # วาดวงกลม 3 วง
-            draw_solid_circle(pdf, center_x - 20, y + 5, 40, val_total, font_size=28) # วงกลมใหญ่(บน)
-            draw_solid_circle(pdf, center_x - 50, y + 38, 32, val_p1, font_size=24)  # วงกลมเล็ก(ซ้าย)
-            draw_solid_circle(pdf, center_x + 18, y + 38, 32, val_p2, font_size=24)  # วงกลมเล็ก(ขวา)
+            draw_solid_circle(pdf, center_x - 20, y + 5, 40, val_total, font_size=28) 
+            draw_solid_circle(pdf, center_x - 50, y + 38, 32, val_p1, font_size=24)  
+            draw_solid_circle(pdf, center_x + 18, y + 38, 32, val_p2, font_size=24)  
             
             pdf.ln(85)
 
@@ -1100,23 +1095,20 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             
             n1 = random.randint(10, 99)
             n2 = random.randint(10, 99)
-            if random.random() > 0.85: n2 = n1 # โอกาส 15% ที่เลขจะเท่ากัน
+            if random.random() > 0.85: n2 = n1 
             
             ans = "=" if n1 == n2 else (">" if n1 > n2 else "<")
             show_ans = ans if pdf.is_key else "?"
             
             start_x = center_x - 70
             
-            # กล่องเลขซ้าย
             draw_rounded_box(pdf, start_x, y+5, 45, 35, r=5, bg_color=(255,255,255), text=str(n1), font_size=32)
             
-            # วงกลมใส่เครื่องหมายตรงกลาง
             if pdf.is_key:
                 draw_solid_circle(pdf, start_x + 52.5, y + 5, 35, show_ans, font_size=36)
             else:
                 draw_circle_placeholder(pdf, start_x + 52.5, y + 5, 35, show_ans)
                 
-            # กล่องเลขขวา
             draw_rounded_box(pdf, start_x + 95, y+5, 45, 35, r=5, bg_color=(255,255,255), text=str(n2), font_size=32)
             
             pdf.ln(55)
@@ -1145,22 +1137,41 @@ st.set_page_config(page_title="Pre-K Math Generator", layout="wide")
 st.title("🖍️ Pre-K Math Worksheet Generator")
 
 with st.sidebar:
-    st.header("⚙️ Settings")
-    shop_name = st.text_input("Shop Name:", value="Kindergarten Learning Press")
+    st.header("🎨 ตกแต่งใบงาน (Customize)")
     
-    main_topic = st.selectbox("Category:", list(PRE_K_CURRICULUM.keys()))
-    sub_topic = st.selectbox("Topic:", PRE_K_CURRICULUM[main_topic])
-    
-    target_num = st.number_input("Target Number (For Axis 1 & 2):", min_value=1, max_value=20, value=1)
-    
-    theme_choice = st.selectbox("Color Theme:", list(THEME_COLORS.keys()))
-    selected_colors = THEME_COLORS[theme_choice]
-    
-    num_q = st.slider("Questions per page:", min_value=1, max_value=5, value=3)
-    session_seed = st.number_input("Random Seed:", value=42)
-    
+    shop_name = st.text_input("🏪 ชื่อร้าน (Copyright):", value="Kindergarten Learning Press")
     st.markdown("---")
-    generate_btn = st.button("🚀 Generate Worksheet", use_container_width=True)
+    
+    # เพิ่ม Grade 1 และโชว์ Grade 2, Grade 3 มารอไว้ตามสั่งครับ
+    grade_level = st.selectbox("📚 1. เลือกระดับชั้น (Grade Level):", [
+        "Pre-K", 
+        "Grade 1", 
+        "Grade 2 (Coming Soon)", 
+        "Grade 3 (Coming Soon)"
+    ])
+    
+    # จัดการเมนูย่อยตามระดับชั้นที่เลือก
+    if grade_level == "Pre-K":
+        main_topic = st.selectbox("🎯 2. เลือกแกนหลัก:", list(PRE_K_CURRICULUM.keys()))
+        sub_topic = st.selectbox("📝 3. เลือกกิจกรรม:", PRE_K_CURRICULUM[main_topic])
+    elif grade_level == "Grade 1":
+        main_topic = st.selectbox("🎯 2. เลือกแกนหลัก:", list(GRADE_1_CURRICULUM.keys()))
+        sub_topic = st.selectbox("📝 3. เลือกกิจกรรม:", GRADE_1_CURRICULUM[main_topic])
+        
+    # ถ้าไม่ใช่ G2, G3 ให้โชว์ปุ่มตั้งค่าต่อ
+    if grade_level in ["Pre-K", "Grade 1"]:
+        theme_choice = st.selectbox("🖌️ 4. โทนสี (Color Palette):", list(THEME_COLORS.keys()))
+        selected_colors = THEME_COLORS[theme_choice]
+        
+        st.markdown("---")
+        target_num = st.selectbox("🎯 5. เลือกตัวเลขเป้าหมาย:", list(range(1, 21))) # ขยายถึง 20 เผื่อ G1
+        num_q = st.slider("📝 6. จำนวนข้อต่อหน้า:", min_value=2, max_value=8, value=3)
+        
+        st.markdown("---")
+        generate_btn = st.button("🚀 สร้างโครงร่าง (Generate PDF)", use_container_width=True)
+    else:
+        st.info(f"🚧 ระบบกำลังพัฒนาเนื้อหาสำหรับ {grade_level} ครับ!")
+        generate_btn = False
 
 if generate_btn:
     with st.spinner("Generating PDF..."):
