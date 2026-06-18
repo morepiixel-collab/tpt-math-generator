@@ -1578,11 +1578,11 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     # โซนแกนที่ 3 : GRADE 3 TOPICS (ป.3)
     # ==========================================
     elif "word problems" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Read carefully and solve the word problems.", ln=True)
+        pdf.cell(0, 10, f" Directions: Read carefully, show your work, and solve the word problems.", ln=True)
         pdf.ln(2)
         y_start = pdf.get_y()
-        box_h = 42   # 4 ข้อ ให้กล่องใหญ่หน่อยเพื่อใส่โจทย์ยาวๆ ได้
-        gap_y = 8
+        box_h = 46   # ขยายกล่องให้สูงขึ้นเพื่อเพิ่มพื้นที่ทดเลข
+        gap_y = 6    # ปรับระยะห่างให้ 4 ข้อลงตัวพอดีหน้า ไม่ทะลุกรอบล่าง
         
         problems = [
             ("Sarah has {a} apples. She buys {b} more. How many does she have?", "+"),
@@ -1592,8 +1592,11 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         
         for i in range(4): # 4 ข้อพอดีหน้า
             y = y_start + i * (box_h + gap_y)
+            
+            # วาดกรอบพื้นหลังสีอ่อน
             draw_rounded_box(pdf, 15, y, 185, box_h, r=8, bg_color=theme_colors["box"])
             
+            # สุ่มโจทย์
             prob_template, op = random.choice(problems)
             a = random.randint(10, 50)
             b = random.randint(2, 9) if op == "*" else random.randint(10, 30)
@@ -1602,16 +1605,37 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             ans = a + b if op == "+" else (a - b if op == "-" else a * b)
             question_text = prob_template.format(a=a, b=b)
             
-            pdf.set_y(y + 8)
+            # 1. พิมพ์ข้อความโจทย์ (ด้านบนของกล่อง)
+            pdf.set_y(y + 4)
             pdf.set_x(20)
             try:
-                pdf.set_font("ComicNeue", "", 16)
+                pdf.set_font("ComicNeue", "", 15)
             except:
-                pdf.set_font("Arial", "", 16)
-            pdf.multi_cell(120, 8, f"{i+1}. {question_text}")
+                pdf.set_font("Arial", "", 15)
+            pdf.set_text_color(50, 50, 50)
+            pdf.multi_cell(175, 7, f"{i+1}. {question_text}")
+            
+            # 2. พื้นที่สำหรับ "แสดงวิธีทำ" (Show your work)
+            try:
+                pdf.set_font("ComicNeue", "", 11)
+            except:
+                pdf.set_font("Arial", "", 11)
+            pdf.set_text_color(120, 120, 120)
+            pdf.text(20, y + 21, "Show your work:")
+            
+            # วาดกล่องสีขาวกว้างๆ สำหรับให้เด็กทดเลข
+            draw_rounded_box(pdf, 20, y + 23, 115, 19, r=3, bg_color=(255, 255, 255))
+            
+            # 3. พื้นที่สำหรับ "เขียนคำตอบ" (Answer)
+            try:
+                pdf.set_font("ComicNeue", "", 12)
+            except:
+                pdf.set_font("Arial", "", 12)
+            pdf.set_text_color(*theme_colors["primary"])
+            pdf.text(145, y + 21, "Answer:")
             
             ans_text = str(ans) if pdf.is_key else ""
-            draw_rounded_box(pdf, 150, y + 8, 40, 25, r=4, bg_color=(255,255,255), text=ans_text, font_size=20)
+            draw_rounded_box(pdf, 145, y + 23, 48, 19, r=4, bg_color=(255, 255, 255), text=ans_text, font_size=20)
             
         pdf.set_y(y_start + 4 * (box_h + gap_y))
 
