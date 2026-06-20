@@ -2008,7 +2008,7 @@ st.title("🖍️ Math Worksheet Generator")
 with st.sidebar:
     st.header("🎨 ตกแต่งใบงาน (Customize)")
     
-    shop_name = st.text_input("🏪 ชื่อร้าน (Copyright):", value="Kindergarten Learning Press")
+    shop_name = st.text_input("🏪 ชื่อร้าน (Copyright):", value="Math Sprout")
     st.markdown("---")
     
     # 1. เอา (Coming Soon) ออก ให้เป็น "Grade 3" เฉยๆ
