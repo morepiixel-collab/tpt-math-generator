@@ -100,8 +100,8 @@ GRADE_3_CURRICULUM = {
 }
 
 THEME_COLORS = {
+    "Math Sprout (ฟ้า-เขียวอ่อน)": {"primary": (74, 164, 230), "secondary": (144, 210, 110), "box": (242, 252, 245)},
     "Sweet Pink (ชมพูหวานแหวว)": {"primary": (244, 143, 177), "secondary": (129, 212, 250), "box": (255, 240, 245)},
-    "Cotton Candy (ฟ้า-ชมพู)": {"primary": (118, 165, 234), "secondary": (244, 164, 185), "box": (248, 250, 255)},
     "Minty Fresh (เขียวมิ้นต์)": {"primary": (104, 195, 163), "secondary": (243, 156, 18), "box": (245, 255, 250)},
     "Lavender Dream (ม่วงอ่อน)": {"primary": (155, 89, 182), "secondary": (26, 188, 156), "box": (252, 248, 255)},
     "Sunshine (เหลือง-ส้ม)": {"primary": (243, 156, 18), "secondary": (231, 76, 60), "box": (255, 253, 240)}
