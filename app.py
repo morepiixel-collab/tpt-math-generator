@@ -271,12 +271,44 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     # ==========================================
     # แก้ไขจุดที่ 2: เปลี่ยนคีย์เวิร์ดให้เจาะจง ป้องกันการชนกับแกนที่ 3
     if "find the number" in clean_sub:
-        pdf.cell(0, 10, f" Directions: Find and color the number {target_num} in the picture below.", ln=True)
-        pdf.ln(5)
-        pdf.set_font("ComicNeue", "", 20)
-        pdf.set_text_color(*theme_colors["primary"])
-        pdf.cell(0, 10, f"Target: {target_num}", ln=True, align="C")
-        draw_rounded_box(pdf, 15, 85, 185, 160, r=8, bg_color=theme_colors["box"], text=f"~ Canva: Add a large scene. Scatter number {target_num} everywhere! ~", font_size=14)
+
+    # Directions
+    pdf.set_font("ComicNeue", "", 15)
+    pdf.set_text_color(70, 70, 70)
+    pdf.cell(
+        0,
+        10,
+        f"Directions: Find and color the number {target_num} in the picture below.",
+        ln=True
+    )
+
+    pdf.ln(4)
+
+    # Target
+    pdf.set_font("ComicNeue", "", 24)
+    pdf.set_text_color(*theme_colors["primary"])
+    pdf.cell(
+        0,
+        10,
+        f"Target: {target_num}",
+        ln=True,
+        align="C"
+    )
+
+    pdf.ln(2)
+
+    # Activity Area
+    draw_rounded_box(
+        pdf,
+        15,
+        82,
+        185,
+        163,
+        r=8,
+        bg_color=theme_colors["box"],
+        text=f"~ Canva: Create a cute full-page scene. Scatter many numbers with number {target_num} appearing frequently as the target. Mix with other numbers and leave comfortable spacing for coloring. ~",
+        font_size=13
+    )
 
     elif "trace the numbers" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the pictures. Then trace and write the number {target_num}.", ln=True)
