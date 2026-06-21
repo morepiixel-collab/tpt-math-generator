@@ -962,14 +962,22 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         # ปรับโจทย์ใหม่ให้เพิ่มคำสั่งระบายสี
         pdf.cell(0, 10, f" Directions: Cross out (X) the picture that is different. Then color the pictures!", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+        
+        # 1. บังคับให้วนลูปสร้างแค่ 4 ข้อ
+        for i in range(4):
+            # ขยายระยะตัดหน้ากระดาษเผื่อไว้เป็น 240
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
+            
             for j in range(4):
-                draw_rounded_box(pdf, 25 + (j*42), y+5, 35, 35, r=5, bg_color=(255,255,255), text=f"~ Item ~", font_size=10)
-            pdf.ln(55)
+                # 3. ลดความสูงกล่องย่อยสีขาวที่ใส่รูป จาก 35 เหลือ 30
+                draw_rounded_box(pdf, 25 + (j*42), y+5, 35, 30, r=5, bg_color=(255,255,255), text=f"~ Item ~", font_size=10)
+                
+            # 4. ลดระยะเว้นบรรทัดจาก 55 เหลือ 46 ให้ใส่ได้ 4 ข้อพอดีหน้ากระดาษ
+            pdf.ln(46)
 
     elif "finish the pattern" in clean_sub:
         # แก้ไขคำสั่งจาก or เป็น and
