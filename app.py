@@ -781,33 +781,44 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "cross out" in clean_sub:
         pdf.cell(0, 10, f" Directions: Read the problem. Cross out the pictures to match, then write the answer.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+        
+        # 1. บังคับให้วนลูปสร้างแค่ 4 ข้อ
+        for i in range(4):
+            # ขยายระยะตัดหน้ากระดาษเผื่อไว้เป็น 240
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
             take = random.randint(1, target_num) if target_num > 1 else 1
             left = target_num - take
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (170 / 2)
             
-            draw_rounded_box(pdf, start_x, y+5, 60, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {target_num} items ~", font_size=11)
+            # 3. ลดความสูงกล่องย่อยสีขาวที่ใส่รูป จาก 35 เหลือ 30
+            draw_rounded_box(pdf, start_x, y+5, 60, 30, r=5, bg_color=(255,255,255), text=f"~ Canva: {target_num} items ~", font_size=11)
             
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
             
-            pdf.text(start_x + 75, y + 28, "-")
-            pdf.text(start_x + 90, y + 28, str(take))
-            pdf.text(start_x + 110, y + 28, "=")
+            # 4. ขยับเครื่องหมายและตัวเลขลบขึ้นให้อยู่กึ่งกลางกล่อง (จาก y+28 เป็น y+25)
+            pdf.text(start_x + 75, y + 25, "-")
+            pdf.text(start_x + 90, y + 25, str(take))
+            pdf.text(start_x + 110, y + 25, "=")
             
             ans_txt = str(left) if pdf.is_key else ""
-            draw_rounded_box(pdf, start_x + 130, y+5, 35, 35, r=5, bg_color=(255,255,255), text=ans_txt, font_size=28)
+            
+            # ลดความสูงของกล่องใส่คำตอบ จาก 35 เหลือ 30
+            draw_rounded_box(pdf, start_x + 130, y+5, 35, 30, r=5, bg_color=(255,255,255), text=ans_txt, font_size=28)
             
             if pdf.is_key:
                 pdf.set_font("ComicNeue", "", 12)
                 pdf.set_text_color(255, 100, 100)
-                pdf.text(start_x + 5, y + 35, f"(Cross out {take})")
-            pdf.ln(55)
+                # ขยับข้อความเฉลย (Cross out) ขึ้นให้สมดุล (จาก y+35 เป็น y+32)
+                pdf.text(start_x + 5, y + 32, f"(Cross out {take})")
+                
+            # 5. ลดระยะเว้นบรรทัดจาก 55 เหลือ 46 ให้ใส่ได้ 4 ข้อพอดีหน้ากระดาษ
+            pdf.ln(46)
 
     elif "correct sum" in clean_sub:
         pdf.cell(0, 10, f" Directions: Add the numbers. Color the box with the correct answer.", ln=True)
