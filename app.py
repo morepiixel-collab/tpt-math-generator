@@ -823,21 +823,28 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "correct sum" in clean_sub:
         pdf.cell(0, 10, f" Directions: Add the numbers. Color the box with the correct answer.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+        
+        # 1. บังคับให้สร้างแค่ 4 ข้อ
+        for i in range(4):
+            # ขยายระยะตัดหน้ากระดาษเป็น 240
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
             n1 = random.randint(0, target_num)
             n2 = target_num - n1
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (160 / 2)
             
-            draw_rounded_box(pdf, start_x, y+5, 60, 35, r=5, bg_color=(255,255,255), text=f" {n1} + {n2} ", font_size=28)
+            # 3. ลดความสูงกล่องโจทย์ด้านซ้าย จาก 35 เหลือ 30
+            draw_rounded_box(pdf, start_x, y+5, 60, 30, r=5, bg_color=(255,255,255), text=f" {n1} + {n2} ", font_size=28)
             
             pdf.set_font("ComicNeue", "", 24)
             pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(start_x + 65, y + 27, "=")
+            
+            # 4. ขยับเครื่องหมาย = ขึ้นให้อยู่กึ่งกลางกล่อง (จาก y+27 เป็น y+25)
+            pdf.text(start_x + 65, y + 25, "=")
             
             choices = [target_num]
             while len(choices) < 3:
@@ -849,10 +856,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             bg2 = theme_colors["secondary"] if (pdf.is_key and choices[1]==target_num) else (255,255,255)
             bg3 = theme_colors["secondary"] if (pdf.is_key and choices[2]==target_num) else (255,255,255)
             
-            draw_rounded_box(pdf, start_x + 80, y+10, 22, 25, r=4, bg_color=bg1, text=str(choices[0]), font_size=20)
-            draw_rounded_box(pdf, start_x + 108, y+10, 22, 25, r=4, bg_color=bg2, text=str(choices[1]), font_size=20)
-            draw_rounded_box(pdf, start_x + 136, y+10, 22, 25, r=4, bg_color=bg3, text=str(choices[2]), font_size=20)
-            pdf.ln(55)
+            # ขยับกล่องตัวเลือกคำตอบทั้ง 3 กล่องขึ้นให้สมดุล และลดความสูงลงนิดหน่อย (จาก y+10 สูง 25 เป็น y+8 สูง 24)
+            draw_rounded_box(pdf, start_x + 80, y+8, 22, 24, r=4, bg_color=bg1, text=str(choices[0]), font_size=20)
+            draw_rounded_box(pdf, start_x + 108, y+8, 22, 24, r=4, bg_color=bg2, text=str(choices[1]), font_size=20)
+            draw_rounded_box(pdf, start_x + 136, y+8, 22, 24, r=4, bg_color=bg3, text=str(choices[2]), font_size=20)
+            
+            # 5. ลดระยะเว้นบรรทัดจาก 55 เหลือ 46 ให้ใส่ได้ 4 ข้อพอดีหน้ากระดาษ
+            pdf.ln(46)
 
 # ==========================================
     # โซนแกนที่ 3 : GEOMETRY & PATTERNS
