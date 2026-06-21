@@ -426,7 +426,9 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         
         nums_str = ", ".join(map(str, key_nums))
         placeholder_text = f"~ Canva: Add a 'Color by Number' graphic using numbers {nums_str} ~"
-        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 110, r=8, bg_color=theme_colors["box"], text=placeholder_text, font_size=12)
+        
+        # แก้ไขจุดนี้: ขยายความสูงของกล่องด้านล่างจาก 110 เป็น 140 เพื่อให้เต็มพื้นที่พอดีไม่ล้นกรอบ
+        draw_rounded_box(pdf, 15, pdf.get_y(), 185, 140, r=8, bg_color=theme_colors["box"], text=placeholder_text, font_size=12)
 
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers. Can you find where {target_num} goes?", ln=True)
