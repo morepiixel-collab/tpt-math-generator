@@ -300,8 +300,11 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         pdf.cell(0, 10, f" Directions: Count the objects. Color the circle with the correct number.", ln=True)
         pdf.ln(5)
         seen_choices = set() 
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+        
+        # 1. บังคับให้วนลูปสร้างแค่ 4 ข้อ
+        for i in range(4):
+            # ขยายระยะตัดหน้ากระดาษเป็น 240 กันพลาด
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
             actual_count = target_num 
@@ -316,14 +319,20 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                     seen_choices.add(sig)
                     break
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (172 / 2)
-            draw_rounded_box(pdf, start_x, y+5, 80, 35, r=5, bg_color=(255, 255, 255), text=f"~ Add {actual_count} items ~")
             
-            draw_solid_circle(pdf, start_x+90, y+11.5, 22, str(choices[0]), font_size=28, is_path=(choices[0]==target_num))
-            draw_solid_circle(pdf, start_x+118, y+11.5, 22, str(choices[1]), font_size=28, is_path=(choices[1]==target_num))
-            draw_solid_circle(pdf, start_x+146, y+11.5, 22, str(choices[2]), font_size=28, is_path=(choices[2]==target_num))
-            pdf.ln(50)
+            # 3. ลดความสูงของกล่องย่อยสีขาวจาก 35 เหลือ 30
+            draw_rounded_box(pdf, start_x, y+5, 80, 30, r=5, bg_color=(255, 255, 255), text=f"~ Add {actual_count} items ~")
+            
+            # 4. ขยับวงกลมคำตอบขึ้นมาให้อยู่กึ่งกลางกล่อง (เปลี่ยนจาก y+11.5 เป็น y+9)
+            draw_solid_circle(pdf, start_x+90, y+9, 22, str(choices[0]), font_size=28, is_path=(choices[0]==target_num))
+            draw_solid_circle(pdf, start_x+118, y+9, 22, str(choices[1]), font_size=28, is_path=(choices[1]==target_num))
+            draw_solid_circle(pdf, start_x+146, y+9, 22, str(choices[2]), font_size=28, is_path=(choices[2]==target_num))
+            
+            # 5. ปรับระยะห่างระหว่างบรรทัดให้พอดีกับ 4 ข้อ (จาก 50 เหลือ 46)
+            pdf.ln(46)
 
     elif "count and match" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw a line to match the groups of {target_num}.", ln=True)
