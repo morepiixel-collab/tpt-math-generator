@@ -635,27 +635,38 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "take away and color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Look at the pictures. Cross out the number given, then color the rest.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+        
+        # 1. บังคับให้สร้างแค่ 4 ข้อ
+        for i in range(4):
+            # ขยายระยะตัดหน้ากระดาษเป็น 240
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
             total = target_num if target_num > 1 else 2
             take = random.randint(1, total - 1)
             left = total - take
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (160 / 2)
             
-            draw_rounded_box(pdf, start_x, y+5, 90, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Add {total} items here ~", font_size=11)
+            # 3. ลดความสูงของกล่องย่อยสีขาวที่ใส่รูป จาก 35 เหลือ 30
+            draw_rounded_box(pdf, start_x, y+5, 90, 30, r=5, bg_color=(255,255,255), text=f"~ Canva: Add {total} items here ~", font_size=11)
             
             pdf.set_font("ComicNeue", "", 18)
             pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(start_x + 95, y + 20, f"Take away {take}")
-            pdf.text(start_x + 95, y + 32, "How many left?")
+            
+            # 4. ขยับข้อความขึ้นให้อยู่กึ่งกลางสมมาตรกับกล่องที่เตี้ยลง (จาก 20 เป็น 17 และ 32 เป็น 28)
+            pdf.text(start_x + 95, y + 17, f"Take away {take}")
+            pdf.text(start_x + 95, y + 28, "How many left?")
             
             ans_txt = str(left) if pdf.is_key else ""
-            draw_rounded_box(pdf, start_x + 140, y+5, 30, 35, r=5, bg_color=(255,255,255), text=ans_txt, font_size=24)
-            pdf.ln(55)
+            
+            # ลดความสูงของกล่องใส่คำตอบ จาก 35 เหลือ 30
+            draw_rounded_box(pdf, start_x + 140, y+5, 30, 30, r=5, bg_color=(255,255,255), text=ans_txt, font_size=24)
+            
+            # 5. ลดระยะเว้นบรรทัดจาก 55 เหลือ 46 ให้ใส่ได้ 4 ข้อพอดีหน้ากระดาษ
+            pdf.ln(46)
 
     elif "addition path" in clean_sub:
         pdf.cell(0, 10, f" Directions: Find the way out! Color the bubbles that add up to {target_num}.", ln=True)
