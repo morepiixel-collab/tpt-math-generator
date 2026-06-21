@@ -432,9 +432,12 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
 
     elif "missing" in clean_sub:
         pdf.cell(0, 10, f" Directions: Fill in the missing numbers. Can you find where {target_num} goes?", ln=True)
-        pdf.ln(10)
+        # ลดระยะเว้นบรรทัดด้านบนจาก 10 เหลือ 5 เพื่อเพิ่มพื้นที่
+        pdf.ln(5)
         seen_sequences = set() 
-        for i in range(num_q):
+        
+        # 1. บังคับให้วนลูปสร้างแค่ 4 ข้อ
+        for i in range(4):
             if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
@@ -445,25 +448,27 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                 # กำหนดให้ซ่อนแค่เลขเป้าหมาย (target_num) ตัวเดียวเท่านั้น
                 hidden = [seq.index(target_num)] if target_num in seq else [2]
                 
-                # ลบบรรทัด other_hidden ออก เพื่อไม่ให้มันสุ่มซ่อนเลขตัวอื่นเพิ่ม
-                
                 sig = (start_val, frozenset(hidden))
                 if sig not in seen_sequences:
                     seen_sequences.add(sig)
                     break
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
             start_x = center_x - (172 / 2)
             
             for j in range(5):
                 x = start_x + (j * 36)
                 if j in hidden:
-                    # ถ้าเป็นหน้าเฉลยจะแสดงตัวเลข แต่ถ้าไม่ใช่จะแสดง "?"
                     val = str(seq[j]) if pdf.is_key else "?"
-                    draw_circle_placeholder(pdf, x, y+8.5, 28, val)
+                    # 3. ขยับวงกลมขึ้นมาให้อยู่กึ่งกลางกล่อง (เปลี่ยนจาก y+8.5 เป็น y+6)
+                    draw_circle_placeholder(pdf, x, y+6, 28, val)
                 else:
-                    draw_solid_circle(pdf, x, y+8.5, 28, str(seq[j]), font_size=28)
-            pdf.ln(50)
+                    draw_solid_circle(pdf, x, y+6, 28, str(seq[j]), font_size=28)
+                    
+            # 4. ปรับระยะห่างระหว่างบรรทัดให้พอดีกับ 4 ข้อ (จาก 50 เหลือ 45)
+            pdf.ln(45)
+            
     elif "maze" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the number {target_num} to find the way out of the maze!", ln=True)
         pdf.ln(5)
