@@ -273,41 +273,48 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     if "find the number" in clean_sub:
 
         # Directions
-        pdf.set_font("ComicNeue", "", 15)
-        pdf.set_text_color(70, 70, 70)
+        pdf.set_font("ComicNeue", "", 14)
+        pdf.set_text_color(90, 90, 90)
         pdf.cell(
             0,
-            10,
+            8,
             f"Directions: Find and color the number {target_num} in the picture below.",
             ln=True
         )
 
-        pdf.ln(4)
+        pdf.ln(3)
 
-        # Target
-        pdf.set_font("ComicNeue", "", 24)
-        pdf.set_text_color(*theme_colors["primary"])
-        pdf.cell(
-            0,
-            10,
-            f"Target: {target_num}",
-            ln=True,
-            align="C"
+        # Target Card
+        draw_rounded_box(
+            pdf,
+            55,
+            60,
+            100,
+            24,
+            r=8,
+            bg_color=(255, 255, 255)
         )
 
-        pdf.ln(2)
+        pdf.set_xy(55, 63)
+        pdf.set_font("ComicNeue", "", 13)
+        pdf.set_text_color(*theme_colors["primary"])
+        pdf.cell(100, 6, "TARGET NUMBER", align="C")
+
+        pdf.set_xy(55, 69)
+        pdf.set_font("ComicNeue", "", 34)
+        pdf.cell(100, 10, str(target_num), align="C")
 
         # Activity Area
         draw_rounded_box(
             pdf,
-            15,
-            82,
-            185,
-            163,
+            12,
+            92,
+            191,
+            150,
             r=8,
             bg_color=theme_colors["box"],
-            text=f"~ Canva: Create a cute full-page scene. Scatter many numbers with number {target_num} appearing frequently as the target. Mix with other numbers and leave comfortable spacing for coloring. ~",
-            font_size=13
+            text=f"~ Canva: Create one large cute scene for preschool children. Hide many numbers inside the illustration with number {target_num} appearing frequently. Use large spacing, thick outlines, and simple objects suitable for coloring. ~",
+            font_size=12
         )
 
     elif "trace the numbers" in clean_sub:
