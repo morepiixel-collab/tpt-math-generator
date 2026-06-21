@@ -983,15 +983,24 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
         # แก้ไขคำสั่งจาก or เป็น and
         pdf.cell(0, 10, f" Directions: Look at the pattern. Draw and color what comes next.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+        
+        # 1. บังคับให้วนลูปสร้างแค่ 4 ข้อ
+        for i in range(4):
+            # ขยายระยะตัดหน้ากระดาษเป็น 240
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
-            draw_rounded_box(pdf, 25, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ A ~", font_size=10)
-            draw_rounded_box(pdf, 60, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ B ~", font_size=10)
-            draw_rounded_box(pdf, 95, y+5, 30, 35, r=5, bg_color=(255,255,255), text="~ A ~", font_size=10)
-            draw_rounded_box(pdf, 145, y+5, 40, 35, r=5, bg_color=(255,255,255), text="~ ? ~", font_size=14)
-            pdf.ln(55)
+            
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
+            
+            # 3. ลดความสูงกล่องย่อยทั้ง 4 กล่อง จาก 35 เหลือ 30
+            draw_rounded_box(pdf, 25, y+5, 30, 30, r=5, bg_color=(255,255,255), text="~ A ~", font_size=10)
+            draw_rounded_box(pdf, 60, y+5, 30, 30, r=5, bg_color=(255,255,255), text="~ B ~", font_size=10)
+            draw_rounded_box(pdf, 95, y+5, 30, 30, r=5, bg_color=(255,255,255), text="~ A ~", font_size=10)
+            draw_rounded_box(pdf, 145, y+5, 40, 30, r=5, bg_color=(255,255,255), text="~ ? ~", font_size=14)
+            
+            # 4. ลดระยะเว้นบรรทัดจาก 55 เหลือ 46 ให้ใส่ได้ 4 ข้อพอดีหน้ากระดาษ
+            pdf.ln(46)
 
     elif "where is it" in clean_sub:
         # เพิ่มคำสั่งให้ระบายสี และเปลี่ยนรูปแบบตัวเลือกให้เป็นวงกลมให้ระบายง่ายๆ
