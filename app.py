@@ -585,30 +585,38 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "count and color total" in clean_sub:
         pdf.cell(0, 10, f" Directions: Count all the pictures together. Color the circle with the correct total.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+        
+        # 1. บังคับให้สร้างแค่ 4 ข้อ
+        for i in range(4):
+            # ขยายระยะตัดหน้ากระดาษเป็น 240 กันพลาด
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
             n1 = random.randint(1, target_num - 1) if target_num > 1 else 1
             n2 = target_num - n1 if target_num > 1 else 0
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
             
             start_x = center_x - (170 / 2)
             
-            draw_rounded_box(pdf, start_x, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n1} items ~", font_size=11)
+            # 3. ลดความสูงกล่องย่อย(สีขาว) จาก 35 เหลือ 30
+            draw_rounded_box(pdf, start_x, y+5, 40, 30, r=5, bg_color=(255,255,255), text=f"~ Canva: {n1} items ~", font_size=11)
             
+            # 4. ขยับเครื่องหมาย + ขึ้นให้อยู่กึ่งกลาง (จาก y+25 เป็น y+22)
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
             w_plus = pdf.get_string_width("+")
-            pdf.text(start_x + 46 - (w_plus/2), y + 25, "+")
+            pdf.text(start_x + 46 - (w_plus/2), y + 22, "+")
             
-            draw_rounded_box(pdf, start_x + 52, y+5, 40, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} items ~", font_size=11)
+            # ลดความสูงกล่องย่อย(สีขาว) จาก 35 เหลือ 30
+            draw_rounded_box(pdf, start_x + 52, y+5, 40, 30, r=5, bg_color=(255,255,255), text=f"~ Canva: {n2} items ~", font_size=11)
             
+            # ขยับเครื่องหมาย = ขึ้นให้อยู่กึ่งกลาง (จาก y+25 เป็น y+22)
             pdf.set_font("ComicNeue", "", 28)
             pdf.set_text_color(*theme_colors["primary"])
             w_eq = pdf.get_string_width("=")
-            pdf.text(start_x + 98 - (w_eq/2), y + 25, "=")
+            pdf.text(start_x + 98 - (w_eq/2), y + 22, "=")
             
             choices = [target_num]
             while len(choices) < 3:
@@ -616,11 +624,13 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
                 if wrong not in choices: choices.append(wrong)
             random.shuffle(choices)
             
-            draw_solid_circle(pdf, start_x + 104, y+11.5, 18, str(choices[0]), font_size=20, is_path=(choices[0]==target_num))
-            draw_solid_circle(pdf, start_x + 128, y+11.5, 18, str(choices[1]), font_size=20, is_path=(choices[1]==target_num))
-            draw_solid_circle(pdf, start_x + 152, y+11.5, 18, str(choices[2]), font_size=20, is_path=(choices[2]==target_num))
+            # ขยับวงกลมตัวเลขคำตอบขึ้นให้อยู่กึ่งกลาง (จาก y+11.5 เป็น y+10)
+            draw_solid_circle(pdf, start_x + 104, y+10, 18, str(choices[0]), font_size=20, is_path=(choices[0]==target_num))
+            draw_solid_circle(pdf, start_x + 128, y+10, 18, str(choices[1]), font_size=20, is_path=(choices[1]==target_num))
+            draw_solid_circle(pdf, start_x + 152, y+10, 18, str(choices[2]), font_size=20, is_path=(choices[2]==target_num))
             
-            pdf.ln(55)
+            # 5. ลดระยะบรรทัดจาก 55 เหลือ 46 ให้ใส่ได้ 4 ข้อพอดีหน้ากระดาษ
+            pdf.ln(46)
             
     elif "take away and color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Look at the pictures. Cross out the number given, then color the rest.", ln=True)
