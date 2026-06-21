@@ -712,16 +712,21 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "make target" in clean_sub:
         pdf.cell(0, 10, f" Directions: We need {target_num} in total. Color more items to make {target_num}.", ln=True)
         pdf.ln(5)
-        for i in range(num_q):
-            if pdf.get_y() > 220: pdf.add_page()
+        
+        # 1. บังคับให้วนลูปสร้างแค่ 4 ข้อ
+        for i in range(4):
+            # ขยายระยะตัดหน้ากระดาษเผื่อไว้เป็น 240
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
             have = random.randint(1, target_num - 1) if target_num > 1 else 0
             need = target_num - have
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
+            # 2. ลดความสูงของกล่องหลักจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
             
-            draw_rounded_box(pdf, 20, y+5, 95, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Add {target_num} items. Show {have} filled, {need} empty ~", font_size=11)
+            # 3. ลดความสูงของกล่องย่อยสีขาวที่ใส่รูป จาก 35 เหลือ 30
+            draw_rounded_box(pdf, 20, y+5, 95, 30, r=5, bg_color=(255,255,255), text=f"~ Canva: Add {target_num} items. Show {have} filled, {need} empty ~", font_size=11)
             
             right_x = 120
             
@@ -729,18 +734,24 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
             pdf.set_text_color(*theme_colors["primary"])
             w_colored = pdf.get_string_width("I colored ")
             
-            pdf.text(right_x, y + 26, "I colored")
+            # 4. ขยับข้อความ "I colored" ขึ้นให้อยู่กึ่งกลางกล่อง (จาก y+26 เป็น y+23)
+            pdf.text(right_x, y + 23, "I colored")
             
             box_w = 20
             box_h = 20
             ans_text = str(need) if pdf.is_key else ""
-            draw_rounded_box(pdf, right_x + w_colored, y + 12.5, box_w, box_h, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
+            
+            # ขยับแกน Y ของกล่องคำตอบสี่เหลี่ยม ขึ้นให้อยู่กึ่งกลาง (จาก y+12.5 เป็น y+10)
+            draw_rounded_box(pdf, right_x + w_colored, y + 10, box_w, box_h, r=4, bg_color=(255,255,255), text=ans_text, font_size=18)
             
             pdf.set_font("ComicNeue", "", 18)
             pdf.set_text_color(*theme_colors["primary"])
-            pdf.text(right_x + w_colored + box_w + 4, y + 26, "more.")
             
-            pdf.ln(55)
+            # ขยับข้อความ "more." ขึ้นให้อยู่กึ่งกลางแนวเดียวกับคำแรก (จาก y+26 เป็น y+23)
+            pdf.text(right_x + w_colored + box_w + 4, y + 23, "more.")
+            
+            # 5. ลดระยะเว้นบรรทัดจาก 55 เหลือ 46 ให้ใส่ได้ 4 ข้อพอดีหน้ากระดาษ
+            pdf.ln(46)
 
     elif "draw and color" in clean_sub:
         pdf.cell(0, 10, f" Directions: Draw and color more pictures to make exactly {target_num}.", ln=True)
