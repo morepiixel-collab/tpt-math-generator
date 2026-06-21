@@ -281,14 +281,20 @@ def generate_worksheet(sub_topic, theme_colors, num_q, shop_name, target_num, se
     elif "trace the numbers" in clean_sub:
         pdf.cell(0, 10, f" Directions: Color the pictures. Then trace and write the number {target_num}.", ln=True)
         pdf.ln(5)
-        for i in range(num_q): 
-            if pdf.get_y() > 220: pdf.add_page()
+        # บังคับให้วนลูปสร้างแค่ 4 ข้อ
+        for i in range(4): 
+            if pdf.get_y() > 240: pdf.add_page()
             y = pdf.get_y()
             
-            draw_rounded_box(pdf, 15, y, 185, 45, r=8, bg_color=theme_colors["box"])
-            draw_rounded_box(pdf, 20, y+5, 110, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: {target_num} Items to color ~", font_size=11)
-            draw_rounded_box(pdf, 135, y+5, 60, 35, r=5, bg_color=(255,255,255), text=f"~ Canva: Dotted {target_num} ~", font_size=11)
-            pdf.ln(55)
+            # ลดความสูงกล่องหลักลงจาก 45 เหลือ 40
+            draw_rounded_box(pdf, 15, y, 185, 40, r=8, bg_color=theme_colors["box"])
+            
+            # ลดความสูงกล่องย่อยด้านในจาก 35 เหลือ 30
+            draw_rounded_box(pdf, 20, y+5, 110, 30, r=5, bg_color=(255,255,255), text=f"~ Canva: {target_num} Items to color ~", font_size=11)
+            draw_rounded_box(pdf, 135, y+5, 60, 30, r=5, bg_color=(255,255,255), text=f"~ Canva: Dotted {target_num} ~", font_size=11)
+            
+            # ลดระยะห่างบรรทัดจาก 55 เหลือ 46 เพื่อให้บรรทัดที่ 4 ไม่ทะลุกรอบขอบล่าง
+            pdf.ln(46)
 
     elif "counting objects" in clean_sub or ("counting" in clean_sub and "objects" in clean_sub):
         pdf.cell(0, 10, f" Directions: Count the objects. Color the circle with the correct number.", ln=True)
